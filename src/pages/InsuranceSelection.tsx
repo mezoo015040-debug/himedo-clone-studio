@@ -102,14 +102,37 @@ const InsuranceSelection = () => {
 
   // شركات التأمين - شامل
   const comprehensiveCompanies: InsuranceCompany[] = [
-    { id: 9, name: "شركة التأمين التاسعة", regularPrice: "3,500.00", salePrice: "2,450.00", logo: "🏆" },
-    { id: 10, name: "شركة التأمين العاشرة", regularPrice: "3,700.00", salePrice: "2,575.00", logo: "🏆" },
-    { id: 11, name: "شركة التأمين الحادية عشر", regularPrice: "3,800.00", salePrice: "2,690.00", logo: "🏆" },
-    { id: 12, name: "شركة التأمين الثانية عشر", regularPrice: "4,000.00", salePrice: "2,810.00", logo: "🏆" },
-    { id: 13, name: "شركة التأمين الثالثة عشر", regularPrice: "4,200.00", salePrice: "2,925.00", logo: "🏆" },
-    { id: 14, name: "شركة التأمين الرابعة عشر", regularPrice: "4,300.00", salePrice: "3,040.00", logo: "🏆" },
-    { id: 15, name: "شركة التأمين الخامسة عشر", regularPrice: "4,500.00", salePrice: "3,155.00", logo: "🏆" },
-    { id: 16, name: "شركة التأمين السادسة عشر", regularPrice: "4,700.00", salePrice: "3,270.00", logo: "🏆" },
+    { 
+      id: 11, 
+      name: "شركة بروج للتأمين التعاوني - التأمين الشامل على المركبات", 
+      regularPrice: "2,051.00", 
+      salePrice: "1,025.50",
+      logo: "https://static.wixstatic.com/media/a4d98c_618ae961f5854eabb4222bf8217783af~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_618ae961f5854eabb4222bf8217783af~mv2.png",
+      discount: "خصم 30% لعدم وجود مطالبات"
+    },
+    { 
+      id: 12, 
+      name: "الشركة الخليجية العامة للتأمين - التأمين الشامل للسيارات الفردية", 
+      regularPrice: "1,015.00", 
+      salePrice: "507.50",
+      logo: "https://static.wixstatic.com/media/a4d98c_87bca84adf174fcb93b2002bddc2a63f~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_87bca84adf174fcb93b2002bddc2a63f~mv2.png"
+    },
+    { 
+      id: 13, 
+      name: "شركة ميد غولف للتأمين - التأمين الشامل للمركبات", 
+      regularPrice: "2,266.95", 
+      salePrice: "1,133.48",
+      logo: "https://static.wixstatic.com/media/a4d98c_6d65f436e14f463db8c9ec3c953a9708~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_6d65f436e14f463db8c9ec3c953a9708~mv2.png",
+      discount: "خصم 30% لعدم وجود مطالبات"
+    },
+    { 
+      id: 14, 
+      name: "شركة تكافل الراجحي - التأمين الشامل على المركبات", 
+      regularPrice: "1,616.00", 
+      salePrice: "808.00",
+      logo: "https://static.wixstatic.com/media/a4d98c_c1540e762dba4775bc16c34ae137a95e~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_c1540e762dba4775bc16c34ae137a95e~mv2.png",
+      discount: "خصم 25% لعدم وجود مطالبات"
+    },
   ];
 
   const displayedCompanies = insuranceType === "comprehensive" 
