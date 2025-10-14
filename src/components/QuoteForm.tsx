@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -20,6 +21,28 @@ export const QuoteForm = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
+  
+  // للتقويم
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const months = [
+    { value: "0", label: "يناير" },
+    { value: "1", label: "فبراير" },
+    { value: "2", label: "مارس" },
+    { value: "3", label: "أبريل" },
+    { value: "4", label: "مايو" },
+    { value: "5", label: "يونيو" },
+    { value: "6", label: "يوليو" },
+    { value: "7", label: "أغسطس" },
+    { value: "8", label: "سبتمبر" },
+    { value: "9", label: "أكتوبر" },
+    { value: "10", label: "نوفمبر" },
+    { value: "11", label: "ديسمبر" },
+  ];
+  
+  const [calendarMonth, setCalendarMonth] = useState<Date>(
+    birthDate || new Date(1990, 0, 1)
+  );
 
   const handleSubmit = () => {
     // التحقق من جميع الحقول
@@ -144,10 +167,54 @@ export const QuoteForm = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="center">
+                  <div className="flex gap-2 p-3 border-b">
+                    <Select
+                      value={calendarMonth.getMonth().toString()}
+                      onValueChange={(value) => {
+                        const newDate = new Date(calendarMonth);
+                        newDate.setMonth(parseInt(value));
+                        setCalendarMonth(newDate);
+                      }}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select
+                      value={calendarMonth.getFullYear().toString()}
+                      onValueChange={(value) => {
+                        const newDate = new Date(calendarMonth);
+                        newDate.setFullYear(parseInt(value));
+                        setCalendarMonth(newDate);
+                      }}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   <Calendar
                     mode="single"
                     selected={birthDate}
                     onSelect={setBirthDate}
+                    month={calendarMonth}
+                    onMonthChange={setCalendarMonth}
                     disabled={(date) =>
                       date > new Date() || date < new Date("1900-01-01")
                     }
