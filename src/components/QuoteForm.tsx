@@ -4,9 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 export const QuoteForm = () => {
   const [insuranceType, setInsuranceType] = useState<"new" | "transfer">("new");
   const [documentType, setDocumentType] = useState<"customs" | "registration">("registration");
+  const [birthDate, setBirthDate] = useState<Date>();
   return <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
         <Card className="p-8 shadow-glow">
@@ -35,6 +42,40 @@ export const QuoteForm = () => {
             {/* Phone Number */}
             <div className="space-y-2">
               <Input type="tel" placeholder="رقم الهاتف 5xxxxxxxxxx" className="w-full text-right" dir="ltr" />
+            </div>
+
+            {/* Birth Date */}
+            <div className="space-y-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-between text-right font-normal",
+                      !birthDate && "text-muted-foreground"
+                    )}
+                  >
+                    {birthDate ? (
+                      format(birthDate, "PPP", { locale: ar })
+                    ) : (
+                      <span>تاريخ الميلاد</span>
+                    )}
+                    <CalendarIcon className="h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center">
+                  <Calendar
+                    mode="single"
+                    selected={birthDate}
+                    onSelect={setBirthDate}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Document Type Selection */}
