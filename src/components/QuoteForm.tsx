@@ -9,7 +9,7 @@ export const QuoteForm = () => {
   const [documentType, setDocumentType] = useState<"customs" | "registration">("registration");
 
   return (
-    <section className="py-16 px-4 md:px-6 bg-background">
+    <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
         <Card className="p-8 shadow-glow">
           {/* Insurance Type Selection */}
