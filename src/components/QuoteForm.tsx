@@ -142,7 +142,10 @@ export const QuoteForm = () => {
                 placeholder="اسم مالك الوثيقة كاملاً" 
                 className="w-full text-right"
                 value={ownerName}
-                onChange={(e) => setOwnerName(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Zأ-ي\s]/g, '');
+                  setOwnerName(value);
+                }}
               />
             </div>
 
