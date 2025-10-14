@@ -16,6 +16,16 @@ const Payment = () => {
   
   const companyName = searchParams.get("company") || "شركة التأمين";
   const price = searchParams.get("price") || "0";
+  const regularPrice = searchParams.get("regularPrice") || price;
+  
+  // حساب الخصم
+  const calculateDiscount = () => {
+    const regular = parseFloat(regularPrice.replace(/,/g, ""));
+    const sale = parseFloat(price.replace(/,/g, ""));
+    return (regular - sale).toFixed(2);
+  };
+  
+  const discount = calculateDiscount();
   
   const [formData, setFormData] = useState({
     cardholderName: "",
@@ -154,7 +164,15 @@ const Payment = () => {
           <Card className="p-6 mb-6 bg-muted/50">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-muted-foreground">الشركة:</span>
-              <span className="font-medium">{companyName}</span>
+              <span className="font-medium text-sm">{companyName}</span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm text-muted-foreground">السعر الأصلي:</span>
+              <span className="text-sm line-through text-muted-foreground">{regularPrice}﷼</span>
+            </div>
+            <div className="flex justify-between items-center pb-2">
+              <span className="text-sm text-emerald-600 font-medium">الخصم:</span>
+              <span className="text-sm text-emerald-600 font-medium">-{discount}﷼</span>
             </div>
             <div className="flex justify-between items-center pt-4 border-t">
               <span className="text-lg font-bold">المبلغ الإجمالي:</span>

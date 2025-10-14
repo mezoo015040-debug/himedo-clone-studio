@@ -161,7 +161,7 @@ const InsuranceSelection = () => {
                     </p>
                   </div>
                   <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => {
-                navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}`);
+                navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
               }}>
                     إشتري الآن
                   </Button>
