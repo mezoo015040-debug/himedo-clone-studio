@@ -22,6 +22,7 @@ const VehicleInfo = () => {
   const [usagePurpose, setUsagePurpose] = useState("");
   const [policyStartDate, setPolicyStartDate] = useState<Date>();
   const [addDriver, setAddDriver] = useState<"yes" | "no" | null>(null);
+  const [vehicleValue, setVehicleValue] = useState("");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear + i);
@@ -49,6 +50,15 @@ const VehicleInfo = () => {
       toast({
         title: "خطأ",
         description: "يرجى إدخال الغرض من الاستخدام",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!vehicleValue.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال القيمة التقديرية للسيارة",
         variant: "destructive",
       });
       return;
@@ -119,6 +129,18 @@ const VehicleInfo = () => {
                       <SelectItem value="waste">نقل نفايات</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Vehicle Value */}
+                <div className="space-y-2">
+                  <Label className="text-right block">القيمة التقديرية للسيارة</Label>
+                  <Input
+                    type="number"
+                    placeholder="أدخل القيمة التقديرية"
+                    value={vehicleValue}
+                    onChange={(e) => setVehicleValue(e.target.value)}
+                    className="text-right"
+                  />
                 </div>
 
                 {/* Policy Start Date */}
