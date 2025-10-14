@@ -10,10 +10,71 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 export const QuoteForm = () => {
   const [insuranceType, setInsuranceType] = useState<"new" | "transfer">("new");
   const [documentType, setDocumentType] = useState<"customs" | "registration">("registration");
   const [birthDate, setBirthDate] = useState<Date>();
+  const [idNumber, setIdNumber] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
+  const { toast } = useToast();
+
+  const handleSubmit = () => {
+    // التحقق من جميع الحقول
+    if (!idNumber.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم الهوية / الإقامة",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!ownerName.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال اسم مالك الوثيقة",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال رقم الهاتف",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!birthDate) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار تاريخ الميلاد",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (serialNumber.length !== 9) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال الرقم التسلسلي كاملاً (9 أرقام)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // إذا كانت جميع البيانات صحيحة
+    toast({
+      title: "تم بنجاح",
+      description: "جاري الانتقال إلى الصفحة التالية...",
+    });
+    // هنا يمكن إضافة كود الانتقال إلى الصفحة التالية
+  };
   return <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
         <Card className="p-8 shadow-glow">
@@ -31,17 +92,36 @@ export const QuoteForm = () => {
           <div className="space-y-6">
             {/* ID/Iqama Number */}
             <div className="space-y-2">
-              <Input type="text" placeholder="رقم الهوية / الإقامة الخاص بك" className="w-full text-right" />
+              <Input 
+                type="text" 
+                placeholder="رقم الهوية / الإقامة الخاص بك" 
+                className="w-full text-right"
+                value={idNumber}
+                onChange={(e) => setIdNumber(e.target.value)}
+              />
             </div>
 
             {/* Owner Name */}
             <div className="space-y-2">
-              <Input type="text" placeholder="اسم مالك الوثيقة كاملاً" className="w-full text-right" />
+              <Input 
+                type="text" 
+                placeholder="اسم مالك الوثيقة كاملاً" 
+                className="w-full text-right"
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+              />
             </div>
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <Input type="tel" placeholder="رقم الهاتف 5xxxxxxxxxx" className="w-full text-right" dir="ltr" />
+              <Input 
+                type="tel" 
+                placeholder="رقم الهاتف 5xxxxxxxxxx" 
+                className="w-full text-right" 
+                dir="ltr"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
             </div>
 
             {/* Birth Date */}
@@ -92,7 +172,7 @@ export const QuoteForm = () => {
             <div className="space-y-2">
               <Label className="text-right block">الرقم التسلسلي / بطاقة جمركية</Label>
               <div className="flex justify-center" dir="ltr">
-                <InputOTP maxLength={9}>
+                <InputOTP maxLength={9} value={serialNumber} onChange={setSerialNumber}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -114,7 +194,11 @@ export const QuoteForm = () => {
             </div>
 
             {/* Submit Button */}
-            <Button size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button 
+              size="lg" 
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={handleSubmit}
+            >
               التالي
             </Button>
 
