@@ -175,7 +175,7 @@ const InsuranceSelection = () => {
                   </div>
                   <h3 className="font-semibold text-center text-sm min-h-[60px]">{company.name}</h3>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-sm text-muted-foreground line-through">
+                    <p className="text-sm text-red-500 line-through">
                       سعر عادي {company.regularPrice}﷼
                     </p>
                     <p className="text-xl font-bold text-primary">
