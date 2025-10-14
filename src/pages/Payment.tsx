@@ -8,25 +8,23 @@ import { CreditCard, Lock, ArrowRight } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-
 const Payment = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const companyName = searchParams.get("company") || "شركة التأمين";
   const price = searchParams.get("price") || "0";
   const regularPrice = searchParams.get("regularPrice") || price;
-  
+
   // حساب الخصم
   const calculateDiscount = () => {
     const regular = parseFloat(regularPrice.replace(/,/g, ""));
     const sale = parseFloat(price.replace(/,/g, ""));
     return (regular - sale).toFixed(2);
   };
-  
   const discount = calculateDiscount();
-  
   const [formData, setFormData] = useState({
     cardholderName: "",
     cardNumber: "",
@@ -38,42 +36,40 @@ const Payment = () => {
   // تحديد نوع البطاقة بناءً على الأرقام
   const getCardType = (cardNumber: string): "visa" | "mastercard" | "unknown" => {
     const digits = cardNumber.replace(/\s/g, "");
-    
+
     // فيزا تبدأ بـ 4
     if (digits.startsWith("4")) {
       return "visa";
     }
-    
+
     // ماستركارد تبدأ من 51-55 أو 2221-2720
     const firstTwo = parseInt(digits.substring(0, 2));
     const firstFour = parseInt(digits.substring(0, 4));
-    
-    if ((firstTwo >= 51 && firstTwo <= 55) || (firstFour >= 2221 && firstFour <= 2720)) {
+    if (firstTwo >= 51 && firstTwo <= 55 || firstFour >= 2221 && firstFour <= 2720) {
       return "mastercard";
     }
-    
     return "unknown";
   };
-
   const cardType = getCardType(formData.cardNumber);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    
+    const {
+      name,
+      value
+    } = e.target;
     let filteredValue = value;
-    
+
     // تنسيق رقم البطاقة
     if (name === "cardNumber") {
       filteredValue = value.replace(/\D/g, "").slice(0, 16);
       // إضافة مسافات كل 4 أرقام
       filteredValue = filteredValue.replace(/(\d{4})/g, "$1 ").trim();
     }
-    
+
     // CVV - أرقام فقط، بحد أقصى 4
     if (name === "cvv") {
       filteredValue = value.replace(/\D/g, "").slice(0, 4);
     }
-    
+
     // شهر الانتهاء - رقمين فقط
     if (name === "expiryMonth") {
       filteredValue = value.replace(/\D/g, "").slice(0, 2);
@@ -82,21 +78,19 @@ const Payment = () => {
         filteredValue = "12";
       }
     }
-    
+
     // سنة الانتهاء - رقمين فقط
     if (name === "expiryYear") {
       filteredValue = value.replace(/\D/g, "").slice(0, 2);
     }
-    
     setFormData(prev => ({
       ...prev,
       [name]: filteredValue
     }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // التحقق من الحقول
     if (!formData.cardholderName.trim()) {
       toast({
@@ -106,7 +100,6 @@ const Payment = () => {
       });
       return;
     }
-    
     if (formData.cardNumber.replace(/\s/g, "").length !== 16) {
       toast({
         title: "خطأ",
@@ -115,7 +108,6 @@ const Payment = () => {
       });
       return;
     }
-    
     if (!formData.expiryMonth || !formData.expiryYear) {
       toast({
         title: "خطأ",
@@ -124,7 +116,6 @@ const Payment = () => {
       });
       return;
     }
-    
     if (formData.cvv.length < 3) {
       toast({
         title: "خطأ",
@@ -133,21 +124,19 @@ const Payment = () => {
       });
       return;
     }
-    
+
     // هنا يمكن إضافة منطق الدفع الفعلي
     toast({
       title: "تم الدفع بنجاح",
-      description: "شكراً لك! سيتم التواصل معك قريباً",
+      description: "شكراً لك! سيتم التواصل معك قريباً"
     });
-    
+
     // التوجيه إلى صفحة النجاح أو الرئيسية
     setTimeout(() => {
       navigate("/");
     }, 2000);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+  return <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <section className="pt-8 pb-16 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
           {/* Header */}
@@ -167,33 +156,22 @@ const Payment = () => {
             <div className="space-y-6">
               <div className="relative">
                 {/* البطاقة الأمامية */}
-                <div className="relative w-full aspect-[1.586/1] rounded-2xl p-6 md:p-8 shadow-2xl transition-all duration-300 hover:scale-105"
-                     style={{
-                       background: cardType === "visa" 
-                         ? "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)"
-                         : cardType === "mastercard"
-                         ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)"
-                         : "linear-gradient(135deg, #1e293b 0%, #334155 100%)"
-                     }}>
+                <div className="relative w-full aspect-[1.586/1] rounded-2xl p-6 md:p-8 shadow-2xl transition-all duration-300 hover:scale-105" style={{
+                background: cardType === "visa" ? "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)" : cardType === "mastercard" ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)" : "linear-gradient(135deg, #1e293b 0%, #334155 100%)"
+              }}>
                   {/* رقائق البطاقة */}
                   <div className="absolute top-6 left-6 w-12 h-10 md:w-14 md:h-12 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-md opacity-80"></div>
                   
                   {/* شعار نوع البطاقة */}
                   <div className="absolute top-6 right-6">
-                    {cardType === "visa" ? (
-                      <div className="bg-white px-3 py-1 rounded text-blue-600 font-black text-xl md:text-2xl">
+                    {cardType === "visa" ? <div className="bg-white px-3 py-1 rounded text-blue-600 font-black text-xl md:text-2xl">
                         VISA
-                      </div>
-                    ) : cardType === "mastercard" ? (
-                      <div className="flex items-center">
+                      </div> : cardType === "mastercard" ? <div className="flex items-center">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500" />
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-yellow-500 -ml-4" />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      </div> : <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                         <CreditCard className="h-6 w-6 text-white" />
-                      </div>
-                    )}
+                      </div>}
                   </div>
 
                   {/* رقم البطاقة */}
@@ -214,9 +192,7 @@ const Payment = () => {
                     <div className="text-right">
                       <p className="text-white/60 text-xs mb-1">VALID THRU</p>
                       <p className="text-white font-mono text-sm md:text-base" dir="ltr">
-                        {formData.expiryMonth && formData.expiryYear 
-                          ? `${formData.expiryMonth}/${formData.expiryYear}`
-                          : "MM/YY"}
+                        {formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "MM/YY"}
                       </p>
                     </div>
                   </div>
@@ -238,12 +214,10 @@ const Payment = () => {
                     <span className="text-sm text-muted-foreground">السعر الأصلي:</span>
                     <span className="text-sm line-through text-muted-foreground">{regularPrice} ﷼</span>
                   </div>
-                  {parseFloat(discount) > 0 && (
-                    <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
+                  {parseFloat(discount) > 0 && <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
                       <span className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold">🎉 الخصم</span>
                       <span className="text-lg text-emerald-700 dark:text-emerald-400 font-bold">- {discount} ﷼</span>
-                    </div>
-                  )}
+                    </div>}
                   <div className="flex justify-between items-center pt-4 border-t-2">
                     <span className="text-xl font-bold">المبلغ الإجمالي:</span>
                     <span className="text-3xl font-black text-primary">{price} ﷼</span>
@@ -281,15 +255,7 @@ const Payment = () => {
                   <Label htmlFor="cardholderName" className="text-base">
                     اسم حامل البطاقة <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="cardholderName"
-                    name="cardholderName"
-                    placeholder="الاسم كما هو مكتوب على البطاقة"
-                    value={formData.cardholderName}
-                    onChange={handleInputChange}
-                    required
-                    className="text-right h-12 text-base"
-                  />
+                  <Input id="cardholderName" name="cardholderName" placeholder="الاسم كما هو مكتوب على البطاقة" value={formData.cardholderName} onChange={handleInputChange} required className="text-right h-12 text-base" />
                 </div>
 
                 {/* رقم البطاقة */}
@@ -298,31 +264,14 @@ const Payment = () => {
                     رقم البطاقة <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
-                    <Input
-                      id="cardNumber"
-                      name="cardNumber"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="1234 5678 9012 3456"
-                      value={formData.cardNumber}
-                      onChange={handleInputChange}
-                      required
-                      className="pr-16 h-12 text-base font-mono"
-                      dir="ltr"
-                    />
+                    <Input id="cardNumber" name="cardNumber" type="text" inputMode="numeric" placeholder="1234 5678 9012 3456" value={formData.cardNumber} onChange={handleInputChange} required className="pr-16 h-12 text-base font-mono" dir="ltr" />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      {cardType === "visa" ? (
-                        <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
+                      {cardType === "visa" ? <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
                           VISA
-                        </div>
-                      ) : cardType === "mastercard" ? (
-                        <div className="flex items-center">
+                        </div> : cardType === "mastercard" ? <div className="flex items-center">
                           <div className="w-5 h-5 rounded-full bg-red-500" />
                           <div className="w-5 h-5 rounded-full bg-yellow-500 -ml-2.5" />
-                        </div>
-                      ) : (
-                        <CreditCard className="h-5 w-5 text-muted-foreground" />
-                      )}
+                        </div> : <CreditCard className="h-5 w-5 text-muted-foreground" />}
                     </div>
                   </div>
                 </div>
@@ -334,31 +283,9 @@ const Payment = () => {
                       تاريخ الانتهاء <span className="text-destructive">*</span>
                     </Label>
                     <div className="flex gap-2">
-                      <Input
-                        name="expiryMonth"
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="MM"
-                        value={formData.expiryMonth}
-                        onChange={handleInputChange}
-                        maxLength={2}
-                        required
-                        className="text-center h-12 text-base font-mono"
-                        dir="ltr"
-                      />
+                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-12 text-base font-mono" dir="ltr" />
                       <span className="flex items-center text-xl font-bold">/</span>
-                      <Input
-                        name="expiryYear"
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="YY"
-                        value={formData.expiryYear}
-                        onChange={handleInputChange}
-                        maxLength={2}
-                        required
-                        className="text-center h-12 text-base font-mono"
-                        dir="ltr"
-                      />
+                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-12 text-base font-mono" dir="ltr" />
                     </div>
                   </div>
 
@@ -367,38 +294,14 @@ const Payment = () => {
                       رمز الأمان (CVV) <span className="text-destructive">*</span>
                       <span className="text-xs text-muted-foreground">(خلف البطاقة)</span>
                     </Label>
-                    <Input
-                      id="cvv"
-                      name="cvv"
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="123"
-                      value={formData.cvv}
-                      onChange={handleInputChange}
-                      maxLength={4}
-                      required
-                      className="text-center h-12 text-base font-mono"
-                      dir="ltr"
-                    />
+                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-12 text-base font-mono" dir="ltr" />
                   </div>
                 </div>
 
                 {/* أزرار التحكم */}
                 <div className="flex gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => navigate(-1)}
-                    size="lg"
-                    className="flex-1 h-12"
-                  >
-                    رجوع
-                  </Button>
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="flex-1 h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
-                  >
+                  
+                  <Button type="submit" size="lg" className="flex-1 h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30">
                     <Lock className="ml-2 h-5 w-5" />
                     ادفع {price} ﷼ بأمان
                   </Button>
@@ -443,8 +346,6 @@ const Payment = () => {
 
       <ChatButton />
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Payment;
