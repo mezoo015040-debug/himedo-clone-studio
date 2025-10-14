@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 export const QuoteForm = () => {
+  const navigate = useNavigate();
   const [insuranceType, setInsuranceType] = useState<"new" | "transfer">("new");
   const [documentType, setDocumentType] = useState<"customs" | "registration">("registration");
   const [birthDate, setBirthDate] = useState<Date>();
@@ -96,7 +98,11 @@ export const QuoteForm = () => {
       title: "تم بنجاح",
       description: "جاري الانتقال إلى الصفحة التالية...",
     });
-    // هنا يمكن إضافة كود الانتقال إلى الصفحة التالية
+    
+    // الانتقال إلى صفحة معلومات المركبة
+    setTimeout(() => {
+      navigate("/vehicle-info");
+    }, 1000);
   };
   return <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
