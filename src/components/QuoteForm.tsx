@@ -132,6 +132,7 @@ export const QuoteForm = () => {
                 }}
                 inputMode="numeric"
                 pattern="[0-9]*"
+                maxLength={10}
               />
             </div>
 
