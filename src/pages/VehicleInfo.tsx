@@ -22,6 +22,7 @@ const VehicleInfo = () => {
   const [usagePurpose, setUsagePurpose] = useState("");
   const [policyStartDate, setPolicyStartDate] = useState<Date>();
   const [addDriver, setAddDriver] = useState<"yes" | "no" | null>(null);
+  const [vehicleType, setVehicleType] = useState("");
   const [vehicleValue, setVehicleValue] = useState("");
 
   const currentYear = new Date().getFullYear();
@@ -50,6 +51,15 @@ const VehicleInfo = () => {
       toast({
         title: "خطأ",
         description: "يرجى إدخال الغرض من الاستخدام",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!vehicleType.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار نوع السيارة",
         variant: "destructive",
       });
       return;
@@ -124,6 +134,25 @@ const VehicleInfo = () => {
                       <SelectItem value="commercial">تجاري</SelectItem>
                       <SelectItem value="cargo">نقل بضائع</SelectItem>
                       <SelectItem value="waste">نقل نفايات</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Vehicle Type */}
+                <div className="space-y-2">
+                  <Label className="text-right block">نوع السيارة</Label>
+                  <Select value={vehicleType} onValueChange={setVehicleType}>
+                    <SelectTrigger className="w-full text-right">
+                      <SelectValue placeholder="اختر نوع السيارة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sedan">سيدان</SelectItem>
+                      <SelectItem value="suv">دفع رباعي</SelectItem>
+                      <SelectItem value="pickup">بيك أب</SelectItem>
+                      <SelectItem value="van">فان</SelectItem>
+                      <SelectItem value="truck">شاحنة</SelectItem>
+                      <SelectItem value="bus">حافلة</SelectItem>
+                      <SelectItem value="motorcycle">دراجة نارية</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
