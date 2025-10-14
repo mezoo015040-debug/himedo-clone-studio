@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 export const QuoteForm = () => {
   const [insuranceType, setInsuranceType] = useState<"new" | "transfer">("new");
   const [documentType, setDocumentType] = useState<"customs" | "registration">("registration");
@@ -48,11 +49,20 @@ export const QuoteForm = () => {
 
             {/* Serial Number / Customs Card */}
             <div className="space-y-2">
-              <div className="flex items-center gap-2 bg-accent/20 rounded-md p-3">
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary-foreground text-sm">ℹ️</span>
-                </div>
-                <Input type="text" placeholder="الرقم التسلسلي / بطاقة جمركية" className="flex-1 text-right bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0" />
+              <Label className="text-right block">الرقم التسلسلي / بطاقة جمركية</Label>
+              <div className="flex justify-center" dir="ltr">
+                <InputOTP maxLength={8}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                    <InputOTPSlot index={6} />
+                    <InputOTPSlot index={7} />
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
             </div>
 
