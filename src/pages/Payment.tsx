@@ -170,10 +170,12 @@ const Payment = () => {
               <span className="text-sm text-muted-foreground">السعر الأصلي:</span>
               <span className="text-sm line-through text-muted-foreground">{regularPrice}﷼</span>
             </div>
-            <div className="flex justify-between items-center pb-2">
-              <span className="text-sm text-emerald-600 font-medium">الخصم:</span>
-              <span className="text-sm text-emerald-600 font-medium">-{discount}﷼</span>
-            </div>
+            {parseFloat(discount) > 0 && (
+              <div className="flex justify-between items-center pb-2">
+                <span className="text-sm text-emerald-600 font-medium">الخصم:</span>
+                <span className="text-sm text-emerald-600 font-medium">-{discount}﷼</span>
+              </div>
+            )}
             <div className="flex justify-between items-center pt-4 border-t">
               <span className="text-lg font-bold">المبلغ الإجمالي:</span>
               <span className="text-2xl font-bold text-primary">{price}﷼</span>
