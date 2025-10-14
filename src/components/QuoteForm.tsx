@@ -122,11 +122,16 @@ export const QuoteForm = () => {
             {/* ID/Iqama Number */}
             <div className="space-y-2">
               <Input 
-                type="text" 
+                type="tel" 
                 placeholder="رقم الهوية / الإقامة الخاص بك" 
                 className="w-full text-right"
                 value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setIdNumber(value);
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
               />
             </div>
 
