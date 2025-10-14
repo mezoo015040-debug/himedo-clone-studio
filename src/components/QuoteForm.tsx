@@ -153,7 +153,7 @@ export const QuoteForm = () => {
             <div className="space-y-2">
               <Input 
                 type="tel" 
-                placeholder="رقم الهاتف 5xxxxxxxxxx" 
+                placeholder="رقم الهاتف05" 
                 className="w-full text-right" 
                 dir="ltr"
                 value={phoneNumber}
