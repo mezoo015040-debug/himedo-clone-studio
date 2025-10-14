@@ -158,7 +158,13 @@ export const QuoteForm = () => {
                 className="w-full text-right" 
                 dir="ltr"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setPhoneNumber(value);
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={10}
               />
             </div>
 
