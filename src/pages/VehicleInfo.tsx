@@ -86,10 +86,7 @@ const VehicleInfo = () => {
     // محاكاة البحث عن العروض
     setTimeout(() => {
       setIsLoading(false);
-      toast({
-        title: "تم بنجاح",
-        description: "تم العثور على العروض المتاحة",
-      });
+      navigate("/insurance-selection");
     }, 2000);
   };
 
