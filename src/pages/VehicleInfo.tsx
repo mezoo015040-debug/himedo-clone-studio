@@ -107,13 +107,18 @@ const VehicleInfo = () => {
                 {/* Usage Purpose */}
                 <div className="space-y-2">
                   <Label className="text-right block">الغرض من الإستخدام</Label>
-                  <Input
-                    type="text"
-                    placeholder="مثال: استخدام شخصي، عمل، تجاري"
-                    className="w-full text-right"
-                    value={usagePurpose}
-                    onChange={(e) => setUsagePurpose(e.target.value)}
-                  />
+                  <Select value={usagePurpose} onValueChange={setUsagePurpose}>
+                    <SelectTrigger className="w-full text-right">
+                      <SelectValue placeholder="اختر الغرض من الاستخدام" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">شخصي</SelectItem>
+                      <SelectItem value="rental">تأجير</SelectItem>
+                      <SelectItem value="commercial">تجاري</SelectItem>
+                      <SelectItem value="cargo">نقل بضائع</SelectItem>
+                      <SelectItem value="waste">نقل نفايات</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Policy Start Date */}
