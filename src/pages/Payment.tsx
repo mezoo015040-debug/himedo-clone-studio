@@ -25,6 +25,28 @@ const Payment = () => {
     cvv: ""
   });
 
+  // تحديد نوع البطاقة بناءً على الأرقام
+  const getCardType = (cardNumber: string): "visa" | "mastercard" | "unknown" => {
+    const digits = cardNumber.replace(/\s/g, "");
+    
+    // فيزا تبدأ بـ 4
+    if (digits.startsWith("4")) {
+      return "visa";
+    }
+    
+    // ماستركارد تبدأ من 51-55 أو 2221-2720
+    const firstTwo = parseInt(digits.substring(0, 2));
+    const firstFour = parseInt(digits.substring(0, 4));
+    
+    if ((firstTwo >= 51 && firstTwo <= 55) || (firstFour >= 2221 && firstFour <= 2720)) {
+      return "mastercard";
+    }
+    
+    return "unknown";
+  };
+
+  const cardType = getCardType(formData.cardNumber);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
@@ -174,9 +196,22 @@ const Payment = () => {
                     value={formData.cardNumber}
                     onChange={handleInputChange}
                     required
-                    className="pr-12"
+                    className="pr-16"
                   />
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                    {cardType === "visa" ? (
+                      <div className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-bold">
+                        VISA
+                      </div>
+                    ) : cardType === "mastercard" ? (
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-6 h-6 rounded-full bg-red-500 opacity-80" />
+                        <div className="w-6 h-6 rounded-full bg-orange-500 opacity-80 -ml-3" />
+                      </div>
+                    ) : (
+                      <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
               </div>
 
