@@ -51,7 +51,7 @@ export const QuoteForm = () => {
             <div className="space-y-2">
               <Label className="text-right block">الرقم التسلسلي / بطاقة جمركية</Label>
               <div className="flex justify-center" dir="ltr">
-                <InputOTP maxLength={8}>
+                <InputOTP maxLength={9}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -61,6 +61,7 @@ export const QuoteForm = () => {
                     <InputOTPSlot index={5} />
                     <InputOTPSlot index={6} />
                     <InputOTPSlot index={7} />
+                    <InputOTPSlot index={8} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
