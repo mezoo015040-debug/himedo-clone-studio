@@ -97,10 +97,10 @@ const OTPVerification = () => {
               {/* Title */}
               <div className="text-center space-y-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                  Enter verification code
+                  أدخل رمز التحقق
                 </h1>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  we sent you a verification code by text message to (966) xxx-xx12. you have 6 attempts.
+                  تم إرسال رمز التحقق برسالة نصية إلى رقم (966) xxx-xx12. لديك 6 محاولات.
                 </p>
               </div>
 
@@ -110,14 +110,14 @@ const OTPVerification = () => {
                   ادخل الكود المرسل الى رقم الهاتف
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  برسالة نصية مكونة من 6 أرقام
+                  برسالة نصية مكونة من 4 أو 6 أرقام
                 </p>
               </div>
 
               {/* Label */}
               <div className="text-center">
                 <label className="text-sm font-medium text-foreground">
-                  Verification code
+                  رمز التحقق
                 </label>
               </div>
 
@@ -143,9 +143,9 @@ const OTPVerification = () => {
                 {canResend ? (
                   <button
                     onClick={handleResendOtp}
-                    className="text-primary hover:underline font-medium text-sm uppercase tracking-wide"
+                    className="text-primary hover:underline font-medium text-sm tracking-wide"
                   >
-                    RESEND CODE
+                    إعادة إرسال الرمز
                   </button>
                 ) : (
                   <p className="text-sm text-muted-foreground">
@@ -162,7 +162,7 @@ const OTPVerification = () => {
                 onClick={handleVerify}
                 disabled={isVerifying || otp.length < 4}
                 size="lg"
-                className="w-full h-12 text-base font-semibold uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90"
+                className="w-full h-12 text-base font-semibold tracking-wide bg-foreground text-background hover:bg-foreground/90"
               >
                 {isVerifying ? (
                   <>
@@ -170,7 +170,7 @@ const OTPVerification = () => {
                     جاري التحقق...
                   </>
                 ) : (
-                  "CONTINUE"
+                  "متابعة"
                 )}
               </Button>
             </div>
