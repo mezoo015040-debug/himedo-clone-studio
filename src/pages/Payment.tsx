@@ -173,42 +173,42 @@ const Payment = () => {
             <div className="space-y-6">
               <div className="relative">
                 {/* البطاقة الأمامية */}
-                <div className="relative w-full aspect-[1.586/1] rounded-2xl p-6 md:p-8 shadow-2xl transition-all duration-300 hover:scale-105" style={{
+                <div className="relative w-full aspect-[1.586/1] rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105" style={{
                 background: cardType === "visa" ? "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)" : cardType === "mastercard" ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)" : "linear-gradient(135deg, #1e293b 0%, #334155 100%)"
               }}>
                   {/* رقائق البطاقة */}
-                  <div className="absolute top-6 left-6 w-12 h-10 md:w-14 md:h-12 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-md opacity-80"></div>
+                  <div className="absolute top-3 left-3 md:top-6 md:left-6 w-10 h-8 md:w-12 md:h-10 lg:w-14 lg:h-12 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-md opacity-80"></div>
                   
                   {/* شعار نوع البطاقة */}
-                  <div className="absolute top-6 right-6">
-                    {cardType === "visa" ? <div className="bg-white px-3 py-1 rounded text-blue-600 font-black text-xl md:text-2xl">
+                  <div className="absolute top-3 right-3 md:top-6 md:right-6">
+                    {cardType === "visa" ? <div className="bg-white px-2 py-0.5 md:px-3 md:py-1 rounded text-blue-600 font-black text-base md:text-xl lg:text-2xl">
                         VISA
                       </div> : cardType === "mastercard" ? <div className="flex items-center">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-500" />
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-yellow-500 -ml-4" />
-                      </div> : <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <CreditCard className="h-6 w-6 text-white" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-full bg-red-500" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-full bg-yellow-500 -ml-3 md:-ml-4" />
+                      </div> : <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <CreditCard className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
                       </div>}
                   </div>
 
                   {/* رقم البطاقة */}
-                  <div className="absolute bottom-20 md:bottom-24 left-6 right-6">
-                    <p className="text-white font-mono text-lg md:text-2xl tracking-wider text-center" dir="ltr">
+                  <div className="absolute bottom-14 md:bottom-20 lg:bottom-24 left-3 right-3 md:left-6 md:right-6">
+                    <p className="text-white font-mono text-sm md:text-lg lg:text-2xl tracking-wider text-center" dir="ltr">
                       {formData.cardNumber || "•••• •••• •••• ••••"}
                     </p>
                   </div>
 
                   {/* اسم حامل البطاقة وتاريخ الانتهاء */}
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                    <div>
-                      <p className="text-white/60 text-xs mb-1">CARDHOLDER NAME</p>
-                      <p className="text-white font-semibold text-sm md:text-base uppercase">
+                  <div className="absolute bottom-3 md:bottom-6 left-3 right-3 md:left-6 md:right-6 flex justify-between items-end gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">CARDHOLDER NAME</p>
+                      <p className="text-white font-semibold text-xs md:text-sm lg:text-base uppercase truncate">
                         {formData.cardholderName || "YOUR NAME"}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-white/60 text-xs mb-1">VALID THRU</p>
-                      <p className="text-white font-mono text-sm md:text-base" dir="ltr">
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">VALID THRU</p>
+                      <p className="text-white font-mono text-xs md:text-sm lg:text-base" dir="ltr">
                         {formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "MM/YY"}
                       </p>
                     </div>
@@ -264,62 +264,62 @@ const Payment = () => {
             </div>
 
             {/* نموذج الدفع */}
-            <Card className="p-8 shadow-xl border-2">
-              <h2 className="text-2xl font-bold mb-6">معلومات الدفع</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <Card className="p-4 md:p-6 lg:p-8 shadow-xl border-2">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">معلومات الدفع</h2>
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                 {/* اسم حامل البطاقة */}
                 <div className="space-y-2">
-                  <Label htmlFor="cardholderName" className="text-base">
+                  <Label htmlFor="cardholderName" className="text-sm md:text-base">
                     اسم حامل البطاقة <span className="text-destructive">*</span>
                   </Label>
-                  <Input id="cardholderName" name="cardholderName" placeholder="الاسم كما هو مكتوب على البطاقة" value={formData.cardholderName} onChange={handleInputChange} required className="text-right h-12 text-base" />
+                  <Input id="cardholderName" name="cardholderName" placeholder="الاسم كما هو مكتوب على البطاقة" value={formData.cardholderName} onChange={handleInputChange} required className="text-right h-10 md:h-12 text-sm md:text-base" />
                 </div>
 
                 {/* رقم البطاقة */}
                 <div className="space-y-2">
-                  <Label htmlFor="cardNumber" className="text-base">
+                  <Label htmlFor="cardNumber" className="text-sm md:text-base">
                     رقم البطاقة <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
-                    <Input id="cardNumber" name="cardNumber" type="text" inputMode="numeric" placeholder="1234 5678 9012 3456" value={formData.cardNumber} onChange={handleInputChange} required className="pr-16 h-12 text-base font-mono" dir="ltr" />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                      {cardType === "visa" ? <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">
+                    <Input id="cardNumber" name="cardNumber" type="text" inputMode="numeric" placeholder="1234 5678 9012 3456" value={formData.cardNumber} onChange={handleInputChange} required className="pr-12 md:pr-16 h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
+                    <div className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2">
+                      {cardType === "visa" ? <div className="bg-blue-600 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold">
                           VISA
                         </div> : cardType === "mastercard" ? <div className="flex items-center">
-                          <div className="w-5 h-5 rounded-full bg-red-500" />
-                          <div className="w-5 h-5 rounded-full bg-yellow-500 -ml-2.5" />
-                        </div> : <CreditCard className="h-5 w-5 text-muted-foreground" />}
+                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-red-500" />
+                          <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-yellow-500 -ml-2 md:-ml-2.5" />
+                        </div> : <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />}
                     </div>
                   </div>
                 </div>
 
                 {/* تاريخ الانتهاء و CVV */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                   <div className="space-y-2">
-                    <Label className="text-base">
+                    <Label className="text-sm md:text-base">
                       تاريخ الانتهاء <span className="text-destructive">*</span>
                     </Label>
-                    <div className="flex gap-2">
-                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-12 text-base font-mono" dir="ltr" />
-                      <span className="flex items-center text-xl font-bold">/</span>
-                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-12 text-base font-mono" dir="ltr" />
+                    <div className="flex gap-1.5 md:gap-2">
+                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
+                      <span className="flex items-center text-lg md:text-xl font-bold">/</span>
+                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cvv" className="text-base flex items-center gap-2">
-                      رمز الأمان (CVV) <span className="text-destructive">*</span>
-                      <span className="text-xs text-muted-foreground">(خلف البطاقة)</span>
+                    <Label htmlFor="cvv" className="text-sm md:text-base flex flex-col md:flex-row md:items-center gap-1">
+                      <span>رمز الأمان (CVV) <span className="text-destructive">*</span></span>
+                      <span className="text-[10px] md:text-xs text-muted-foreground">(خلف البطاقة)</span>
                     </Label>
-                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-12 text-base font-mono" dir="ltr" />
+                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
                   </div>
                 </div>
 
                 {/* أزرار التحكم */}
-                <div className="flex gap-4 pt-6">
+                <div className="flex gap-3 md:gap-4 pt-4 md:pt-6">
                   
-                  <Button type="submit" size="lg" className="flex-1 h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30">
-                    <Lock className="ml-2 h-5 w-5" />
+                  <Button type="submit" size="lg" className="flex-1 h-11 md:h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30 text-sm md:text-base">
+                    <Lock className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                     ادفع {price} ﷼ بأمان
                   </Button>
                 </div>
@@ -335,26 +335,26 @@ const Payment = () => {
           </div>
 
           {/* شعارات البطاقات المقبولة */}
-          <div className="mt-12 text-center">
-            <p className="text-sm text-muted-foreground mb-6">وسائل الدفع المقبولة</p>
-            <div className="flex flex-wrap justify-center gap-6 items-center">
-              <div className="bg-card border rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
-                <div className="bg-blue-600 text-white px-3 py-1 rounded font-black text-lg">VISA</div>
+          <div className="mt-8 md:mt-12 text-center">
+            <p className="text-xs md:text-sm text-muted-foreground mb-4 md:mb-6">وسائل الدفع المقبولة</p>
+            <div className="flex flex-wrap justify-center gap-3 md:gap-6 items-center">
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
+                <div className="bg-blue-600 text-white px-2 py-0.5 md:px-3 md:py-1 rounded font-black text-sm md:text-lg">VISA</div>
               </div>
-              <div className="bg-card border rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-1">
-                  <div className="w-7 h-7 rounded-full bg-red-500"></div>
-                  <div className="w-7 h-7 rounded-full bg-yellow-500 -ml-3"></div>
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-0.5 md:gap-1">
+                  <div className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-red-500"></div>
+                  <div className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-yellow-500 -ml-2 md:-ml-3"></div>
                 </div>
               </div>
-              <div className="bg-card border rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-bold text-blue-600">American Express</span>
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-bold text-blue-600 text-xs md:text-base">American Express</span>
               </div>
-              <div className="bg-card border rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-bold text-orange-600">Discover</span>
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-bold text-orange-600 text-xs md:text-base">Discover</span>
               </div>
-              <div className="bg-card border rounded-lg px-4 py-2 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-bold">مدى</span>
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
+                <span className="font-bold text-xs md:text-base">مدى</span>
               </div>
             </div>
           </div>
