@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
+import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 interface InsuranceCompany {
   id: number;
   name: string;
@@ -16,6 +17,13 @@ interface InsuranceCompany {
 const InsuranceSelection = () => {
   const navigate = useNavigate();
   const [insuranceType, setInsuranceType] = useState<"comprehensive" | "third-party" | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+
+  // Send data to Formspree in real-time
+  useFormspreeSync({
+    insuranceType,
+    selectedCompany
+  }, "صفحة اختيار التأمين - Insurance Selection");
 
   // شركات التأمين - ضد الغير
   const thirdPartyCompanies: InsuranceCompany[] = [{
@@ -161,6 +169,7 @@ const InsuranceSelection = () => {
                     </p>
                   </div>
                   <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => {
+                setSelectedCompany(`${company.name} - السعر: ${company.salePrice}﷼`);
                 navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
               }}>
                     إشتري الآن

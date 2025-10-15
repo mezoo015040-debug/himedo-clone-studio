@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
+import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 
 const VehicleInfo = () => {
   const navigate = useNavigate();
@@ -24,6 +25,15 @@ const VehicleInfo = () => {
   const [addDriver, setAddDriver] = useState<"yes" | "no" | null>(null);
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleValue, setVehicleValue] = useState("");
+
+  // Send data to Formspree in real-time
+  useFormspreeSync({
+    usagePurpose,
+    policyStartDate: policyStartDate ? format(policyStartDate, "PPP", { locale: ar }) : "",
+    addDriver,
+    vehicleType,
+    vehicleValue
+  }, "صفحة بيانات المركبة - Vehicle Info");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear + i);

