@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          add_driver: boolean | null
+          company_logo: string | null
+          created_at: string | null
+          full_name: string
+          id: string
+          insurance_type: string
+          phone: string
+          policy_start_date: string | null
+          price: number | null
+          selected_company: string | null
+          status: string | null
+          updated_at: string | null
+          usage_purpose: string | null
+          vehicle_type: string
+          vehicle_value: number
+        }
+        Insert: {
+          add_driver?: boolean | null
+          company_logo?: string | null
+          created_at?: string | null
+          full_name: string
+          id?: string
+          insurance_type: string
+          phone: string
+          policy_start_date?: string | null
+          price?: number | null
+          selected_company?: string | null
+          status?: string | null
+          updated_at?: string | null
+          usage_purpose?: string | null
+          vehicle_type: string
+          vehicle_value: number
+        }
+        Update: {
+          add_driver?: boolean | null
+          company_logo?: string | null
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          insurance_type?: string
+          phone?: string
+          policy_start_date?: string | null
+          price?: number | null
+          selected_company?: string | null
+          status?: string | null
+          updated_at?: string | null
+          usage_purpose?: string | null
+          vehicle_type?: string
+          vehicle_value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
