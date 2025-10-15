@@ -121,122 +121,109 @@ const OTPVerification = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      <section className="pt-8 pb-16 px-4 md:px-6">
-        <div className="container mx-auto max-w-2xl">
-          {/* Header */}
+    <div className="min-h-screen bg-background">
+      <section className="pt-16 pb-16 px-4 md:px-6">
+        <div className="container mx-auto max-w-lg">
+          {/* Logo/Header */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-glow mb-6 shadow-glow">
-              <Shield className="h-10 w-10 text-primary-foreground" />
+            <div className="inline-flex items-center justify-center mb-8">
+              <Shield className="h-16 w-16 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-l from-primary via-purple-600 to-primary bg-clip-text text-transparent">
-              تأكيد عملية الدفع
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              أدخل الرمز المرسل إلى رقم هاتفك
-            </p>
           </div>
 
-          {/* OTP Card */}
-          <Card className="p-8 md:p-12 shadow-xl border-2">
+          {/* Main Card */}
+          <Card className="p-8 md:p-10 shadow-sm border">
             <div className="space-y-8">
-              {/* Company and Amount Info */}
-              <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">المبلغ المراد دفعه</p>
-                <p className="text-3xl font-black text-primary mb-2">{price} ﷼</p>
-                <p className="text-xs text-muted-foreground">{companyName}</p>
+              {/* Title */}
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+                  Enter verification code
+                </h1>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  we sent you a verification code by text message to (966) xxx-xx12. you have 6 attempts.
+                </p>
+              </div>
+
+              {/* Arabic Title */}
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-foreground">
+                  ادخل الكود المرسل الى رقم الهاتف
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  برسالة نصية مكونة من 6 أرقام
+                </p>
+              </div>
+
+              {/* Label */}
+              <div className="text-center">
+                <label className="text-sm font-medium text-foreground">
+                  Verification code
+                </label>
               </div>
 
               {/* OTP Input */}
-              <div>
-                <label className="block text-center text-sm font-medium mb-4">
-                  رمز التحقق (OTP)
-                </label>
-                <div 
-                  className="flex gap-2 md:gap-3 justify-center" 
-                  dir="ltr"
-                  onPaste={handlePaste}
-                >
-                  {otp.map((digit, index) => (
-                    <Input
-                      key={index}
-                      ref={(el) => (inputRefs.current[index] = el)}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      className="w-12 h-14 md:w-16 md:h-20 text-center text-2xl md:text-4xl font-bold border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    />
-                  ))}
-                </div>
+              <div 
+                className="flex gap-2 md:gap-3 justify-center" 
+                dir="ltr"
+                onPaste={handlePaste}
+              >
+                {otp.map((digit, index) => (
+                  <Input
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className="w-12 h-14 md:w-14 md:h-16 text-center text-2xl font-bold border-2 rounded-md focus:border-primary focus:ring-1 focus:ring-primary"
+                  />
+                ))}
               </div>
 
-              {/* Timer and Resend */}
-              <div className="text-center space-y-4">
-                {!canResend ? (
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                    <span className="text-sm">
-                      يمكنك إعادة إرسال الرمز بعد{" "}
-                      <span className="font-mono font-bold text-foreground">
-                        {formatTime(timer)}
-                      </span>
-                    </span>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
+              {/* Resend Code Link */}
+              <div className="text-center">
+                {canResend ? (
+                  <button
                     onClick={handleResendOtp}
-                    className="gap-2"
+                    className="text-primary hover:underline font-medium text-sm uppercase tracking-wide"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    إعادة إرسال الرمز
-                  </Button>
+                    RESEND CODE
+                  </button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    يمكنك إعادة إرسال الرمز بعد{" "}
+                    <span className="font-mono font-bold text-foreground">
+                      {formatTime(timer)}
+                    </span>
+                  </p>
                 )}
               </div>
 
-              {/* Verify Button */}
+              {/* Continue Button */}
               <Button
                 onClick={handleVerify}
                 disabled={isVerifying || otp.join("").length !== 6}
                 size="lg"
-                className="w-full h-14 text-lg font-bold bg-gradient-to-l from-secondary to-emerald-500 hover:from-secondary/90 hover:to-emerald-600 shadow-lg"
+                className="w-full h-12 text-base font-semibold uppercase tracking-wide bg-foreground text-background hover:bg-foreground/90"
               >
                 {isVerifying ? (
                   <>
-                    <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
                     جاري التحقق...
                   </>
                 ) : (
-                  <>
-                    <CheckCircle2 className="ml-2 h-5 w-5" />
-                    تأكيد الدفع
-                  </>
+                  "CONTINUE"
                 )}
               </Button>
-
-              {/* Security Note */}
-              <div className="text-center pt-6 border-t">
-                <p className="text-xs text-muted-foreground">
-                  🔒 رمز التحقق صالح لمدة دقيقتين فقط
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  لا تشارك هذا الرمز مع أي شخص
-                </p>
-              </div>
             </div>
           </Card>
 
-          {/* Help Section */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              لم تستلم الرمز؟
-            </p>
-            <p className="text-xs text-muted-foreground">
-              تأكد من رقم الهاتف أو تواصل مع الدعم الفني
-            </p>
+          {/* Amount Info - Compact */}
+          <div className="mt-6 text-center">
+            <p className="text-xs text-muted-foreground mb-1">المبلغ المراد دفعه</p>
+            <p className="text-2xl font-bold text-foreground">{price} ﷼</p>
           </div>
         </div>
       </section>
