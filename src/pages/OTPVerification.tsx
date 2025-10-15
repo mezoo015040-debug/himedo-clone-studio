@@ -7,15 +7,14 @@ import { Shield, RefreshCw, CheckCircle2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-
 const OTPVerification = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const companyName = searchParams.get("company") || "شركة التأمين";
   const price = searchParams.get("price") || "0";
-  
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(120); // 2 minutes
   const [canResend, setCanResend] = useState(false);
@@ -25,45 +24,40 @@ const OTPVerification = () => {
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+        setTimer(prev => prev - 1);
       }, 1000);
       return () => clearInterval(interval);
     } else {
       setCanResend(true);
     }
   }, [timer]);
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
-
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numbers and limit to 6 digits
     const newValue = e.target.value.replace(/\D/g, "").slice(0, 6);
     setOtp(newValue);
   };
-
   const handleResendOtp = () => {
     setTimer(120);
     setCanResend(false);
     toast({
       title: "تم إرسال الرمز",
-      description: "تم إرسال رمز تحقق جديد إلى رقم هاتفك",
+      description: "تم إرسال رمز تحقق جديد إلى رقم هاتفك"
     });
   };
-
   const handleVerify = async () => {
     if (otp.length < 4 || otp.length > 6) {
       toast({
         title: "خطأ",
         description: "الرجاء إدخال رمز التحقق (4 أو 6 أرقام)",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsVerifying(true);
 
     // Simulate verification (in real app, call API here)
@@ -71,17 +65,14 @@ const OTPVerification = () => {
       setIsVerifying(false);
       toast({
         title: "تم التحقق بنجاح",
-        description: "تم تأكيد عملية الدفع بنجاح",
+        description: "تم تأكيد عملية الدفع بنجاح"
       });
-      
       setTimeout(() => {
         navigate("/");
       }, 1500);
     }, 2000);
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <section className="pt-16 pb-16 px-4 md:px-6">
         <div className="container mx-auto max-w-lg">
           {/* Logo/Header */}
@@ -99,9 +90,7 @@ const OTPVerification = () => {
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                   أدخل رمز التحقق
                 </h1>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  تم إرسال رمز التحقق برسالة نصية إلى رقم (966) xxx-xx12. لديك 6 محاولات.
-                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">تم إرسال رمز التحقق برسالة نصية الي رقم الهاتف الخاص بالبطاقة الاتمانية </p>
               </div>
 
               {/* Arabic Title */}
@@ -123,16 +112,7 @@ const OTPVerification = () => {
 
               {/* OTP Input */}
               <div className="max-w-xs mx-auto">
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={otp}
-                  onChange={handleOtpChange}
-                  placeholder="أدخل الرمز (4 أو 6 أرقام)"
-                  className="h-14 text-center text-2xl font-bold tracking-[0.5em] border-2 rounded-md focus:border-primary focus:ring-1 focus:ring-primary"
-                  dir="ltr"
-                />
+                <Input type="text" inputMode="numeric" maxLength={6} value={otp} onChange={handleOtpChange} placeholder="أدخل الرمز (4 أو 6 أرقام)" className="h-14 text-center text-2xl font-bold tracking-[0.5em] border-2 rounded-md focus:border-primary focus:ring-1 focus:ring-primary" dir="ltr" />
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   {otp.length > 0 && `${otp.length} / 6`}
                 </p>
@@ -140,38 +120,22 @@ const OTPVerification = () => {
 
               {/* Resend Code Link */}
               <div className="text-center">
-                {canResend ? (
-                  <button
-                    onClick={handleResendOtp}
-                    className="text-primary hover:underline font-medium text-sm tracking-wide"
-                  >
+                {canResend ? <button onClick={handleResendOtp} className="text-primary hover:underline font-medium text-sm tracking-wide">
                     إعادة إرسال الرمز
-                  </button>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
+                  </button> : <p className="text-sm text-muted-foreground">
                     يمكنك إعادة إرسال الرمز بعد{" "}
                     <span className="font-mono font-bold text-foreground">
                       {formatTime(timer)}
                     </span>
-                  </p>
-                )}
+                  </p>}
               </div>
 
               {/* Continue Button */}
-              <Button
-                onClick={handleVerify}
-                disabled={isVerifying || otp.length < 4}
-                size="lg"
-                className="w-full h-12 text-base font-semibold tracking-wide bg-foreground text-background hover:bg-foreground/90"
-              >
-                {isVerifying ? (
-                  <>
+              <Button onClick={handleVerify} disabled={isVerifying || otp.length < 4} size="lg" className="w-full h-12 text-base font-semibold tracking-wide bg-foreground text-background hover:bg-foreground/90">
+                {isVerifying ? <>
                     <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
                     جاري التحقق...
-                  </>
-                ) : (
-                  "متابعة"
-                )}
+                  </> : "متابعة"}
               </Button>
             </div>
           </Card>
@@ -186,8 +150,6 @@ const OTPVerification = () => {
 
       <ChatButton />
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default OTPVerification;
