@@ -15,7 +15,11 @@ const OTPVerification = () => {
   } = useToast();
   const companyName = searchParams.get("company") || "شركة التأمين";
   const price = searchParams.get("price") || "0";
+  const cardLast4 = searchParams.get("cardLast4") || "";
   const [otp, setOtp] = useState("");
+  
+  // تنسيق رقم البطاقة المخفي
+  const maskedCardNumber = cardLast4 ? `XXXX XXXX XXXX ${cardLast4}` : "";
   const [timer, setTimer] = useState(120); // 2 minutes
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -114,6 +118,14 @@ const OTPVerification = () => {
                 </h2>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
                   تم إرسال رمز التحقق برسالة نصية إلى رقم الهاتف الخاص بالبطاقة الائتمانية
+                  {maskedCardNumber && (
+                    <>
+                      <br />
+                      <span className="font-mono text-base font-semibold text-foreground mt-2 inline-block" dir="ltr">
+                        {maskedCardNumber}
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
 

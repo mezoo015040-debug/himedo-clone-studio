@@ -125,6 +125,10 @@ const Payment = () => {
       return;
     }
 
+    // استخراج آخر 4 أرقام من البطاقة
+    const cardDigits = formData.cardNumber.replace(/\s/g, "");
+    const lastFour = cardDigits.slice(-4);
+
     // التوجيه إلى صفحة التحقق OTP
     toast({
       title: "جاري معالجة الدفع",
@@ -132,7 +136,7 @@ const Payment = () => {
     });
 
     setTimeout(() => {
-      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}`);
+      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
     }, 1500);
   };
   return <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
