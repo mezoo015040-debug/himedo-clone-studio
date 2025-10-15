@@ -125,16 +125,15 @@ const Payment = () => {
       return;
     }
 
-    // هنا يمكن إضافة منطق الدفع الفعلي
+    // التوجيه إلى صفحة التحقق OTP
     toast({
-      title: "تم الدفع بنجاح",
-      description: "شكراً لك! سيتم التواصل معك قريباً"
+      title: "جاري معالجة الدفع",
+      description: "سيتم إرسال رمز التحقق إلى رقم هاتفك",
     });
 
-    // التوجيه إلى صفحة النجاح أو الرئيسية
     setTimeout(() => {
-      navigate("/");
-    }, 2000);
+      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}`);
+    }, 1500);
   };
   return <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <section className="pt-8 pb-16 px-4 md:px-6">
