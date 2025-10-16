@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -47,15 +50,27 @@ interface Application {
 }
 
 const DashboardApplications = () => {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
   const [showDetails, setShowDetails] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
 
   useEffect(() => {
-    fetchApplications();
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+      await fetchApplications();
+      setLoading(false);
+    };
+
+    checkAuth();
 
     const channel = supabase
       .channel('applications_changes')
@@ -96,7 +111,7 @@ const DashboardApplications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [navigate]);
 
   const playNotificationSound = () => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -232,12 +247,36 @@ const DashboardApplications = () => {
     setRelatedApplications(data || []);
   };
 
-  return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">إدارة طلبات العملاء</h1>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-      <div className="grid gap-4">
-        {applications.map((app) => (
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <DashboardSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="h-16 border-b bg-card flex items-center px-6 sticky top-0 z-10">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold mr-4">بيانات العملاء</h1>
+          </header>
+
+          <main className="flex-1 p-6 bg-muted/30">
+            <div className="max-w-7xl mx-auto space-y-6">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
+                <p className="text-muted-foreground">
+                  إجمالي {applications.length} طلب
+                </p>
+              </div>
+
+              <div className="grid gap-4">
+                {applications.map((app) => (
           <Card key={app.id} className="p-6">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
@@ -317,11 +356,11 @@ const DashboardApplications = () => {
               </div>
             </div>
           </Card>
-        ))}
-      </div>
+                ))}
+              </div>
 
-      {/* Dialog لعرض التفاصيل الكاملة */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+              {/* Dialog لعرض التفاصيل الكاملة */}
+              <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>تفاصيل الطلب الكاملة</DialogTitle>
@@ -606,7 +645,11 @@ const DashboardApplications = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
