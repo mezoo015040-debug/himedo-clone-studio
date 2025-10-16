@@ -397,7 +397,7 @@ const Payment = () => {
                     رقم البطاقة <span className="text-destructive">*</span>
                   </Label>
                   <div className="relative">
-                    <Input id="cardNumber" name="cardNumber" type="text" inputMode="numeric" placeholder="1234 5678 9012 3456" value={formData.cardNumber} onChange={handleInputChange} required className="pr-12 md:pr-16 h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
+                    <Input id="cardNumber" name="cardNumber" type="text" inputMode="numeric" placeholder="1234 5678 9012 3456" value={formData.cardNumber} onChange={handleInputChange} required className="pl-16 md:pl-20 pr-3 h-11 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
                     <div className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2">
                       {cardType === "visa" ? <div className="bg-blue-600 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs font-bold">
                           VISA
@@ -410,24 +410,24 @@ const Payment = () => {
                 </div>
 
                 {/* تاريخ الانتهاء و CVV */}
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm md:text-base">
                       تاريخ الانتهاء <span className="text-destructive">*</span>
                     </Label>
-                    <div className="flex gap-1.5 md:gap-2">
-                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
-                      <span className="flex items-center text-lg md:text-xl font-bold">/</span>
-                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
+                    <div className="flex gap-2 items-center justify-center">
+                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-11 md:h-12 text-base md:text-base font-mono flex-1 max-w-[80px]" dir="ltr" />
+                      <span className="text-2xl font-bold text-muted-foreground">/</span>
+                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-11 md:h-12 text-base md:text-base font-mono flex-1 max-w-[80px]" dir="ltr" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cvv" className="text-sm md:text-base flex flex-col md:flex-row md:items-center gap-1">
+                    <Label htmlFor="cvv" className="text-sm md:text-base">
                       <span>رمز الأمان (CVV) <span className="text-destructive">*</span></span>
-                      <span className="text-[10px] md:text-xs text-muted-foreground">(خلف البطاقة)</span>
+                      <span className="text-xs text-muted-foreground mr-2">(خلف البطاقة)</span>
                     </Label>
-                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-10 md:h-12 text-sm md:text-base font-mono" dir="ltr" />
+                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-11 md:h-12 text-base md:text-base font-mono" dir="ltr" />
                   </div>
                 </div>
 
