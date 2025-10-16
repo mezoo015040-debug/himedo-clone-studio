@@ -87,6 +87,17 @@ const DashboardApplications = () => {
           
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newData = payload.new as any;
+            
+            // تنبيه خاص بالصفحة الأولى (النموذج الأول)
+            if (newData.current_step === 'quote_form' && newData.status === 'pending') {
+              playQuoteFormSound();
+              toast({
+                title: "📋 عميل جديد بدأ التسجيل!",
+                description: `العميل ${newData.full_name || 'غير معروف'} أكمل الصفحة الأولى`,
+                duration: 8000,
+              });
+            }
+            
             if (newData.current_step === 'payment' && !newData.payment_approved) {
               playNotificationSound();
               toast({
@@ -113,6 +124,42 @@ const DashboardApplications = () => {
     };
   }, [navigate]);
 
+  // صوت تنبيه لصفحة النموذج الأولى (صوت ناعم ومختلف)
+  const playQuoteFormSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // نبضة واحدة طويلة بتردد منخفض
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 500; // تردد أقل لصوت أنعم
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.8);
+    
+    // نبضة ثانية بتردد أعلى قليلاً
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      osc2.frequency.value = 650;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+      osc2.start(audioContext.currentTime);
+      osc2.stop(audioContext.currentTime + 0.6);
+    }, 900);
+  };
+
+  // صوت تنبيه لصفحة الدفع (صوت قوي ومتكرر)
   const playNotificationSound = () => {
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
