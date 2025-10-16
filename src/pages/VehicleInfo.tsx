@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
 import { usePresence } from "@/hooks/usePresence";
 
@@ -42,6 +43,15 @@ const VehicleInfo = () => {
     vehicleType,
     vehicleValue
   }, "صفحة بيانات المركبة - Vehicle Info");
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    usage_purpose: usagePurpose,
+    policy_start_date: policyStartDate?.toISOString().split('T')[0],
+    add_driver: addDriver === "yes",
+    vehicle_value: vehicleValue ? parseFloat(vehicleValue) : null,
+    current_step: 'vehicle_info'
+  }, "VehicleInfo");
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear + i);

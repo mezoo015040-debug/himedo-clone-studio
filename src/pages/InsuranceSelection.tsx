@@ -6,6 +6,7 @@ import { Shield, CheckCircle2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
 import { usePresence } from "@/hooks/usePresence";
 interface InsuranceCompany {
@@ -32,6 +33,12 @@ const InsuranceSelection = () => {
     insuranceType,
     selectedCompany
   }, "صفحة اختيار التأمين - Insurance Selection");
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    selected_company: selectedCompany,
+    current_step: 'insurance_selection'
+  }, "InsuranceSelection");
 
   // شركات التأمين - ضد الغير
   const thirdPartyCompanies: InsuranceCompany[] = [{
