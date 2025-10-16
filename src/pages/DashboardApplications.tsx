@@ -277,8 +277,8 @@ const DashboardApplications = () => {
 
               <div className="grid gap-4">
                 {applications.map((app) => (
-          <Card key={app.id} className="p-6">
-            <div className="flex justify-between items-start">
+          <Card key={app.id} className="p-4 md:p-6">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xl font-bold">{app.full_name}</h3>
@@ -322,20 +322,18 @@ const DashboardApplications = () => {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Button
-                  onClick={() => {
-                    setSelectedApp(app);
-                    fetchRelatedApplications(app.phone);
-                    setShowDetails(true);
-                  }}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  عرض التفاصيل
-                </Button>
-              </div>
+              <Button
+                onClick={() => {
+                  setSelectedApp(app);
+                  fetchRelatedApplications(app.phone);
+                  setShowDetails(true);
+                }}
+                variant="default"
+                className="w-full md:w-auto gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                عرض التفاصيل
+              </Button>
             </div>
 
             <div className="mt-4 pt-4 border-t">
