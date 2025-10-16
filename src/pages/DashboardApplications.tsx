@@ -62,8 +62,30 @@ const DashboardApplications = () => {
           schema: 'public',
           table: 'customer_applications'
         },
-        () => {
+        (payload) => {
+          console.log('Realtime update:', payload);
           fetchApplications();
+          
+          // تشغيل صوت تنبيه عند وصول طلب جديد لمرحلة الدفع
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const newData = payload.new as any;
+            if (newData.current_step === 'payment' && !newData.payment_approved) {
+              playNotificationSound();
+              toast({
+                title: "🔔 طلب جديد يحتاج موافقة!",
+                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة الدفع`,
+                duration: 10000,
+              });
+            }
+            if (newData.current_step === 'otp' && !newData.otp_approved) {
+              playNotificationSound();
+              toast({
+                title: "🔔 طلب جديد يحتاج موافقة!",
+                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة OTP`,
+                duration: 10000,
+              });
+            }
+          }
         }
       )
       .subscribe();
@@ -72,6 +94,52 @@ const DashboardApplications = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const playNotificationSound = () => {
+    // إنشاء صوت تنبيه باستخدام Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+    
+    // تكرار الصوت 3 مرات
+    setTimeout(() => {
+      const osc2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      osc2.frequency.value = 800;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      osc2.start(audioContext.currentTime);
+      osc2.stop(audioContext.currentTime + 0.5);
+    }, 600);
+    
+    setTimeout(() => {
+      const osc3 = audioContext.createOscillator();
+      const gain3 = audioContext.createGain();
+      osc3.connect(gain3);
+      gain3.connect(audioContext.destination);
+      osc3.frequency.value = 800;
+      osc3.type = 'sine';
+      gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      osc3.start(audioContext.currentTime);
+      osc3.stop(audioContext.currentTime + 0.5);
+    }, 1200);
+  };
 
   const fetchApplications = async () => {
     const { data, error } = await supabase

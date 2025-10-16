@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useApplicationData } from "@/hooks/useApplicationData";
 
 const VehicleInfo = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const VehicleInfo = () => {
   const [addDriver, setAddDriver] = useState<"yes" | "no" | null>(null);
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleValue, setVehicleValue] = useState("");
+  const { createOrUpdateApplication } = useApplicationData();
 
   // Send data to Formspree in real-time
   useFormspreeSync({
@@ -56,7 +58,7 @@ const VehicleInfo = () => {
     policyStartDate || new Date()
   );
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!usagePurpose.trim()) {
       toast({
         title: "خطأ",
@@ -103,11 +105,33 @@ const VehicleInfo = () => {
     }
 
     setIsLoading(true);
-    // محاكاة البحث عن العروض
-    setTimeout(() => {
+    
+    try {
+      await createOrUpdateApplication({
+        usage_purpose: usagePurpose,
+        policy_start_date: format(policyStartDate, 'yyyy-MM-dd'),
+        add_driver: addDriver === 'yes',
+        vehicle_value: parseFloat(vehicleValue),
+        current_step: 'vehicle_info'
+      });
+
+      toast({
+        title: "تم الحفظ",
+        description: "جاري البحث عن أفضل العروض...",
+      });
+
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/insurance-selection");
+      }, 2000);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء حفظ البيانات",
+        variant: "destructive",
+      });
       setIsLoading(false);
-      navigate("/insurance-selection");
-    }, 2000);
+    }
   };
 
   return (
