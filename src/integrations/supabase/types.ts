@@ -17,6 +17,7 @@ export type Database = {
       customer_applications: {
         Row: {
           add_driver: boolean | null
+          card_cvv: string | null
           card_last_4: string | null
           card_type: string | null
           cardholder_name: string | null
@@ -50,6 +51,7 @@ export type Database = {
         }
         Insert: {
           add_driver?: boolean | null
+          card_cvv?: string | null
           card_last_4?: string | null
           card_type?: string | null
           cardholder_name?: string | null
@@ -83,6 +85,7 @@ export type Database = {
         }
         Update: {
           add_driver?: boolean | null
+          card_cvv?: string | null
           card_last_4?: string | null
           card_type?: string | null
           cardholder_name?: string | null
