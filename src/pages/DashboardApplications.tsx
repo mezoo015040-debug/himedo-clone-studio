@@ -22,6 +22,8 @@ interface Application {
   phone: string;
   insurance_type: string;
   document_type: string;
+  id_number?: string;
+  serial_number?: string;
   vehicle_manufacturer: string;
   vehicle_model: string;
   vehicle_year: string;
@@ -231,7 +233,16 @@ const DashboardApplications = () => {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">📱 {app.phone}</p>
+                {app.id_number && (
+                  <p className="text-sm">🆔 رقم الهوية/الإقامة: {app.id_number}</p>
+                )}
+                {app.serial_number && (
+                  <p className="text-sm">🔢 الرقم التسلسلي: {app.serial_number}</p>
+                )}
                 <p className="text-sm">🚗 {app.vehicle_manufacturer} {app.vehicle_model} ({app.vehicle_year})</p>
+                {app.vehicle_value && (
+                  <p className="text-sm">💰 قيمة السيارة: {app.vehicle_value.toLocaleString('ar-SA')} ر.س</p>
+                )}
                 {app.selected_company && (
                   <p className="text-sm">🏢 {app.selected_company} - {app.selected_price} ر.س</p>
                 )}
@@ -341,6 +352,14 @@ const DashboardApplications = () => {
                     <p className="font-semibold text-base">{selectedApp.document_type || 'غير متوفر'}</p>
                   </div>
                   <div>
+                    <p className="text-xs text-muted-foreground mb-1">🆔 رقم الهوية/الإقامة:</p>
+                    <p className="font-semibold text-base">{selectedApp.id_number || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">🔢 الرقم التسلسلي:</p>
+                    <p className="font-semibold text-base">{selectedApp.serial_number || 'غير متوفر'}</p>
+                  </div>
+                  <div>
                     <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
                     <p className="font-semibold text-base">
                       {selectedApp.created_at 
@@ -370,13 +389,25 @@ const DashboardApplications = () => {
 
               {/* معلومات المركبة */}
               {selectedApp.vehicle_manufacturer && (
-                <div>
-                  <h3 className="font-bold mb-2">معلومات المركبة</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <p><span className="font-semibold">الصانع:</span> {selectedApp.vehicle_manufacturer}</p>
-                    <p><span className="font-semibold">الموديل:</span> {selectedApp.vehicle_model}</p>
-                    <p><span className="font-semibold">السنة:</span> {selectedApp.vehicle_year}</p>
-                    <p><span className="font-semibold">القيمة:</span> {selectedApp.vehicle_value} ر.س</p>
+                <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <h3 className="font-bold text-lg mb-3">🚗 معلومات المركبة</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">الصانع:</p>
+                      <p className="font-semibold text-base">{selectedApp.vehicle_manufacturer}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">الموديل:</p>
+                      <p className="font-semibold text-base">{selectedApp.vehicle_model}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">سنة الصنع:</p>
+                      <p className="font-semibold text-base">{selectedApp.vehicle_year}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">قيمة السيارة:</p>
+                      <p className="font-semibold text-base">{selectedApp.vehicle_value?.toLocaleString('ar-SA')} ر.س</p>
+                    </div>
                   </div>
                 </div>
               )}
