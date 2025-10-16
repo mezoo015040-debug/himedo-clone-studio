@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock } from "lucide-react";
@@ -15,7 +15,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
+  
 
   useEffect(() => {
     // Check if user is already logged in
@@ -69,61 +69,6 @@ const Login = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password || !fullName) {
-      toast({
-        title: "خطأ",
-        description: "يرجى ملء جميع الحقول",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "خطأ",
-        description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
-        },
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast({
-        title: "خطأ في التسجيل",
-        description: error.message === "User already registered"
-          ? "البريد الإلكتروني مسجل بالفعل"
-          : error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (data.session) {
-      toast({
-        title: "تم التسجيل بنجاح",
-        description: "مرحباً بك في لوحة التحكم",
-      });
-      navigate("/dashboard");
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
@@ -138,13 +83,7 @@ const Login = () => {
           </p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login">تسجيل الدخول</TabsTrigger>
-            <TabsTrigger value="signup">إنشاء حساب</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="login">
+        <div className="w-full">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email">البريد الإلكتروني</Label>
@@ -187,67 +126,7 @@ const Login = () => {
                 )}
               </Button>
             </form>
-          </TabsContent>
-
-          <TabsContent value="signup">
-            <form onSubmit={handleSignup} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">الاسم الكامل</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="أحمد محمد"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">البريد الإلكتروني</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="admin@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  dir="ltr"
-                  className="text-left"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">كلمة المرور</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  dir="ltr"
-                  className="text-left"
-                />
-                <p className="text-xs text-muted-foreground">
-                  يجب أن تكون 6 أحرف على الأقل
-                </p>
-              </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    جاري إنشاء الحساب...
-                  </>
-                ) : (
-                  "إنشاء حساب"
-                )}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+        </div>
       </Card>
     </div>
   );

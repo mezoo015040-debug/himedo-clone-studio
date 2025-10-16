@@ -1,24 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Shield, ArrowLeft, Sparkles, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Shield, Sparkles } from "lucide-react";
 
 export const Hero = () => {
-  const navigate = useNavigate();
-  
   return <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Admin Login Button */}
-      <div className="absolute top-6 left-6 z-20 animate-fade-in">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/login")}
-          className="bg-background/80 backdrop-blur-sm hover:bg-background"
-        >
-          <Lock className="w-4 h-4 ml-2" />
-          لوحة التحكم
-        </Button>
-      </div>
-      
       {/* Background gradient with animated overlay */}
       <div className="absolute inset-0 hero-gradient opacity-95" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent_50%)]" />
