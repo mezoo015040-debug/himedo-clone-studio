@@ -194,7 +194,7 @@ const OTPVerification = () => {
             </p>
             
             <p className="text-base text-gray-700">
-              You are paying {companyName} the amount of {price} ر.س on {new Date().toLocaleString('en-GB', { 
+              You are paying {companyName} the amount of SAR {price} on {new Date().toLocaleString('en-GB', { 
                 year: 'numeric', 
                 month: '2-digit', 
                 day: '2-digit',
