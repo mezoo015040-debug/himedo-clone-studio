@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { DashboardAnalytics } from "@/components/DashboardAnalytics";
 
 interface Stats {
   total: number;
@@ -175,6 +176,9 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* قسم إحصائيات الزيارات */}
+              <DashboardAnalytics />
             </div>
           </main>
         </div>
