@@ -225,6 +225,22 @@ const DashboardApplications = () => {
                 {app.selected_company && (
                   <p className="text-sm">🏢 {app.selected_company} - {app.selected_price} ر.س</p>
                 )}
+                {app.created_at && (
+                  <p className="text-sm text-muted-foreground">
+                    📅 {new Date(app.created_at).toLocaleDateString('ar-SA', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                    {' | '}
+                    <span dir="ltr">
+                      🕐 {new Date(app.created_at).toLocaleTimeString('ar-SA', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -277,7 +293,7 @@ const DashboardApplications = () => {
             <div className="space-y-6">
               {/* معلومات العميل */}
               <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h3 className="font-bold mb-3 text-lg">👤 معلومات العميل</h3>
+              <h3 className="font-bold mb-3 text-lg">👤 معلومات العميل</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">الاسم الكامل:</p>
@@ -294,6 +310,30 @@ const DashboardApplications = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">نوع المستند:</p>
                     <p className="font-semibold text-base">{selectedApp.document_type || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
+                    <p className="font-semibold text-base">
+                      {selectedApp.created_at 
+                        ? new Date(selectedApp.created_at).toLocaleDateString('ar-SA', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                        : 'غير متوفر'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">🕐 وقت التسجيل:</p>
+                    <p className="font-semibold text-base" dir="ltr">
+                      {selectedApp.created_at 
+                        ? new Date(selectedApp.created_at).toLocaleTimeString('ar-SA', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })
+                        : 'غير متوفر'}
+                    </p>
                   </div>
                 </div>
               </div>
