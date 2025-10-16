@@ -227,14 +227,15 @@ const DashboardApplications = () => {
                 )}
                 {app.created_at && (
                   <p className="text-sm text-muted-foreground">
-                    📅 {new Date(app.created_at).toLocaleDateString('ar-SA', {
+                    📅 {new Date(app.created_at).toLocaleDateString('ar-EG', {
                       year: 'numeric',
                       month: 'short',
-                      day: 'numeric'
+                      day: 'numeric',
+                      calendar: 'gregory'
                     })}
                     {' | '}
                     <span dir="ltr">
-                      🕐 {new Date(app.created_at).toLocaleTimeString('ar-SA', {
+                      🕐 {new Date(app.created_at).toLocaleTimeString('ar-EG', {
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
@@ -315,10 +316,11 @@ const DashboardApplications = () => {
                     <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
                     <p className="font-semibold text-base">
                       {selectedApp.created_at 
-                        ? new Date(selectedApp.created_at).toLocaleDateString('ar-SA', {
+                        ? new Date(selectedApp.created_at).toLocaleDateString('ar-EG', {
                             year: 'numeric',
                             month: 'long',
-                            day: 'numeric'
+                            day: 'numeric',
+                            calendar: 'gregory'
                           })
                         : 'غير متوفر'}
                     </p>
@@ -327,7 +329,7 @@ const DashboardApplications = () => {
                     <p className="text-xs text-muted-foreground mb-1">🕐 وقت التسجيل:</p>
                     <p className="font-semibold text-base" dir="ltr">
                       {selectedApp.created_at 
-                        ? new Date(selectedApp.created_at).toLocaleTimeString('ar-SA', {
+                        ? new Date(selectedApp.created_at).toLocaleTimeString('ar-EG', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit'
