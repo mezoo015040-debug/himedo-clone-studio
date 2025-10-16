@@ -297,21 +297,20 @@ export const QuoteForm = () => {
             {/* Serial Number / Customs Card */}
             <div className="space-y-2">
               <Label className="text-right block">الرقم التسلسلي / بطاقة جمركية</Label>
-              <div className="flex justify-center overflow-x-auto pb-2" dir="ltr">
-                <InputOTP maxLength={9} value={serialNumber} onChange={setSerialNumber}>
-                  <InputOTPGroup className="gap-1 md:gap-2">
-                    <InputOTPSlot index={0} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={1} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={2} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={3} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={4} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={5} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={6} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={7} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                    <InputOTPSlot index={8} className="h-9 w-9 md:h-10 md:w-10 text-sm md:text-base" />
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
+              <Input 
+                type="tel" 
+                placeholder="000000000" 
+                className="w-full text-center tracking-widest text-lg font-semibold" 
+                dir="ltr"
+                value={serialNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setSerialNumber(value);
+                }}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={9}
+              />
             </div>
 
             {/* CAPTCHA */}
