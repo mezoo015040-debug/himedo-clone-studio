@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,11 @@ const menuItems = [
     title: "طلبات الأسعار",
     url: "/dashboard/quotes",
     icon: FileText,
+  },
+  {
+    title: "طلبات العملاء",
+    url: "/dashboard/applications",
+    icon: Users,
   },
 ];
 
