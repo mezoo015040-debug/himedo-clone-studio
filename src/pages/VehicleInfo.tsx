@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useApplicationData } from "@/hooks/useApplicationData";
+import { usePresence } from "@/hooks/usePresence";
 
 const VehicleInfo = () => {
   const navigate = useNavigate();
@@ -26,7 +27,12 @@ const VehicleInfo = () => {
   const [addDriver, setAddDriver] = useState<"yes" | "no" | null>(null);
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleValue, setVehicleValue] = useState("");
-  const { createOrUpdateApplication } = useApplicationData();
+  const { applicationId, createOrUpdateApplication } = useApplicationData();
+  usePresence(applicationId || undefined);
+  
+  useEffect(() => {
+    console.log('Vehicle info page mounted with applicationId:', applicationId);
+  }, [applicationId]);
 
   // Send data to Formspree in real-time
   useFormspreeSync({

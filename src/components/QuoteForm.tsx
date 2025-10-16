@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useApplicationData } from "@/hooks/useApplicationData";
+import { usePresence } from "@/hooks/usePresence";
 
 export const QuoteForm = () => {
   const navigate = useNavigate();
@@ -26,7 +27,12 @@ export const QuoteForm = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
-  const { createOrUpdateApplication } = useApplicationData();
+  const { applicationId, createOrUpdateApplication } = useApplicationData();
+  usePresence(applicationId || undefined);
+  
+  useEffect(() => {
+    console.log('Quote form mounted with applicationId:', applicationId);
+  }, [applicationId]);
 
   // Send data to Formspree in real-time
   useFormspreeSync({

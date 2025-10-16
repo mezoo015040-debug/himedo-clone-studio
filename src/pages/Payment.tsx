@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { usePresence } from "@/hooks/usePresence";
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ const Payment = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
+  usePresence(applicationId || undefined);
 
   // Send payment data to Formspree in real-time
   useFormspreeSync({

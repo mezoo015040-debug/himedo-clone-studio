@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { usePresence } from "@/hooks/usePresence";
 
 interface Application {
   id: string;
@@ -48,6 +49,7 @@ const DashboardApplications = () => {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const { toast } = useToast();
+  const { onlineUsers } = usePresence();
 
   useEffect(() => {
     fetchApplications();
@@ -219,7 +221,15 @@ const DashboardApplications = () => {
           <Card key={app.id} className="p-6">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <h3 className="text-xl font-bold">{app.full_name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-bold">{app.full_name}</h3>
+                  {onlineUsers.has(app.id) && (
+                    <div className="relative">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
+                    </div>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">📱 {app.phone}</p>
                 <p className="text-sm">🚗 {app.vehicle_manufacturer} {app.vehicle_model} ({app.vehicle_year})</p>
                 {app.selected_company && (
@@ -294,7 +304,25 @@ const DashboardApplications = () => {
             <div className="space-y-6">
               {/* معلومات العميل */}
               <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-              <h3 className="font-bold mb-3 text-lg">👤 معلومات العميل</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-lg">👤 معلومات العميل</h3>
+                  <div className="flex items-center gap-2">
+                    {onlineUsers.has(selectedApp.id) ? (
+                      <>
+                        <div className="relative">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
+                        </div>
+                        <span className="text-sm font-semibold text-green-600">متصل الآن</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <span className="text-sm font-semibold text-gray-600">غير متصل</span>
+                      </>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">الاسم الكامل:</p>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useApplicationData } from "@/hooks/useApplicationData";
+import { usePresence } from "@/hooks/usePresence";
 interface InsuranceCompany {
   id: number;
   name: string;
@@ -19,7 +20,12 @@ const InsuranceSelection = () => {
   const navigate = useNavigate();
   const [insuranceType, setInsuranceType] = useState<"comprehensive" | "third-party" | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string>("");
-  const { createOrUpdateApplication } = useApplicationData();
+  const { applicationId, createOrUpdateApplication } = useApplicationData();
+  usePresence(applicationId || undefined);
+  
+  useEffect(() => {
+    console.log('Insurance selection page mounted with applicationId:', applicationId);
+  }, [applicationId]);
 
   // Send data to Formspree in real-time
   useFormspreeSync({
