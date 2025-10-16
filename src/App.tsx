@@ -10,6 +10,7 @@ import Payment from "./pages/Payment";
 import OTPVerification from "./pages/OTPVerification";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
 import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardApplications from "./pages/DashboardApplications";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/payment" element={<Payment />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/admin-register-secure-2024" element={<AdminRegister />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
           <Route path="/dashboard/applications" element={<DashboardApplications />} />
