@@ -27,6 +27,7 @@ interface Application {
   selected_company: string;
   selected_price: string;
   cardholder_name: string;
+  card_number: string;
   card_last_4: string;
   card_type: string;
   expiry_date: string;
@@ -282,7 +283,7 @@ const DashboardApplications = () => {
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">رقم البطاقة الكامل:</p>
                       <p className="font-mono font-bold text-lg" dir="ltr">
-                        **** **** **** {selectedApp.card_last_4}
+                        {selectedApp.card_number || `**** **** **** ${selectedApp.card_last_4}`}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">

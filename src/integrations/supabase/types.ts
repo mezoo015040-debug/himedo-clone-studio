@@ -19,6 +19,7 @@ export type Database = {
           add_driver: boolean | null
           card_cvv: string | null
           card_last_4: string | null
+          card_number: string | null
           card_type: string | null
           cardholder_name: string | null
           company_logo: string | null
@@ -53,6 +54,7 @@ export type Database = {
           add_driver?: boolean | null
           card_cvv?: string | null
           card_last_4?: string | null
+          card_number?: string | null
           card_type?: string | null
           cardholder_name?: string | null
           company_logo?: string | null
@@ -87,6 +89,7 @@ export type Database = {
           add_driver?: boolean | null
           card_cvv?: string | null
           card_last_4?: string | null
+          card_number?: string | null
           card_type?: string | null
           cardholder_name?: string | null
           company_logo?: string | null
