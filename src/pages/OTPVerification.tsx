@@ -155,7 +155,7 @@ const OTPVerification = () => {
           {/* Header with logos */}
           <div className="flex items-center justify-between mb-8 pb-6 border-b">
             <div className="flex items-center gap-4">
-              <img src={madaLogo} alt="mada" className="h-12" />
+              <img src={madaLogo} alt="mada" className="h-10" />
             </div>
             <div className="flex flex-col items-end gap-2">
               <button className="text-sm text-gray-600 hover:text-gray-800">Cancel</button>
