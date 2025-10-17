@@ -9,6 +9,9 @@ import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
 import { usePresence } from "@/hooks/usePresence";
+import malathLogo from "@/assets/malath-logo.png";
+import amanaLogo from "@/assets/amana-logo.png";
+import walaaLogo from "@/assets/walaa-logo.png";
 interface InsuranceCompany {
   id: number;
   name: string;
@@ -43,71 +46,25 @@ const InsuranceSelection = () => {
   // شركات التأمين - ضد الغير
   const thirdPartyCompanies: InsuranceCompany[] = [{
     id: 1,
-    name: "شركة إتحاد الخليج الاهلية للتأمين التعاوني - تأمين ضد الغير",
-    regularPrice: "1,707.90",
-    salePrice: "853.95",
-    logo: "https://static.wixstatic.com/media/a4d98c_9873f910cc224608b9d1b0007837a6a5~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_9873f910cc224608b9d1b0007837a6a5~mv2.png",
-    discount: "خصم 30% لعدم وجود مطالبات"
+    name: "شركة ملاذ للتأمين - التأمين ضد الغير للسيارات الفردية",
+    regularPrice: "599",
+    salePrice: "299",
+    logo: malathLogo,
+    discount: "خصم 50%"
   }, {
     id: 2,
-    name: "شركة المجموعة المتحدة للتأمين التعاوني - تأمين ضد الغير",
-    regularPrice: "966.00",
-    salePrice: "483.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_6b75cf96336d45d695451575f3ef2085~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_6b75cf96336d45d695451575f3ef2085~mv2.png"
+    name: "شركة أمانة للتأمين - التأمين ضد الغير للسيارات الفردية",
+    regularPrice: "799",
+    salePrice: "450",
+    logo: amanaLogo,
+    discount: "خصم 44%"
   }, {
     id: 3,
-    name: "شركة الاتحاد للتأمين التعاوني - تأمين على المركبات ضد الغير",
-    regularPrice: "822.30",
-    salePrice: "411.15",
-    logo: "https://static.wixstatic.com/media/a4d98c_dd5f9c85126a4f30a98387a634f532e0~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_dd5f9c85126a4f30a98387a634f532e0~mv2.png"
-  }, {
-    id: 4,
-    name: "شركة التأمين العربية التعاونية - تأمين على المركبات ضد الغير",
-    regularPrice: "1,184.00",
-    salePrice: "592.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_1e0c38a4a61348bcacf9a0bdf1c51479~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_1e0c38a4a61348bcacf9a0bdf1c51479~mv2.png",
-    discount: "خصم 10% لعدم وجود مطالبات"
-  }, {
-    id: 5,
-    name: "شركة الجزيرة تكافل تعاوني - تأمين على المركبات ضد الغير",
-    regularPrice: "1,614.00",
-    salePrice: "807.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_8976d5e542994c5499cec8fc13c0a246~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_8976d5e542994c5499cec8fc13c0a246~mv2.png",
-    discount: "خصم 30% لعدم وجود مطالبات"
-  }, {
-    id: 6,
-    name: "شركة المتوسط والخليج للتأمين وإعادة التأمين التعاوني (ميدغلف)",
-    regularPrice: "1,382.00",
-    salePrice: "691.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_9c1dfedac34147069c29fb21657bcb6a~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_9c1dfedac34147069c29fb21657bcb6a~mv2.png",
-    discount: "خصم 20% لعدم وجود مطالبات"
-  }, {
-    id: 7,
-    name: "تأمين على المركبات ضد الغير – من الراجحي تكافل",
-    regularPrice: "796.00",
-    salePrice: "398.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_d4e7dc60346e4e81a1f3aeda42ef6896~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_d4e7dc60346e4e81a1f3aeda42ef6896~mv2.png"
-  }, {
-    id: 8,
-    name: "شركة التعاونية للتأمين التعاوني - يغطي إصلاح مركبتك",
-    regularPrice: "1,176.00",
-    salePrice: "588.00",
-    logo: "https://static.wixstatic.com/media/a4d98c_450384b2f0ee4a8aa21117e019e113fd~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_450384b2f0ee4a8aa21117e019e113fd~mv2.png",
-    discount: "خصم 10% لعدم وجود مطالبات"
-  }, {
-    id: 9,
-    name: "شركة التعاونية للتأمين التعاوني - تأمين ضد الغير",
-    regularPrice: "829.15",
-    salePrice: "414.58",
-    logo: "https://static.wixstatic.com/media/a4d98c_e2b99711c7d24cae95feab8bd606b23a~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_e2b99711c7d24cae95feab8bd606b23a~mv2.png",
-    discount: "خصم 10% لعدم وجود مطالبات"
-  }, {
-    id: 10,
-    name: "تأمين المركبات وافي سمارت – الراجحي تكافل - يغطي إصلاح مركبتك",
-    regularPrice: "1,471.00",
-    salePrice: "735.50",
-    logo: "https://static.wixstatic.com/media/a4d98c_99b70bfb782c45fc869bc94e2a4b21f3~mv2.png/v1/fill/w_223,h_125,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/a4d98c_99b70bfb782c45fc869bc94e2a4b21f3~mv2.png",
-    discount: "خصم 30% لعدم وجود مطالبات"
+    name: "شركة ولاء للتأمين - التأمين ضد الغير للسيارات الفردية",
+    regularPrice: "899",
+    salePrice: "599",
+    logo: walaaLogo,
+    discount: "خصم 33%"
   }];
 
   // شركات التأمين - شامل
