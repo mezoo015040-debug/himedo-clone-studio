@@ -153,9 +153,13 @@ export const QuoteForm = () => {
       });
     }
   };
-  return <section className="pt-8 pb-16 px-4 md:px-6 bg-background">
+  return <section id="quote-form" className="py-16 px-4 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
-        <Card className="p-8 shadow-glow">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">احصل على عرض سعر</h2>
+          <p className="text-muted-foreground">أدخل بياناتك للحصول على أفضل عروض التأمين</p>
+        </div>
+        <Card className="p-8 shadow-lg border-border">
           {/* Insurance Type Selection */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <Button variant={insuranceType === "new" ? "default" : "outline"} size="lg" onClick={() => setInsuranceType("new")} className="w-full">
