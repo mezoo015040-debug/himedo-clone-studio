@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Header } from "@/components/Header";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
+import { InsuranceLoadingScreen } from "@/components/InsuranceLoadingScreen";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
@@ -596,8 +597,18 @@ const InsuranceSelection = () => {
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [sortBy, setSortBy] = useState<"price" | "discount" | "rating">("discount");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { applicationId, createOrUpdateApplication } = useApplicationData();
   usePresence(applicationId || undefined);
+
+  useEffect(() => {
+    // Show loading screen for 3 seconds
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     console.log('Insurance selection page mounted with applicationId:', applicationId);
@@ -645,8 +656,11 @@ const InsuranceSelection = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 to-background">
-      <Header />
+    <>
+      <InsuranceLoadingScreen isLoading={isLoading} insuranceType={insuranceType} />
+      
+      <div className="min-h-screen bg-gradient-to-b from-sky-50 to-background">
+        <Header />
       
       <section className="py-8 px-4 md:px-6">
         <div className="container mx-auto max-w-7xl">
@@ -866,6 +880,7 @@ const InsuranceSelection = () => {
       <ChatButton />
       <Footer />
     </div>
+    </>
   );
 };
 
