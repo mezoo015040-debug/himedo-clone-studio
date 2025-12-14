@@ -16,6 +16,7 @@ import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
 import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardApplications from "./pages/DashboardApplications";
+import DashboardVisitors from "./pages/DashboardVisitors";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/admin-register-secure-2024" element={<AdminRegister />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/visitors" element={<DashboardVisitors />} />
         <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
         <Route path="/dashboard/applications" element={<DashboardApplications />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
