@@ -154,7 +154,7 @@ const DashboardQuotes = () => {
 
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b bg-card flex items-center px-6 sticky top-0 z-10">
-            <SidebarTrigger />
+            <SidebarTrigger className="p-2 hover:bg-accent rounded-md" />
             <h1 className="text-2xl font-bold mr-4">طلبات الأسعار</h1>
           </header>
 

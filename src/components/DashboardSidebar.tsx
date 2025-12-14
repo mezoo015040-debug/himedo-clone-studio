@@ -41,6 +41,7 @@ const menuItems = [
 export function DashboardSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { state } = useSidebar();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -62,15 +63,17 @@ export function DashboardSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-l">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>القائمة الرئيسية</SidebarGroupLabel>
+          <SidebarGroupLabel className={state === "collapsed" ? "sr-only" : ""}>
+            القائمة الرئيسية
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end
@@ -94,7 +97,7 @@ export function DashboardSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout}>
+            <SidebarMenuButton onClick={handleLogout} tooltip="تسجيل الخروج">
               <LogOut className="h-4 w-4" />
               <span>تسجيل الخروج</span>
             </SidebarMenuButton>

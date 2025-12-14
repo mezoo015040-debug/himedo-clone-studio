@@ -208,7 +208,7 @@ const DashboardVisitors = () => {
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger />
+              <SidebarTrigger className="p-2 hover:bg-accent rounded-md" />
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold">تحليلات الزيارات</h1>
                 <p className="text-muted-foreground text-sm">إحصائيات شاملة عن زوار الموقع ومصادر الزيارات</p>
