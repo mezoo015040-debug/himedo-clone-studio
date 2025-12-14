@@ -817,16 +817,13 @@ const InsuranceSelection = () => {
                   </div>
 
                   {/* Features */}
-                  <div className="space-y-1 mb-3 min-h-[60px]">
-                    {company.features.slice(0, 3).map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
-                        <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-1">{feature}</span>
+                  <div className="space-y-1.5 mb-3">
+                    {company.features.map((feature, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span>{feature}</span>
                       </div>
                     ))}
-                    {company.features.length > 3 && (
-                      <p className="text-[10px] text-primary text-center">+{company.features.length - 3} مميزات أخرى</p>
-                    )}
                   </div>
 
                   {/* CTA Button */}
