@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { supabase } from "@/integrations/supabase/client";
+import madaLogo from "@/assets/mada-logo.png";
 import {
   Dialog,
   DialogContent,
@@ -550,8 +551,8 @@ const Payment = () => {
               <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
                 <span className="font-bold text-orange-600 text-xs md:text-base">Discover</span>
               </div>
-              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow">
-                <span className="font-bold text-xs md:text-base">مدى</span>
+              <div className="bg-card border rounded-lg px-3 py-1.5 md:px-4 md:py-2 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center">
+                <img src={madaLogo} alt="مدى" className="h-5 md:h-7 object-contain" />
               </div>
             </div>
           </div>
