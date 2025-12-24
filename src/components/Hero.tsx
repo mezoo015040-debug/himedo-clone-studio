@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle } from "lucide-react";
+import heroImage from "@/assets/hero-image.png";
 
 export const Hero = () => {
   const scrollToForm = () => {
@@ -53,22 +54,13 @@ export const Hero = () => {
           {/* Left Content - Image/Illustration */}
           <div className="relative order-2 lg:order-1 flex justify-center">
             <div className="relative">
-              {/* Main illustration container */}
-              <div className="relative w-80 h-80 md:w-96 md:h-96">
-                {/* Background circle */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-sky-100 rounded-full" />
-                
-                {/* Car icon placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-32 h-32 md:w-40 md:h-40 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-20 h-20 md:w-24 md:h-24 text-primary" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-                      </svg>
-                    </div>
-                    <p className="text-2xl md:text-3xl font-bold text-primary">تأميني معك</p>
-                  </div>
-                </div>
+              {/* Main image */}
+              <div className="relative">
+                <img 
+                  src={heroImage} 
+                  alt="تأميني معك" 
+                  className="w-80 h-80 md:w-96 md:h-96 object-contain"
+                />
 
                 {/* Floating badges */}
                 <div className="absolute -top-4 -right-4 bg-background shadow-lg rounded-xl p-3 animate-fade-in">
