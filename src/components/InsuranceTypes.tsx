@@ -94,6 +94,12 @@ export const InsuranceTypes = () => {
                       ? 'accent-gradient hover:opacity-90 shadow-lg' 
                       : 'hero-gradient hover:opacity-90'
                   } text-white transition-smooth`}
+                  onClick={() => {
+                    const quoteForm = document.getElementById('quote-form');
+                    if (quoteForm) {
+                      quoteForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
                 >
                   اشترِ الآن
                 </Button>
