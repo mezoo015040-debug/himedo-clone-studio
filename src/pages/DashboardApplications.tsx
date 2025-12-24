@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -371,7 +371,9 @@ const DashboardApplications = () => {
         
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b bg-card flex items-center px-6 sticky top-0 z-10">
-            <SidebarTrigger className="p-2 hover:bg-accent rounded-md" />
+            <SidebarTrigger className="p-2 hover:bg-accent rounded-lg border border-border shadow-sm">
+              <Menu className="h-5 w-5" />
+            </SidebarTrigger>
             <h1 className="text-2xl font-bold mr-4">بيانات العملاء</h1>
           </header>
 
