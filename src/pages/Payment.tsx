@@ -31,13 +31,52 @@ const Payment = () => {
   const price = searchParams.get("price") || "0";
   const regularPrice = searchParams.get("regularPrice") || price;
 
-  // حساب الخصم
+  // خصم 10% إضافي للدفع الفوري
+  const [timeLeft, setTimeLeft] = useState(600); // 10 دقائق
+  const [extraDiscountApplied, setExtraDiscountApplied] = useState(true);
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setExtraDiscountApplied(false);
+      return;
+    }
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // حساب الخصم الأصلي
   const calculateDiscount = () => {
     const regular = parseFloat(regularPrice.replace(/,/g, ""));
     const sale = parseFloat(price.replace(/,/g, ""));
     return (regular - sale).toFixed(2);
   };
+
+  // حساب الخصم الإضافي 10%
+  const calculateExtraDiscount = () => {
+    const currentPrice = parseFloat(price.replace(/,/g, ""));
+    return (currentPrice * 0.10).toFixed(2);
+  };
+
+  // السعر النهائي بعد الخصم الإضافي
+  const calculateFinalPrice = () => {
+    const currentPrice = parseFloat(price.replace(/,/g, ""));
+    if (extraDiscountApplied) {
+      return (currentPrice * 0.90).toFixed(2);
+    }
+    return currentPrice.toFixed(2);
+  };
+
   const discount = calculateDiscount();
+  const extraDiscount = calculateExtraDiscount();
+  const finalPrice = calculateFinalPrice();
   const [formData, setFormData] = useState({
     cardholderName: "",
     cardNumber: "",
@@ -346,6 +385,25 @@ const Payment = () => {
                 </div>
               </div>
 
+              {/* بانر الخصم الإضافي */}
+              {extraDiscountApplied && (
+                <Card className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-2xl">🔥</span>
+                      <span className="font-bold text-lg">خصم إضافي 10% للدفع الفوري!</span>
+                      <span className="text-2xl">🔥</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-sm">ينتهي العرض خلال:</span>
+                      <span className="bg-white/20 px-3 py-1 rounded-full font-mono font-bold text-xl">
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               {/* ملخص الطلب */}
               <Card className="p-6 shadow-lg border-2">
                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -361,14 +419,38 @@ const Payment = () => {
                     <span className="text-sm text-muted-foreground">السعر الأصلي:</span>
                     <span className="text-sm line-through text-muted-foreground">{regularPrice} ﷼</span>
                   </div>
-                  {parseFloat(discount) > 0 && <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
-                      <span className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold">🎉 الخصم</span>
+                  {parseFloat(discount) > 0 && (
+                    <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
+                      <span className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold">🎉 الخصم الأول</span>
                       <span className="text-lg text-emerald-700 dark:text-emerald-400 font-bold">- {discount} ﷼</span>
-                    </div>}
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-muted-foreground">السعر بعد الخصم:</span>
+                    <span className="text-sm text-muted-foreground">{price} ﷼</span>
+                  </div>
+                  {extraDiscountApplied && (
+                    <div className="flex justify-between items-center bg-orange-50 dark:bg-orange-950/30 p-3 rounded-lg border-2 border-orange-300 dark:border-orange-700">
+                      <span className="text-sm text-orange-700 dark:text-orange-400 font-semibold">🔥 خصم الدفع الفوري (10%)</span>
+                      <span className="text-lg text-orange-700 dark:text-orange-400 font-bold">- {extraDiscount} ﷼</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center pt-4 border-t-2">
                     <span className="text-xl font-bold">المبلغ الإجمالي:</span>
-                    <span className="text-3xl font-black text-primary">{price} ﷼</span>
+                    <div className="text-right">
+                      {extraDiscountApplied && (
+                        <span className="text-sm line-through text-muted-foreground block">{price} ﷼</span>
+                      )}
+                      <span className="text-3xl font-black text-primary">{finalPrice} ﷼</span>
+                    </div>
                   </div>
+                  {extraDiscountApplied && (
+                    <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-center">
+                      <span className="text-green-700 dark:text-green-400 font-bold">
+                        💰 وفرت {(parseFloat(discount) + parseFloat(extraDiscount)).toFixed(2)} ﷼
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* شعارات الأمان */}
