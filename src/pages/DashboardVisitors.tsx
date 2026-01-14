@@ -4,10 +4,14 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Eye, TrendingUp, Globe, Calendar, RefreshCw, Facebook, Youtube, Twitter, Instagram, Search, MessageCircle } from "lucide-react";
-import { useRealtimePresence } from "@/hooks/useRealtimePresence";
+import { Users, Eye, TrendingUp, Globe, Calendar, RefreshCw, Facebook, Youtube, Twitter, Instagram, Search, MessageCircle, MapPin, User, Clock, Phone, FileText } from "lucide-react";
+import { useRealtimePresence, OnlineVisitor } from "@/hooks/useRealtimePresence";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatDistanceToNow } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface SourceStats {
   source: string;
@@ -25,6 +29,37 @@ interface VisitorStats {
   monthVisitors: number;
   sourceStats: SourceStats[];
 }
+
+const pageNames: { [key: string]: string } = {
+  '/': 'الصفحة الرئيسية',
+  '/vehicle-info': 'معلومات المركبة',
+  '/insurance-selection': 'اختيار التأمين',
+  '/payment': 'الدفع',
+  '/otp': 'التحقق من OTP',
+  '/login': 'تسجيل الدخول',
+  '/dashboard': 'لوحة التحكم',
+  '/dashboard/quotes': 'عروض الأسعار',
+  '/dashboard/applications': 'طلبات العملاء',
+  '/dashboard/visitors': 'تحليلات الزيارات',
+  '/dashboard/analytics': 'التحليلات',
+  '/cheapest': 'أرخص التأمين',
+  '/renewal': 'تجديد التأمين',
+  '/comprehensive': 'التأمين الشامل',
+};
+
+const getPageName = (path: string): string => {
+  return pageNames[path] || path;
+};
+
+const getPageColor = (path: string): string => {
+  if (path === '/') return 'bg-blue-500';
+  if (path.includes('vehicle')) return 'bg-orange-500';
+  if (path.includes('insurance')) return 'bg-purple-500';
+  if (path.includes('payment')) return 'bg-green-500';
+  if (path.includes('otp')) return 'bg-yellow-500';
+  if (path.includes('dashboard')) return 'bg-primary';
+  return 'bg-muted-foreground';
+};
 
 const sourceConfig: { [key: string]: { icon: React.ElementType; color: string; bgColor: string } } = {
   'جوجل': { icon: Search, color: 'text-red-500', bgColor: 'bg-red-500/10' },
@@ -50,7 +85,7 @@ const DashboardVisitors = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const { onlineCount } = useRealtimePresence();
+  const { onlineCount, onlineVisitors } = useRealtimePresence();
   const [stats, setStats] = useState<VisitorStats>({
     totalVisitors: 0,
     todayVisitors: 0,
@@ -268,6 +303,101 @@ const DashboardVisitors = () => {
                   );
                 })}
               </div>
+
+              {/* الزوار المتواجدون حالياً */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-orange-500" />
+                    الزوار المتواجدون الآن
+                    <Badge variant="secondary" className="mr-2 bg-orange-500/20 text-orange-600">
+                      {onlineCount} متصل
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    تتبع حي لجميع الزوار المتواجدين على الموقع وتحركاتهم
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {onlineVisitors.length > 0 ? (
+                    <ScrollArea className="h-[400px]">
+                      <div className="space-y-3">
+                        {onlineVisitors.map((visitor) => (
+                          <div
+                            key={visitor.visitorId}
+                            className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:shadow-md transition-all"
+                          >
+                            {/* أيقونة الزائر */}
+                            <div className="relative">
+                              <div className="p-3 rounded-full bg-orange-500/10">
+                                <User className="h-6 w-6 text-orange-500" />
+                              </div>
+                              <div className="absolute -bottom-1 -left-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+                            </div>
+                            
+                            {/* معلومات الزائر */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {visitor.fullName ? (
+                                  <span className="font-semibold text-foreground">
+                                    {visitor.fullName}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">
+                                    زائر {visitor.visitorId.slice(-6)}
+                                  </span>
+                                )}
+                                
+                                {visitor.phone && (
+                                  <Badge variant="outline" className="gap-1 text-xs">
+                                    <Phone className="h-3 w-3" />
+                                    {visitor.phone}
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* الصفحة الحالية */}
+                              <div className="flex items-center gap-2 mt-2">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <Badge 
+                                  className={`${getPageColor(visitor.currentPage)} text-white`}
+                                >
+                                  {getPageName(visitor.currentPage)}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            {/* الوقت */}
+                            <div className="text-left">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {formatDistanceToNow(new Date(visitor.lastActivity), {
+                                    addSuffix: true,
+                                    locale: ar,
+                                  })}
+                                </span>
+                              </div>
+                              {visitor.applicationId && (
+                                <div className="flex items-center gap-1 text-xs text-primary mt-1">
+                                  <FileText className="h-3 w-3" />
+                                  <span>يملأ طلب</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Eye className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                      <p>لا يوجد زوار متصلون حالياً</p>
+                      <p className="text-sm mt-2">سيظهر هنا أي زائر يتصفح الموقع</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* إحصائيات المصادر */}
               <Card>
