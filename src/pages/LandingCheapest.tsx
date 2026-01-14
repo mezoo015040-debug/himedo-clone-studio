@@ -37,7 +37,7 @@ const LandingCheapest = () => {
             </Badge>
             
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-              وفّر حتى <span className="text-primary">50%</span> على تأمين سيارتك
+              وفّر حتى <span className="text-primary">35%</span> على تأمين سيارتك
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
