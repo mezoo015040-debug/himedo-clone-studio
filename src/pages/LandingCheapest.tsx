@@ -121,15 +121,7 @@ const LandingCheapest = () => {
       <InsurancePartners />
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">جاهز لتوفير المال؟</h2>
-          <p className="text-xl mb-8 opacity-90">احصل على أرخص عرض تأمين في أقل من دقيقتين</p>
-          <Button size="lg" variant="secondary" className="text-xl px-12 py-6 rounded-full" onClick={() => navigate("/")}>
-            ابدأ المقارنة الآن
-          </Button>
-        </div>
-      </section>
+      
 
       <Footer />
     </div>;
