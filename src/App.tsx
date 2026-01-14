@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { usePageLoading } from "@/hooks/usePageLoading";
 import Index from "./pages/Index";
+import LandingCheapest from "./pages/LandingCheapest";
+import LandingComprehensive from "./pages/LandingComprehensive";
+import LandingRenewal from "./pages/LandingRenewal";
 import VehicleInfo from "./pages/VehicleInfo";
 import InsuranceSelection from "./pages/InsuranceSelection";
 import Payment from "./pages/Payment";
@@ -28,6 +31,9 @@ const AppRoutes = () => {
       <LoadingScreen isLoading={isLoading} />
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/cheapest-insurance" element={<LandingCheapest />} />
+        <Route path="/comprehensive-insurance" element={<LandingComprehensive />} />
+        <Route path="/renew-insurance" element={<LandingRenewal />} />
         <Route path="/vehicle-info" element={<VehicleInfo />} />
         <Route path="/insurance-selection" element={<InsuranceSelection />} />
         <Route path="/payment" element={<Payment />} />
