@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Eye, TrendingUp, Globe, Calendar, RefreshCw, Facebook, Youtube, Twitter, Instagram, Search, MessageCircle, MapPin, User, Clock, Phone, FileText } from "lucide-react";
+import { Users, Eye, TrendingUp, Globe, Calendar, RefreshCw, Facebook, Youtube, Twitter, Instagram, Search, MessageCircle, MapPin, User, Clock, Phone, FileText, Shield, Ban } from "lucide-react";
 import { useRealtimePresence, OnlineVisitor } from "@/hooks/useRealtimePresence";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface SourceStats {
   source: string;
@@ -354,6 +355,14 @@ const DashboardVisitors = () => {
                                     {visitor.phone}
                                   </Badge>
                                 )}
+
+                                {/* عرض IP */}
+                                {visitor.ipAddress && (
+                                  <Badge variant="secondary" className="gap-1 text-xs font-mono">
+                                    <Globe className="h-3 w-3" />
+                                    {visitor.ipAddress}
+                                  </Badge>
+                                )}
                               </div>
                               
                               {/* الصفحة الحالية */}
@@ -367,8 +376,8 @@ const DashboardVisitors = () => {
                               </div>
                             </div>
                             
-                            {/* الوقت */}
-                            <div className="text-left">
+                            {/* الوقت وأزرار الإجراءات */}
+                            <div className="text-left flex flex-col items-end gap-2">
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                 <Clock className="h-3 w-3" />
                                 <span>
@@ -379,10 +388,46 @@ const DashboardVisitors = () => {
                                 </span>
                               </div>
                               {visitor.applicationId && (
-                                <div className="flex items-center gap-1 text-xs text-primary mt-1">
+                                <div className="flex items-center gap-1 text-xs text-primary">
                                   <FileText className="h-3 w-3" />
                                   <span>يملأ طلب</span>
                                 </div>
+                              )}
+                              
+                              {/* زر حظر سريع */}
+                              {visitor.ipAddress && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50 h-7 px-2"
+                                  onClick={async () => {
+                                    try {
+                                      const { error } = await supabase
+                                        .from('blocked_ips')
+                                        .insert({
+                                          ip_address: visitor.ipAddress,
+                                          reason: 'حظر سريع من صفحة الزوار'
+                                        });
+                                      
+                                      if (error) {
+                                        if (error.code === '23505') {
+                                          toast.error('هذا الـ IP محظور بالفعل');
+                                        } else {
+                                          throw error;
+                                        }
+                                        return;
+                                      }
+                                      
+                                      toast.success(`تم حظر ${visitor.ipAddress}`);
+                                    } catch (error) {
+                                      console.error('Error blocking IP:', error);
+                                      toast.error('خطأ في حظر الـ IP');
+                                    }
+                                  }}
+                                >
+                                  <Ban className="h-3 w-3 ml-1" />
+                                  حظر
+                                </Button>
                               )}
                             </div>
                           </div>

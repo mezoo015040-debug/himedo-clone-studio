@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardApplications from "./pages/DashboardApplications";
 import DashboardVisitors from "./pages/DashboardVisitors";
+import DashboardBlockedIPs from "./pages/DashboardBlockedIPs";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="/dashboard/visitors" element={<DashboardVisitors />} />
         <Route path="/dashboard/quotes" element={<DashboardQuotes />} />
         <Route path="/dashboard/applications" element={<DashboardApplications />} />
+        <Route path="/dashboard/blocked-ips" element={<DashboardBlockedIPs />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

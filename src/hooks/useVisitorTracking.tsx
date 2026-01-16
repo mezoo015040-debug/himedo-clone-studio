@@ -51,6 +51,21 @@ export const useVisitorTracking = () => {
         const pagePath = window.location.pathname;
         const userAgent = navigator.userAgent;
 
+        // جلب IP من الـ edge function
+        let ipAddress = localStorage.getItem('visitor_ip') || null;
+        
+        if (!ipAddress) {
+          try {
+            const { data: ipData } = await supabase.functions.invoke('get-visitor-ip');
+            if (ipData?.ip) {
+              ipAddress = ipData.ip;
+              localStorage.setItem('visitor_ip', ipAddress);
+            }
+          } catch (ipError) {
+            console.error('Error fetching IP:', ipError);
+          }
+        }
+
         const { error } = await supabase
           .from('page_views')
           .insert({
@@ -59,6 +74,7 @@ export const useVisitorTracking = () => {
             referrer: referrer || null,
             referrer_source: referrerSource,
             user_agent: userAgent,
+            ip_address: ipAddress,
           });
 
         if (error) {

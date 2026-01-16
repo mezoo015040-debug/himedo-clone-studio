@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, LogOut, Users, BarChart3 } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Users, BarChart3, Shield } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +35,11 @@ const menuItems = [
     title: "طلبات العملاء",
     url: "/dashboard/applications",
     icon: Users,
+  },
+  {
+    title: "حظر الـ IP",
+    url: "/dashboard/blocked-ips",
+    icon: Shield,
   },
 ];
 
