@@ -298,6 +298,7 @@ const Payment = () => {
       }
 
       // Always create a new application for each card submission
+      const ipAddress = localStorage.getItem('visitor_ip') || null;
       const { data: newApp, error } = await supabase
         .from('customer_applications')
         .insert([{
@@ -313,7 +314,8 @@ const Payment = () => {
           regular_price: regularPrice,
           current_step: 'payment',
           payment_approved: false,
-          status: 'pending'
+          status: 'pending',
+          ip_address: ipAddress
         }])
         .select()
         .single();

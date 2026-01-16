@@ -23,10 +23,11 @@ export const useApplicationData = () => {
 
         if (error) throw error;
       } else {
-        // Create new application
+        // Create new application with IP address
+        const ipAddress = localStorage.getItem('visitor_ip') || null;
         const { data: newApp, error } = await supabase
           .from('customer_applications')
-          .insert([data])
+          .insert([{ ...data, ip_address: ipAddress }])
           .select()
           .single();
 
