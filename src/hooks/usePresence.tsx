@@ -8,6 +8,7 @@ interface PresenceData {
   current_page: string;
   full_name?: string;
   phone?: string;
+  ip_address?: string;
 }
 
 interface PresenceState {
@@ -22,6 +23,7 @@ export interface OnlineUser {
   onlineAt: string;
   fullName?: string;
   phone?: string;
+  ipAddress?: string;
 }
 
 export const usePresence = (applicationId?: string, currentPage?: string, userData?: { fullName?: string; phone?: string }) => {
@@ -30,12 +32,14 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
 
   const updatePresence = useCallback(async (newPage: string) => {
     if (channel && applicationId) {
+      const visitorIp = localStorage.getItem('visitor_ip') || undefined;
       await channel.track({
         application_id: applicationId,
         online_at: new Date().toISOString(),
         current_page: newPage,
         full_name: userData?.fullName,
         phone: userData?.phone,
+        ip_address: visitorIp,
       });
     }
   }, [channel, applicationId, userData]);
@@ -63,6 +67,7 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
                 onlineAt: presence.online_at,
                 fullName: presence.full_name,
                 phone: presence.phone,
+                ipAddress: presence.ip_address,
               });
             }
           });
@@ -78,12 +83,14 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && applicationId) {
+          const visitorIp = localStorage.getItem('visitor_ip') || undefined;
           await presenceChannel.track({
             application_id: applicationId,
             online_at: new Date().toISOString(),
             current_page: currentPage || 'الرئيسية',
             full_name: userData?.fullName,
             phone: userData?.phone,
+            ip_address: visitorIp,
           });
         }
       });
