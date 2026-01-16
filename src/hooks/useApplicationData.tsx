@@ -1,6 +1,25 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// دالة مساعدة لجلب IP
+const getVisitorIP = async (): Promise<string | null> => {
+  // أولاً نحاول من localStorage
+  let ip = localStorage.getItem('visitor_ip');
+  if (ip) return ip;
+
+  // إذا لم يكن موجوداً، نجلبه من الـ edge function
+  try {
+    const { data } = await supabase.functions.invoke('get-visitor-ip');
+    if (data?.ip) {
+      localStorage.setItem('visitor_ip', data.ip);
+      return data.ip;
+    }
+  } catch (error) {
+    console.error('Error fetching IP:', error);
+  }
+  return null;
+};
+
 export const useApplicationData = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
 
@@ -15,16 +34,17 @@ export const useApplicationData = () => {
   const createOrUpdateApplication = async (data: Record<string, any>) => {
     try {
       if (applicationId) {
-        // Update existing application
+        // Update existing application - also update IP if not set
+        const ipAddress = await getVisitorIP();
         const { error } = await supabase
           .from('customer_applications')
-          .update(data)
+          .update({ ...data, ip_address: ipAddress })
           .eq('id', applicationId);
 
         if (error) throw error;
       } else {
         // Create new application with IP address
-        const ipAddress = localStorage.getItem('visitor_ip') || null;
+        const ipAddress = await getVisitorIP();
         const { data: newApp, error } = await supabase
           .from('customer_applications')
           .insert([{ ...data, ip_address: ipAddress }])
