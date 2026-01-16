@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { usePresence, OnlineUser } from "@/hooks/usePresence";
+import { toast as sonnerToast } from "sonner";
 
 interface Application {
   id: string;
@@ -69,6 +70,7 @@ const getPageName = (step: string): string => {
 const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [applicationIPs, setApplicationIPs] = useState<Map<string, string>>(new Map());
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
   const [showDetails, setShowDetails] = useState(false);
@@ -277,7 +279,68 @@ const DashboardApplications = () => {
     });
 
     setApplications(data || []);
+    
+    // جلب IPs من page_views
+    await fetchApplicationIPs(data || []);
+    
     setRefreshing(false);
+  };
+
+  const fetchApplicationIPs = async (apps: Application[]) => {
+    const phones = apps.map(app => app.phone).filter(Boolean);
+    if (phones.length === 0) return;
+
+    // جلب آخر IP لكل طلب من page_views
+    const { data: pageViews, error } = await supabase
+      .from('page_views')
+      .select('visitor_id, ip_address, created_at')
+      .not('ip_address', 'is', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching IPs:', error);
+      return;
+    }
+
+    // إنشاء خريطة للـ IPs
+    const ipMap = new Map<string, string>();
+    
+    // ربط الـ visitor_id مع الطلبات
+    // نستخدم أول ظهور للـ IP لكل visitor
+    const visitorIPs = new Map<string, string>();
+    pageViews?.forEach(pv => {
+      if (pv.ip_address && !visitorIPs.has(pv.visitor_id)) {
+        visitorIPs.set(pv.visitor_id, pv.ip_address);
+      }
+    });
+
+    // حفظ الـ IPs
+    setApplicationIPs(visitorIPs);
+  };
+
+  const handleBlockIP = async (ip: string) => {
+    try {
+      const { error } = await supabase
+        .from('blocked_ips')
+        .insert({
+          ip_address: ip,
+          reason: 'حظر من صفحة طلبات العملاء'
+        });
+      
+      if (error) {
+        if (error.code === '23505') {
+          sonnerToast.error('هذا الـ IP محظور بالفعل');
+        } else {
+          throw error;
+        }
+        return;
+      }
+      
+      sonnerToast.success(`تم حظر ${ip}`);
+    } catch (error) {
+      console.error('Error blocking IP:', error);
+      sonnerToast.error('خطأ في حظر الـ IP');
+    }
   };
 
   const approveStep = async (appId: string, stepField: string) => {
@@ -402,6 +465,8 @@ const DashboardApplications = () => {
                 {applications.map((app) => {
                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
+                  // جلب IP من الزائر المتصل أو من localStorage
+                  const visitorIP = userOnline?.ipAddress || null;
                   
                   return (
                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
@@ -418,6 +483,25 @@ const DashboardApplications = () => {
                                     <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full opacity-50 animate-ping"></div>
                                   </div>
                                   <span className="text-xs font-semibold text-green-700 dark:text-green-300">متصل الآن</span>
+                                </div>
+                              )}
+                              
+                              {/* عرض IP مع زر الحظر */}
+                              {visitorIP && (
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="secondary" className="gap-1 text-xs font-mono">
+                                    <Globe className="h-3 w-3" />
+                                    {visitorIP}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={() => handleBlockIP(visitorIP)}
+                                    title="حظر هذا الـ IP"
+                                  >
+                                    <Ban className="h-3 w-3" />
+                                  </Button>
                                 </div>
                               )}
                             </div>
