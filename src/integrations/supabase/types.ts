@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      blocked_ips: {
+        Row: {
+          blocked_by: string | null
+          created_at: string
+          id: string
+          ip_address: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_by?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       customer_applications: {
         Row: {
           add_driver: boolean | null
@@ -126,6 +150,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ip_address: string | null
           page_path: string
           referrer: string | null
           referrer_source: string | null
@@ -135,6 +160,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           page_path: string
           referrer?: string | null
           referrer_source?: string | null
@@ -144,6 +170,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           page_path?: string
           referrer?: string | null
           referrer_source?: string | null

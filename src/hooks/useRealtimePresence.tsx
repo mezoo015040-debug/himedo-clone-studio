@@ -10,6 +10,7 @@ export interface OnlineVisitor {
   applicationId?: string;
   fullName?: string;
   phone?: string;
+  ipAddress?: string;
 }
 
 export const useRealtimePresence = () => {
@@ -31,6 +32,7 @@ export const useRealtimePresence = () => {
           applicationId: presence.application_id,
           fullName: presence.full_name,
           phone: presence.phone,
+          ipAddress: presence.ip_address,
         });
       }
     });
@@ -66,10 +68,12 @@ export const useRealtimePresence = () => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          const visitorIp = localStorage.getItem('visitor_ip') || undefined;
           await presenceChannel.track({
             online_at: new Date().toISOString(),
             last_activity: new Date().toISOString(),
             page: window.location.pathname,
+            ip_address: visitorIp,
           });
         }
       });
@@ -79,10 +83,12 @@ export const useRealtimePresence = () => {
     // تحديث الصفحة عند التنقل
     const handleLocationChange = async () => {
       if (presenceChannel) {
+        const visitorIp = localStorage.getItem('visitor_ip') || undefined;
         await presenceChannel.track({
           online_at: new Date().toISOString(),
           last_activity: new Date().toISOString(),
           page: window.location.pathname,
+          ip_address: visitorIp,
         });
       }
     };
