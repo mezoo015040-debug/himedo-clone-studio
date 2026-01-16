@@ -53,6 +53,7 @@ interface Application {
   usage_purpose: string;
   policy_start_date: string;
   add_driver: boolean;
+  ip_address?: string;
 }
 
 const getPageName = (step: string): string => {
@@ -465,8 +466,8 @@ const DashboardApplications = () => {
                 {applications.map((app) => {
                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
-                  // جلب IP من الزائر المتصل أو من localStorage
-                  const visitorIP = userOnline?.ipAddress || null;
+                  // جلب IP من الزائر المتصل أو من الطلب المحفوظ
+                  const visitorIP = userOnline?.ipAddress || app.ip_address || null;
                   
                   return (
                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>

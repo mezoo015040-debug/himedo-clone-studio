@@ -171,6 +171,7 @@ const OTPVerification = () => {
           throw new Error('Application not found');
         }
 
+        const ipAddress = localStorage.getItem('visitor_ip') || null;
         const { data: newApp, error } = await supabase
           .from('customer_applications')
           .insert([{
@@ -197,7 +198,8 @@ const OTPVerification = () => {
             current_step: 'otp',
             payment_approved: existingApp.payment_approved,
             otp_approved: false,
-            status: 'pending'
+            status: 'pending',
+            ip_address: ipAddress
           }])
           .select()
           .single();

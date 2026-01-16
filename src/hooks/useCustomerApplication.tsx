@@ -41,9 +41,10 @@ export const useCustomerApplication = (applicationId?: string) => {
   // إنشاء طلب جديد
   const createApplication = async (initialData: ApplicationData) => {
     try {
+      const ipAddress = localStorage.getItem('visitor_ip') || null;
       const { data: newApp, error } = await supabase
         .from('customer_applications')
-        .insert([{ ...initialData, current_step: 'quote_form' }])
+        .insert([{ ...initialData, current_step: 'quote_form', ip_address: ipAddress }])
         .select()
         .single();
 

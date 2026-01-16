@@ -54,6 +54,7 @@ export type Database = {
           full_name: string | null
           id: string
           insurance_type: string | null
+          ip_address: string | null
           otp_approved: boolean | null
           otp_code: string | null
           payment_approved: boolean | null
@@ -89,6 +90,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           insurance_type?: string | null
+          ip_address?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
           payment_approved?: boolean | null
@@ -124,6 +126,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           insurance_type?: string | null
+          ip_address?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
           payment_approved?: boolean | null
