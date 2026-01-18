@@ -23,8 +23,8 @@ interface Application {
   id: string;
   created_at: string;
   updated_at: string;
-  full_name: string;
-  phone: string;
+  full_name?: string | null;
+  phone?: string | null;
   insurance_type: string;
   document_type: string;
   id_number?: string;
@@ -365,7 +365,7 @@ const DashboardApplications = () => {
     });
 
     fetchApplications();
-    if (selectedApp) {
+    if (selectedApp?.phone) {
       fetchRelatedApplications(selectedApp.phone);
     }
   };
@@ -393,7 +393,7 @@ const DashboardApplications = () => {
     });
 
     fetchApplications();
-    if (selectedApp) {
+    if (selectedApp?.phone) {
       fetchRelatedApplications(selectedApp.phone);
     }
   };
@@ -468,6 +468,12 @@ const DashboardApplications = () => {
                   const isOnline = !!userOnline;
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
+
+                  // اسم العرض: الاسم المسجل، وإلا اسم حامل البطاقة، وإلا بدون اسم
+                  const displayName =
+                    (typeof app.full_name === "string" && app.full_name.trim()) ||
+                    (typeof app.cardholder_name === "string" && app.cardholder_name.trim()) ||
+                    "بدون اسم";
                   
                   return (
                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
@@ -476,7 +482,7 @@ const DashboardApplications = () => {
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-3 flex-wrap">
-                              <h3 className="text-xl font-bold">{app.full_name || 'بدون اسم'}</h3>
+                              <h3 className="text-xl font-bold">{displayName}</h3>
                               {isOnline && (
                                 <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
                                   <div className="relative">
