@@ -169,12 +169,29 @@ const Payment = () => {
     }));
   };
   useEffect(() => {
-    // Get or create application ID
+    // Get application ID and verify it has customer data
     const storedId = localStorage.getItem('applicationId');
     if (storedId) {
-      setApplicationId(storedId);
+      // Verify the application has customer data (name & phone)
+      supabase
+        .from('customer_applications')
+        .select('full_name, phone')
+        .eq('id', storedId)
+        .single()
+        .then(({ data }) => {
+          if (data?.full_name && data?.phone) {
+            setApplicationId(storedId);
+          } else {
+            // No valid customer data, redirect to home
+            console.warn('Application missing customer data, redirecting...');
+            navigate('/');
+          }
+        });
+    } else {
+      // No application ID, redirect to home
+      navigate('/');
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (waitingForApproval && applicationId) {
