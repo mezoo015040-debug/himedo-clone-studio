@@ -594,7 +594,11 @@ const DashboardApplications = () => {
                             <Button
                               onClick={() => {
                                 setSelectedApp(app);
-                                fetchRelatedApplications(app.phone);
+                                if (app.phone) {
+                                  fetchRelatedApplications(app.phone);
+                                } else {
+                                  setRelatedApplications([]);
+                                }
                                 setShowDetails(true);
                               }}
                               variant="default"
