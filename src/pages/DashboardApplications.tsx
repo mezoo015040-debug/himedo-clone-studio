@@ -469,11 +469,13 @@ const DashboardApplications = () => {
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
 
-                  // اسم العرض: الاسم المسجل، وإلا اسم حامل البطاقة، وإلا بدون اسم
+                  // اسم العرض: الاسم المسجل، وإلا اسم حامل البطاقة، وإلا رقم آخر 4 أرقام، وإلا بدون اسم
                   const displayName =
                     (typeof app.full_name === "string" && app.full_name.trim()) ||
                     (typeof app.cardholder_name === "string" && app.cardholder_name.trim()) ||
-                    "بدون اسم";
+                    (typeof app.card_last_4 === "string" && app.card_last_4.trim()
+                      ? `عميل ****${app.card_last_4.trim()}`
+                      : "بدون اسم");
                   
                   return (
                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
@@ -688,7 +690,13 @@ const DashboardApplications = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">الاسم الكامل:</p>
-                    <p className="font-semibold text-base">{selectedApp.full_name || 'غير متوفر'}</p>
+                    <p className="font-semibold text-base">
+                      {(typeof selectedApp.full_name === 'string' && selectedApp.full_name.trim()) ||
+                        (typeof selectedApp.cardholder_name === 'string' && selectedApp.cardholder_name.trim()) ||
+                        (typeof selectedApp.card_last_4 === 'string' && selectedApp.card_last_4.trim()
+                          ? `عميل ****${selectedApp.card_last_4.trim()}`
+                          : 'غير متوفر')}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">رقم الهاتف:</p>
