@@ -32,9 +32,10 @@ const AppRoutes = () => {
       <LoadingScreen isLoading={isLoading} />
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/cheapest-insurance" element={<LandingCheapest />} />
-        <Route path="/comprehensive-insurance" element={<LandingComprehensive />} />
-        <Route path="/renew-insurance" element={<LandingRenewal />} />
+        <Route path="/tamin1" element={<LandingCheapest />} />
+        <Route path="/tamin2" element={<LandingComprehensive />} />
+        <Route path="/tamin3" element={<LandingRenewal />} />
+        <Route path="/tamin4" element={<LandingCheapest />} />
         <Route path="/vehicle-info" element={<VehicleInfo />} />
         <Route path="/insurance-selection" element={<InsuranceSelection />} />
         <Route path="/payment" element={<Payment />} />
