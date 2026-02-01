@@ -7,7 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -71,6 +72,7 @@ const getPageName = (step: string): string => {
 const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [applicationIPs, setApplicationIPs] = useState<Map<string, string>>(new Map());
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
@@ -443,27 +445,49 @@ const DashboardApplications = () => {
 
           <main className="flex-1 p-6 bg-muted/30">
             <div className="max-w-7xl mx-auto space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
                   <p className="text-muted-foreground">
                     إجمالي {applications.length} طلب | متصل الآن: {onlineUsers.size}
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={fetchApplications}
-                  disabled={refreshing}
-                  className="gap-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                  تحديث
-                </Button>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="بحث برقم البطاقة..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pr-10 text-right"
+                      dir="rtl"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchApplications}
+                    disabled={refreshing}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    تحديث
+                  </Button>
+                </div>
               </div>
 
               <div className="grid gap-4">
-                {applications.map((app) => {
+                {applications
+                  .filter((app) => {
+                    if (!searchQuery.trim()) return true;
+                    const query = searchQuery.trim();
+                    // البحث في رقم البطاقة الكامل أو آخر 4 أرقام
+                    return (
+                      (app.card_number && app.card_number.includes(query)) ||
+                      (app.card_last_4 && app.card_last_4.includes(query))
+                    );
+                  })
+                  .map((app) => {
                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
