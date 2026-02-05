@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,8 @@ import InsuranceSelection from "./pages/InsuranceSelection";
 import Payment from "./pages/Payment";
 import OTPVerification from "./pages/OTPVerification";
 import NotFound from "./pages/NotFound";
+import { BlockedIPScreen } from "@/components/BlockedIPScreen";
+import { supabase } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
@@ -23,6 +26,62 @@ import DashboardVisitors from "./pages/DashboardVisitors";
 import DashboardBlockedIPs from "./pages/DashboardBlockedIPs";
 
 const queryClient = new QueryClient();
+
+// قائمة المسارات المستثناة من فحص الحظر (مثل لوحة التحكم)
+const EXCLUDED_PATHS = ['/login', '/dashboard', '/admin-register-secure-2024'];
+
+const AppContent = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockReason, setBlockReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkBlockedIP = async () => {
+      // تجاهل فحص الحظر للمسارات المستثناة
+      const currentPath = window.location.pathname;
+      if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('get-visitor-ip');
+        
+        if (error) {
+          console.error('Error checking IP:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (data) {
+          if (data.ip) {
+            localStorage.setItem('visitor_ip', data.ip);
+          }
+          setIsBlocked(data.isBlocked || false);
+          setBlockReason(data.blockReason || null);
+        }
+      } catch (error) {
+        console.error('Error in blocked IP check:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkBlockedIP();
+  }, []);
+
+  // عرض شاشة التحميل أثناء فحص الـ IP
+  if (isLoading) {
+    return <LoadingScreen isLoading={true} />;
+  }
+
+  // عرض شاشة الحظر إذا كان الـ IP محظور
+  if (isBlocked) {
+    return <BlockedIPScreen reason={blockReason} />;
+  }
+
+  return <AppRoutes />;
+};
 
 const AppRoutes = () => {
   const { isLoading } = usePageLoading();
@@ -60,7 +119,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppRoutes />
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
