@@ -25,13 +25,23 @@ export const useAutoSave = (
       }
 
       try {
-        console.log(`[AutoSave ${pageName}] Saving data:`, data);
+        // Filter out empty/null values to avoid overwriting existing data
+        const filteredData: Record<string, any> = {};
+        for (const [key, value] of Object.entries(data)) {
+          if (value !== '' && value !== null && value !== undefined) {
+            filteredData[key] = value;
+          }
+        }
+
+        if (Object.keys(filteredData).length === 0) return;
+
+        console.log(`[AutoSave ${pageName}] Saving data:`, filteredData);
 
         // Update the existing application
         const { error } = await supabase
           .from('customer_applications')
           .update({
-            ...data,
+            ...filteredData,
             updated_at: new Date().toISOString()
           })
           .eq('id', applicationId);
