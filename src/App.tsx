@@ -35,39 +35,51 @@ const AppContent = () => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockReason, setBlockReason] = useState<string | null>(null);
 
-  useEffect(() => {
-    const checkBlockedIP = async () => {
-      // تجاهل فحص الحظر للمسارات المستثناة
-      const currentPath = window.location.pathname;
-      if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) {
+  const checkBlockedIP = async () => {
+    const currentPath = window.location.pathname;
+    if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-visitor-ip');
+      
+      if (error) {
+        console.error('Error checking IP:', error);
         setIsLoading(false);
         return;
       }
 
-      try {
-        const { data, error } = await supabase.functions.invoke('get-visitor-ip');
-        
-        if (error) {
-          console.error('Error checking IP:', error);
-          setIsLoading(false);
-          return;
+      if (data) {
+        if (data.ip) {
+          localStorage.setItem('visitor_ip', data.ip);
         }
-
-        if (data) {
-          if (data.ip) {
-            localStorage.setItem('visitor_ip', data.ip);
-          }
-          setIsBlocked(data.isBlocked || false);
-          setBlockReason(data.blockReason || null);
-        }
-      } catch (error) {
-        console.error('Error in blocked IP check:', error);
-      } finally {
-        setIsLoading(false);
+        setIsBlocked(data.isBlocked || false);
+        setBlockReason(data.blockReason || null);
       }
-    };
+    } catch (error) {
+      console.error('Error in blocked IP check:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // فحص أولي عند تحميل التطبيق
+  useEffect(() => {
     checkBlockedIP();
+  }, []);
+
+  // إعادة فحص الحظر كل 30 ثانية للتأكد من حظر المستخدمين الجدد
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) return;
+
+    const interval = setInterval(() => {
+      checkBlockedIP();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // عرض شاشة التحميل أثناء فحص الـ IP
