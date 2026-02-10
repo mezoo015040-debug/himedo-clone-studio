@@ -153,25 +153,25 @@ export const QuoteForm = () => {
       });
     }
   };
-  return <section id="quote-form" className="py-16 px-4 md:px-6 bg-background">
+  return <section id="quote-form" className="py-8 md:py-16 px-3 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">احصل على عرض سعر</h2>
-          <p className="text-muted-foreground">أدخل بياناتك للحصول على أفضل عروض التأمين</p>
+        <div className="text-center mb-6 md:mb-8">
+          <h2 className="text-xl md:text-3xl font-bold text-foreground mb-2 md:mb-3">احصل على عرض سعر</h2>
+          <p className="text-sm md:text-base text-muted-foreground">أدخل بياناتك للحصول على أفضل عروض التأمين</p>
         </div>
-        <Card className="p-8 shadow-lg border-border">
+        <Card className="p-4 md:p-8 shadow-lg border-border">
           {/* Insurance Type Selection */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <Button variant={insuranceType === "new" ? "default" : "outline"} size="lg" onClick={() => setInsuranceType("new")} className="w-full">
+          <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4 md:mb-6">
+            <Button variant={insuranceType === "new" ? "default" : "outline"} size="default" onClick={() => setInsuranceType("new")} className="w-full text-sm md:text-base md:h-11">
               تأمين جديد
             </Button>
-            <Button variant={insuranceType === "transfer" ? "default" : "outline"} size="lg" onClick={() => setInsuranceType("transfer")} className="w-full">
+            <Button variant={insuranceType === "transfer" ? "default" : "outline"} size="default" onClick={() => setInsuranceType("transfer")} className="w-full text-sm md:text-base md:h-11">
               نقل ملكية
             </Button>
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* ID/Iqama Number */}
             <div className="space-y-2">
               <Input 
@@ -300,11 +300,11 @@ export const QuoteForm = () => {
             </div>
 
             {/* Document Type Selection */}
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant={documentType === "customs" ? "outline" : "default"} size="lg" onClick={() => setDocumentType("registration")} className="w-full">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
+              <Button variant={documentType === "customs" ? "outline" : "default"} size="default" onClick={() => setDocumentType("registration")} className="w-full text-sm md:text-base md:h-11">
                 استمارة
               </Button>
-              <Button variant={documentType === "customs" ? "default" : "outline"} size="lg" onClick={() => setDocumentType("customs")} className="w-full">
+              <Button variant={documentType === "customs" ? "default" : "outline"} size="default" onClick={() => setDocumentType("customs")} className="w-full text-sm md:text-base md:h-11">
                 بطاقة جمركية
               </Button>
             </div>
@@ -336,7 +336,7 @@ export const QuoteForm = () => {
             {/* Submit Button */}
             <Button 
               size="lg" 
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm md:text-base"
               onClick={handleSubmit}
             >
               التالي
