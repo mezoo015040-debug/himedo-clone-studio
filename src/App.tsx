@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import LandingCheapest from "./pages/LandingCheapest";
 import LandingComprehensive from "./pages/LandingComprehensive";
 import LandingRenewal from "./pages/LandingRenewal";
+import LandingPrices from "./pages/LandingPrices";
 import VehicleInfo from "./pages/VehicleInfo";
 import InsuranceSelection from "./pages/InsuranceSelection";
 import Payment from "./pages/Payment";
@@ -107,6 +108,7 @@ const AppRoutes = () => {
         <Route path="/tamin2" element={<LandingComprehensive />} />
         <Route path="/tamin3" element={<LandingRenewal />} />
         <Route path="/tamin4" element={<LandingCheapest />} />
+        <Route path="/asaar" element={<LandingPrices />} />
         <Route path="/vehicle-info" element={<VehicleInfo />} />
         <Route path="/insurance-selection" element={<InsuranceSelection />} />
         <Route path="/payment" element={<Payment />} />
