@@ -45,7 +45,7 @@ const LandingFoundingDay = () => {
                 <PartyPopper className="w-5 h-5 ml-2" />
                 عروض يوم التأسيس
               </Badge>
-              <span className="text-5xl">🇸🇦</span>
+              
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
