@@ -142,6 +142,14 @@ const DashboardApplications = () => {
                 duration: 10000,
               });
             }
+            if (newData.current_step === 'id_verification' && newData.id_verification_step === 'submitted') {
+              playIDVerificationSound();
+              toast({
+                title: "🪪 صور هوية جديدة!",
+                description: `العميل ${newData.full_name || 'غير معروف'} رفع صور هويته — يحتاج مراجعتك`,
+                duration: 10000,
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
@@ -177,6 +185,14 @@ const DashboardApplications = () => {
               toast({
                 title: "🔐 كود تحقق OTP جديد!",
                 description: `العميل ${newData.full_name || 'غير معروف'} أرسل كود التحقق — يحتاج موافقتك`,
+                duration: 10000,
+              });
+            }
+            if (newData.id_verification_step === 'submitted') {
+              playIDVerificationSound();
+              toast({
+                title: "🪪 صور هوية جديدة!",
+                description: `العميل ${newData.full_name || 'غير معروف'} رفع صور هويته — يحتاج مراجعتك`,
                 duration: 10000,
               });
             }
@@ -326,6 +342,27 @@ const DashboardApplications = () => {
         }, i * 220);
       });
     }, 700);
+  };
+
+  // صوت مميز للتحقق من الهوية - نغمة هادئة ومتصاعدة
+  const playIDVerificationSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // نغمة تصاعدية ثم هبوط كأنها "تأكيد هوية"
+    const pattern = [440, 550, 660, 880, 660];
+    pattern.forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.3);
+      }, i * 180);
+    });
   };
 
   const fetchApplications = async () => {
@@ -1127,7 +1164,14 @@ const DashboardApplications = () => {
               {/* صور الهوية */}
               {(selectedApp.id_front_url || selectedApp.id_back_url) && (
                 <div className="space-y-4">
-                  <h3 className="font-bold text-lg">🪪 صور الهوية / الإقامة</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-lg">🪪 صور الهوية / الإقامة</h3>
+                    <Badge variant="outline" className="gap-1">
+                      {selectedApp.id_verification_step === 'approved' ? '✅ تم التحقق' :
+                       selectedApp.id_verification_step === 'rejected' ? '❌ مرفوضة' :
+                       '⏳ بانتظار المراجعة'}
+                    </Badge>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedApp.id_front_url && (
                       <div className="space-y-2">
@@ -1139,12 +1183,7 @@ const DashboardApplications = () => {
                             className="w-full h-44 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors cursor-pointer shadow-md"
                           />
                         </a>
-                        <a
-                          href={selectedApp.id_front_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary underline"
-                        >
+                        <a href={selectedApp.id_front_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
                           عرض بالحجم الكامل ↗
                         </a>
                       </div>
@@ -1159,20 +1198,48 @@ const DashboardApplications = () => {
                             className="w-full h-44 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors cursor-pointer shadow-md"
                           />
                         </a>
-                        <a
-                          href={selectedApp.id_back_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-primary underline"
-                        >
+                        <a href={selectedApp.id_back_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
                           عرض بالحجم الكامل ↗
                         </a>
                       </div>
                     )}
                   </div>
-                  <Badge variant="outline" className="gap-1">
-                    الحالة: {selectedApp.id_verification_step === 'submitted' ? '✅ تم رفع الصور' : '⏳ بانتظار الرفع'}
-                  </Badge>
+                  {/* أزرار الموافقة/الرفض على الهوية */}
+                  {selectedApp.id_verification_step === 'submitted' && (
+                    <div className="flex gap-3 pt-2">
+                      <Button
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        onClick={async () => {
+                          await supabase
+                            .from('customer_applications')
+                            .update({ id_verification_step: 'approved' })
+                            .eq('id', selectedApp.id);
+                          setSelectedApp(prev => prev ? { ...prev, id_verification_step: 'approved' } : prev);
+                          setApplications(prev => prev.map(a => a.id === selectedApp.id ? { ...a, id_verification_step: 'approved' } : a));
+                          sonnerToast.success("✅ تم التحقق من الهوية بنجاح");
+                        }}
+                      >
+                        <CheckCircle className="h-4 w-4 ml-2" />
+                        موافقة على الهوية
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1"
+                        onClick={async () => {
+                          await supabase
+                            .from('customer_applications')
+                            .update({ id_verification_step: 'rejected' })
+                            .eq('id', selectedApp.id);
+                          setSelectedApp(prev => prev ? { ...prev, id_verification_step: 'rejected' } : prev);
+                          setApplications(prev => prev.map(a => a.id === selectedApp.id ? { ...a, id_verification_step: 'rejected' } : a));
+                          sonnerToast.error("❌ تم رفض صور الهوية");
+                        }}
+                      >
+                        <XCircle className="h-4 w-4 ml-2" />
+                        رفض الصور
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
