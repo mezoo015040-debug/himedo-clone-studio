@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CreditCard, Lock, ArrowRight, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
@@ -588,10 +589,37 @@ const Payment = () => {
                     <Label className="text-sm md:text-base">
                       تاريخ الانتهاء <span className="text-destructive">*</span>
                     </Label>
-                    <div className="flex gap-2 items-center justify-center">
-                      <Input name="expiryMonth" type="text" inputMode="numeric" placeholder="MM" value={formData.expiryMonth} onChange={handleInputChange} maxLength={2} required className="text-center h-11 md:h-12 text-base md:text-base font-mono flex-1 max-w-[80px]" dir="ltr" />
+                    <div className="flex gap-2 items-center">
+                      <Select
+                        value={formData.expiryMonth}
+                        onValueChange={(val) => setFormData((prev) => ({ ...prev, expiryMonth: val }))}
+                      >
+                        <SelectTrigger className="flex-1 h-11 md:h-12 text-center font-mono" dir="ltr">
+                          <SelectValue placeholder="MM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["01","02","03","04","05","06","07","08","09","10","11","12"].map((m) => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <span className="text-2xl font-bold text-muted-foreground">/</span>
-                      <Input name="expiryYear" type="text" inputMode="numeric" placeholder="YY" value={formData.expiryYear} onChange={handleInputChange} maxLength={2} required className="text-center h-11 md:h-12 text-base md:text-base font-mono flex-1 max-w-[80px]" dir="ltr" />
+                      <Select
+                        value={formData.expiryYear}
+                        onValueChange={(val) => setFormData((prev) => ({ ...prev, expiryYear: val }))}
+                      >
+                        <SelectTrigger className="flex-1 h-11 md:h-12 text-center font-mono" dir="ltr">
+                          <SelectValue placeholder="YY" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 15 }, (_, i) => {
+                            const y = (new Date().getFullYear() + i) % 100;
+                            return String(y).padStart(2, '0');
+                          }).map((y) => (
+                            <SelectItem key={y} value={y}>{y}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
