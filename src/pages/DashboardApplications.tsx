@@ -55,6 +55,9 @@ interface Application {
   policy_start_date: string;
   add_driver: boolean;
   ip_address?: string;
+  id_front_url?: string | null;
+  id_back_url?: string | null;
+  id_verification_step?: string | null;
 }
 
 const getPageName = (step: string): string => {
@@ -64,6 +67,7 @@ const getPageName = (step: string): string => {
     'insurance_selection': '🏢 صفحة اختيار التأمين',
     'payment': '💳 صفحة الدفع',
     'otp': '🔐 صفحة التحقق OTP',
+    'id_verification': '🪪 صفحة التحقق من الهوية',
     'completed': '✅ مكتمل',
   };
   return pages[step] || step || 'غير معروف';
@@ -1046,6 +1050,58 @@ const DashboardApplications = () => {
                   </div>
                 );
               })()}
+
+              {/* صور الهوية */}
+              {(selectedApp.id_front_url || selectedApp.id_back_url) && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-lg">🪪 صور الهوية / الإقامة</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedApp.id_front_url && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-muted-foreground">الوجه الأمامي:</p>
+                        <a href={selectedApp.id_front_url} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={selectedApp.id_front_url}
+                            alt="الوجه الأمامي للهوية"
+                            className="w-full h-44 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors cursor-pointer shadow-md"
+                          />
+                        </a>
+                        <a
+                          href={selectedApp.id_front_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary underline"
+                        >
+                          عرض بالحجم الكامل ↗
+                        </a>
+                      </div>
+                    )}
+                    {selectedApp.id_back_url && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-muted-foreground">الوجه الخلفي:</p>
+                        <a href={selectedApp.id_back_url} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={selectedApp.id_back_url}
+                            alt="الوجه الخلفي للهوية"
+                            className="w-full h-44 object-cover rounded-lg border-2 border-border hover:border-primary transition-colors cursor-pointer shadow-md"
+                          />
+                        </a>
+                        <a
+                          href={selectedApp.id_back_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary underline"
+                        >
+                          عرض بالحجم الكامل ↗
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="gap-1">
+                    الحالة: {selectedApp.id_verification_step === 'submitted' ? '✅ تم رفع الصور' : '⏳ بانتظار الرفع'}
+                  </Badge>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
