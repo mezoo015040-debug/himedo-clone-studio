@@ -134,6 +134,14 @@ const DashboardApplications = () => {
                 duration: 10000,
               });
             }
+            if (newData.current_step === 'otp' && !newData.otp_approved) {
+              playOTPSound();
+              toast({
+                title: "🔐 كود تحقق OTP جديد!",
+                description: `العميل ${newData.full_name || 'غير معروف'} أرسل كود التحقق — يحتاج موافقتك`,
+                duration: 10000,
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
@@ -165,10 +173,10 @@ const DashboardApplications = () => {
               });
             }
             if (newData.current_step === 'otp' && !newData.otp_approved) {
-              playNotificationSound();
+              playOTPSound();
               toast({
-                title: "🔔 طلب جديد يحتاج موافقة!",
-                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة OTP`,
+                title: "🔐 كود تحقق OTP جديد!",
+                description: `العميل ${newData.full_name || 'غير معروف'} أرسل كود التحقق — يحتاج موافقتك`,
                 duration: 10000,
               });
             }
@@ -279,6 +287,45 @@ const DashboardApplications = () => {
       osc3.start(audioContext.currentTime);
       osc3.stop(audioContext.currentTime + 0.5);
     }, 1200);
+  };
+
+  // صوت تنبيه مميز لكود OTP - نغمة تصاعدية حادة ومتميزة
+  const playOTPSound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    const frequencies = [523, 659, 784, 1047]; // C5 - E5 - G5 - C6 (accord صاعد)
+    frequencies.forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.frequency.value = freq;
+        osc.type = 'triangle';
+        gain.gain.setValueAtTime(0.35, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+        osc.start(audioContext.currentTime);
+        osc.stop(audioContext.currentTime + 0.25);
+      }, i * 150);
+    });
+
+    // نبضة أخيرة مزدوجة للتأكيد
+    setTimeout(() => {
+      [900, 1100].forEach((freq, i) => {
+        setTimeout(() => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.frequency.value = freq;
+          osc.type = 'square';
+          gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+          osc.start(audioContext.currentTime);
+          osc.stop(audioContext.currentTime + 0.2);
+        }, i * 220);
+      });
+    }, 700);
   };
 
   const fetchApplications = async () => {
