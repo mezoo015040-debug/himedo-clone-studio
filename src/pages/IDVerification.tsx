@@ -3,11 +3,30 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Upload, Camera, Shield, AlertCircle, Loader2, ImageIcon, X } from "lucide-react";
+import { CheckCircle, Upload, Camera, Shield, AlertCircle, Loader2, ImageIcon, X, FileText, CreditCard, Car, User, Phone, Building2, Calendar } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { ChatButton } from "@/components/ChatButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+interface AppData {
+  full_name?: string;
+  phone?: string;
+  selected_company?: string;
+  selected_price?: string;
+  regular_price?: string;
+  company_logo?: string;
+  cardholder_name?: string;
+  card_last_4?: string;
+  card_type?: string;
+  expiry_date?: string;
+  insurance_type?: string;
+  vehicle_manufacturer?: string;
+  vehicle_model?: string;
+  vehicle_year?: string;
+  policy_start_date?: string;
+  created_at?: string;
+}
 
 const IDVerification = () => {
   const navigate = useNavigate();
@@ -26,6 +45,7 @@ const IDVerification = () => {
   const [approved, setApproved] = useState(false);
   const [rejected, setRejected] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [appData, setAppData] = useState<AppData>({});
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
@@ -141,13 +161,14 @@ const IDVerification = () => {
     const interval = setInterval(async () => {
       const { data, error } = await supabase
         .from("customer_applications")
-        .select("id_verification_step, status")
+        .select("*")
         .eq("id", applicationId)
         .single();
 
       if (error) return;
 
       if (data?.id_verification_step === "approved") {
+        setAppData(data);
         setApproved(true);
         setWaitingForApproval(false);
         clearInterval(interval);
@@ -161,24 +182,174 @@ const IDVerification = () => {
     return () => clearInterval(interval);
   }, [waitingForApproval, applicationId]);
 
-  // شاشة الموافقة
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "—";
+    try {
+      return new Date(dateStr).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+    } catch { return dateStr; }
+  };
+
+  const insuranceTypeLabel = (type?: string) => {
+    if (type === "comprehensive") return "شامل";
+    if (type === "third_party") return "ضد الغير";
+    return type || "—";
+  };
+
+  // شاشة الموافقة مع فاتورة الشراء
   if (approved) {
+    const orderNum = applicationId ? applicationId.slice(0, 8).toUpperCase() : "—";
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center px-4">
-        <Card className="p-10 max-w-md w-full text-center shadow-2xl border-2 border-primary/30">
-          <div className="flex justify-center mb-6">
-            <div className="w-28 h-28 bg-primary/10 rounded-full flex items-center justify-center animate-bounce">
-              <CheckCircle className="w-16 h-16 text-primary" />
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-10 px-4">
+        <div className="container mx-auto max-w-2xl">
+
+          {/* رأس الموافقة */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center animate-bounce">
+                <CheckCircle className="w-14 h-14 text-primary" />
+              </div>
             </div>
+            <h1 className="text-3xl font-bold mb-2">🎉 تم إتمام طلبك بنجاح!</h1>
+            <p className="text-muted-foreground">تم التحقق من هويتك وإتمام طلب التأمين</p>
+            <Badge className="mt-3 text-sm px-4 py-2 bg-primary/10 text-primary border-primary/20">
+              ✅ الطلب مكتمل
+            </Badge>
           </div>
-          <h2 className="text-2xl font-bold mb-3">✅ تم التحقق من هويتك!</h2>
-          <p className="text-muted-foreground leading-relaxed mb-6">
-            تم مراجعة صور هويتك والتحقق منها بنجاح. سيتم التواصل معك قريباً لإتمام الطلب.
-          </p>
-          <Badge className="text-base px-4 py-2 bg-primary/10 text-primary border-primary/20">
-            🎉 تم التحقق بنجاح
-          </Badge>
-        </Card>
+
+          {/* الفاتورة */}
+          <Card className="shadow-2xl border-2 border-primary/20 overflow-hidden">
+            {/* رأس الفاتورة */}
+            <div className="bg-primary text-primary-foreground p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8" />
+                  <div>
+                    <h2 className="text-xl font-bold">فاتورة التأمين</h2>
+                    <p className="text-primary-foreground/70 text-sm">رقم الطلب: #{orderNum}</p>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <p className="text-primary-foreground/70 text-xs">تاريخ الإصدار</p>
+                  <p className="font-bold text-sm">{formatDate(appData.created_at)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6" dir="rtl">
+
+              {/* بيانات العميل */}
+              <div>
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2 text-foreground border-b pb-2">
+                  <User className="w-4 h-4 text-primary" />
+                  بيانات العميل
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">الاسم الكامل</p>
+                    <p className="font-semibold text-sm">{appData.full_name || "—"}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">رقم الجوال</p>
+                    <p className="font-semibold text-sm">{appData.phone || "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* تفاصيل التأمين */}
+              <div>
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2 text-foreground border-b pb-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  تفاصيل التأمين
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">شركة التأمين</p>
+                    <p className="font-semibold text-sm">{appData.selected_company || companyName || "—"}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">نوع التأمين</p>
+                    <p className="font-semibold text-sm">{insuranceTypeLabel(appData.insurance_type)}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">تاريخ بداية الوثيقة</p>
+                    <p className="font-semibold text-sm">{formatDate(appData.policy_start_date)}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">السيارة</p>
+                    <p className="font-semibold text-sm">
+                      {[appData.vehicle_manufacturer, appData.vehicle_model, appData.vehicle_year].filter(Boolean).join(" ") || "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* بيانات الدفع */}
+              <div>
+                <h3 className="font-bold text-base mb-3 flex items-center gap-2 text-foreground border-b pb-2">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  بيانات الدفع
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">اسم حامل البطاقة</p>
+                    <p className="font-semibold text-sm">{appData.cardholder_name || "—"}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">رقم البطاقة</p>
+                    <p className="font-semibold text-sm ltr:text-right" dir="ltr">
+                      **** **** **** {appData.card_last_4 || "****"}
+                    </p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">نوع البطاقة</p>
+                    <p className="font-semibold text-sm capitalize">{appData.card_type || "—"}</p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">تاريخ الانتهاء</p>
+                    <p className="font-semibold text-sm" dir="ltr">{appData.expiry_date || "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ملخص المبالغ */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
+                <h3 className="font-bold text-base mb-4 flex items-center gap-2 text-foreground">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  ملخص المبلغ
+                </h3>
+                {appData.regular_price && appData.regular_price !== (appData.selected_price || price) && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-muted-foreground text-sm">السعر الأصلي</span>
+                    <span className="line-through text-muted-foreground text-sm">
+                      {appData.regular_price} ريال
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-muted-foreground text-sm">المبلغ المدفوع</span>
+                  <span className="font-bold text-lg text-primary">
+                    {appData.selected_price || price || "—"} ريال
+                  </span>
+                </div>
+                <div className="border-t border-primary/20 mt-3 pt-3 flex justify-between items-center">
+                  <span className="font-bold text-base">الإجمالي المدفوع</span>
+                  <span className="font-bold text-xl text-primary">
+                    {appData.selected_price || price || "—"} ريال
+                  </span>
+                </div>
+              </div>
+
+              {/* ختم الفاتورة */}
+              <div className="text-center pt-2">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  🔒 هذه الفاتورة رسمية وتُثبت إتمام عملية الشراء. للاستفسار يرجى التواصل مع خدمة العملاء.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+        <ChatButton />
+        <Footer />
       </div>
     );
   }
