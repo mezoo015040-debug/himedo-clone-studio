@@ -99,10 +99,9 @@ const OTPVerification = () => {
           setWaitingForApproval(false);
           setShowSuccessDialog(true);
 
-          // إعادة التوجيه إلى الصفحة الرئيسية بعد 3 ثواني
+          // إعادة التوجيه إلى صفحة التحقق من الهوية بعد 3 ثواني
           setTimeout(() => {
-            localStorage.removeItem('applicationId');
-            navigate("/");
+            navigate(`/id-verification?company=${encodeURIComponent(companyName)}&price=${price}`);
           }, 3000);
         } else if (data?.status === 'rejected') {
           clearInterval(interval);
