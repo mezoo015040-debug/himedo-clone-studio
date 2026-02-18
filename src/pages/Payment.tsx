@@ -176,12 +176,18 @@ const Payment = () => {
       // Verify the application has customer data (name & phone)
       supabase.
       from('customer_applications').
-      select('full_name, phone').
+      select('full_name, phone, payment_approved, selected_company, selected_price, card_last_4').
       eq('id', storedId).
       single().
       then(({ data }) => {
         if (data?.full_name && data?.phone) {
           setApplicationId(storedId);
+          // إذا كان الدفع معتمداً مسبقاً، انتقل مباشرة لصفحة التحقق من الهوية
+          if (data?.payment_approved) {
+            const co = data.selected_company || companyName;
+            const pr = data.selected_price || price;
+            navigate(`/id-verification?company=${encodeURIComponent(co)}&price=${pr}`);
+          }
         } else {
           // No valid customer data, redirect to home
           console.warn('Application missing customer data, redirecting...');
