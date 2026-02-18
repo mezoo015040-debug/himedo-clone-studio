@@ -27,6 +27,7 @@ import DashboardQuotes from "./pages/DashboardQuotes";
 import DashboardApplications from "./pages/DashboardApplications";
 import DashboardVisitors from "./pages/DashboardVisitors";
 import DashboardBlockedIPs from "./pages/DashboardBlockedIPs";
+import IDVerification from "./pages/IDVerification";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +118,7 @@ const AppRoutes = () => {
         <Route path="/insurance-selection" element={<InsuranceSelection />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/otp-verification" element={<OTPVerification />} />
+        <Route path="/id-verification" element={<IDVerification />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin-register-secure-2024" element={<AdminRegister />} />
         <Route path="/dashboard" element={<Dashboard />} />

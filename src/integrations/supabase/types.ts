@@ -53,6 +53,9 @@ export type Database = {
           expiry_date: string | null
           full_name: string | null
           id: string
+          id_back_url: string | null
+          id_front_url: string | null
+          id_verification_step: string | null
           insurance_type: string | null
           ip_address: string | null
           otp_approved: boolean | null
@@ -89,6 +92,9 @@ export type Database = {
           expiry_date?: string | null
           full_name?: string | null
           id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_verification_step?: string | null
           insurance_type?: string | null
           ip_address?: string | null
           otp_approved?: boolean | null
@@ -125,6 +131,9 @@ export type Database = {
           expiry_date?: string | null
           full_name?: string | null
           id?: string
+          id_back_url?: string | null
+          id_front_url?: string | null
+          id_verification_step?: string | null
           insurance_type?: string | null
           ip_address?: string | null
           otp_approved?: boolean | null
