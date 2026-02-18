@@ -634,7 +634,7 @@ const Payment = () => {
                       <span>رمز الأمان (CVV) <span className="text-destructive">*</span></span>
                       <span className="text-xs text-muted-foreground mr-2">(خلف البطاقة)</span>
                     </Label>
-                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={4} required className="text-center h-11 md:h-12 text-base md:text-base font-mono" dir="ltr" />
+                    <Input id="cvv" name="cvv" type="text" inputMode="numeric" placeholder="123" value={formData.cvv} onChange={handleInputChange} maxLength={3} required className="text-center h-11 md:h-12 text-base md:text-base font-mono" dir="ltr" />
                   </div>
                 </div>
 
