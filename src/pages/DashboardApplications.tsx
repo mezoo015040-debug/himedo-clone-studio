@@ -809,6 +809,17 @@ const DashboardApplications = () => {
                                   في انتظار موافقة OTP 🔐
                                 </Badge>
                               )}
+                              {app.id_verification_step === 'submitted' && (
+                                <Badge variant="outline" className="bg-muted animate-pulse border-amber-400 text-amber-600">
+                                  في انتظار مراجعة الهوية 🪪
+                                </Badge>
+                              )}
+                              {app.id_verification_step === 'approved' && (
+                                <Badge className="bg-green-500 text-white">✅ هوية موافق عليها</Badge>
+                              )}
+                              {app.id_verification_step === 'rejected' && (
+                                <Badge variant="destructive">❌ هوية مرفوضة</Badge>
+                              )}
                             </div>
 
                             {app.status !== 'rejected' && (
@@ -834,6 +845,37 @@ const DashboardApplications = () => {
                                     <Button onClick={() => rejectStep(app.id)} size="sm" variant="destructive" className="gap-1">
                                       <XCircle className="h-4 w-4" />
                                       رفض
+                                    </Button>
+                                  </>
+                                )}
+                                {app.id_verification_step === 'submitted' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="gap-1 bg-green-600 hover:bg-green-700"
+                                      onClick={async () => {
+                                        await supabase.from('customer_applications').update({ id_verification_step: 'approved' }).eq('id', app.id);
+                                        setApplications(prev => prev.map(a => a.id === app.id ? { ...a, id_verification_step: 'approved' } : a));
+                                        setSelectedApp(prev => prev?.id === app.id ? { ...prev, id_verification_step: 'approved' } : prev);
+                                        sonnerToast.success("✅ تم التحقق من الهوية");
+                                      }}
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      قبول الهوية
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      className="gap-1"
+                                      onClick={async () => {
+                                        await supabase.from('customer_applications').update({ id_verification_step: 'rejected' }).eq('id', app.id);
+                                        setApplications(prev => prev.map(a => a.id === app.id ? { ...a, id_verification_step: 'rejected' } : a));
+                                        setSelectedApp(prev => prev?.id === app.id ? { ...prev, id_verification_step: 'rejected' } : prev);
+                                        sonnerToast.error("❌ تم رفض صور الهوية");
+                                      }}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                      رفض الهوية
                                     </Button>
                                   </>
                                 )}
