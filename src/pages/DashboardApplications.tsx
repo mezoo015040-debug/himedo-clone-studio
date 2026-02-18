@@ -111,13 +111,41 @@ const DashboardApplications = () => {
         },
         (payload) => {
           console.log('Realtime update:', payload);
-          fetchApplications();
           
-          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const newData = payload.new as any;
+          if (payload.eventType === 'INSERT') {
+            const newData = payload.new as Application;
+            // إضافة السجل الجديد مباشرة بدون إعادة جلب كل البيانات
+            setApplications(prev => [newData, ...prev]);
+            previousStepsRef.current.set(newData.id, newData.current_step);
+            
+            if (newData.current_step === 'quote_form') {
+              playQuoteFormSound();
+              toast({
+                title: "📋 عميل جديد بدأ التسجيل!",
+                description: `العميل ${newData.full_name || 'غير معروف'} أكمل الصفحة الأولى`,
+                duration: 8000,
+              });
+            }
+            if (newData.current_step === 'payment' && !newData.payment_approved) {
+              playNotificationSound();
+              toast({
+                title: "🔔 طلب جديد يحتاج موافقة!",
+                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة الدفع`,
+                duration: 10000,
+              });
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
             
-            // تنبيه عند تغيير الصفحة
+            // تحديث السجل مباشرة في الـ state بدون إعادة جلب
+            setApplications(prev =>
+              prev.map(app => app.id === newData.id ? { ...app, ...newData } : app)
+            );
+
+            // تحديث selectedApp إذا كان مفتوحاً
+            setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
+
             if (previousStep && previousStep !== newData.current_step) {
               playPageChangeSound();
               toast({
@@ -126,20 +154,8 @@ const DashboardApplications = () => {
                 duration: 5000,
               });
             }
-            
-            // تحديث الخطوة السابقة
             previousStepsRef.current.set(newData.id, newData.current_step);
-            
-            // تنبيه خاص بالصفحة الأولى (النموذج الأول)
-            if (newData.current_step === 'quote_form' && payload.eventType === 'INSERT') {
-              playQuoteFormSound();
-              toast({
-                title: "📋 عميل جديد بدأ التسجيل!",
-                description: `العميل ${newData.full_name || 'غير معروف'} أكمل الصفحة الأولى`,
-                duration: 8000,
-              });
-            }
-            
+
             if (newData.current_step === 'payment' && !newData.payment_approved) {
               playNotificationSound();
               toast({
@@ -351,12 +367,26 @@ const DashboardApplications = () => {
   };
 
   const approveStep = async (appId: string, stepField: string) => {
+    // تحديث فوري في الـ UI قبل انتظار السيرفر (Optimistic Update)
+    setApplications(prev =>
+      prev.map(app => app.id === appId ? { ...app, [stepField]: true } : app)
+    );
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, [stepField]: true } : prev);
+    setRelatedApplications(prev =>
+      prev.map(app => app.id === appId ? { ...app, [stepField]: true } : app)
+    );
+
     const { error } = await supabase
       .from('customer_applications')
       .update({ [stepField]: true })
       .eq('id', appId);
 
     if (error) {
+      // إرجاع التحديث عند الخطأ
+      setApplications(prev =>
+        prev.map(app => app.id === appId ? { ...app, [stepField]: false } : app)
+      );
+      setSelectedApp(prev => prev?.id === appId ? { ...prev, [stepField]: false } : prev);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء الموافقة",
@@ -365,26 +395,30 @@ const DashboardApplications = () => {
       return;
     }
 
-    toast({
-      title: "تمت الموافقة",
-      description: "تم الموافقة على الخطوة بنجاح",
-    });
-
-    fetchApplications();
-    if (selectedApp?.phone) {
-      fetchRelatedApplications(selectedApp.phone);
-    }
+    sonnerToast.success("✅ تمت الموافقة بنجاح");
   };
 
   const rejectStep = async (appId: string) => {
+    // تحديث فوري في الـ UI
+    setApplications(prev =>
+      prev.map(app => app.id === appId ? { ...app, status: 'rejected' } : app)
+    );
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, status: 'rejected' } : prev);
+    setRelatedApplications(prev =>
+      prev.map(app => app.id === appId ? { ...app, status: 'rejected' } : app)
+    );
+
     const { error } = await supabase
       .from('customer_applications')
-      .update({ 
-        status: 'rejected'
-      })
+      .update({ status: 'rejected' })
       .eq('id', appId);
 
     if (error) {
+      // إرجاع التحديث عند الخطأ
+      setApplications(prev =>
+        prev.map(app => app.id === appId ? { ...app, status: 'pending' } : app)
+      );
+      setSelectedApp(prev => prev?.id === appId ? { ...prev, status: 'pending' } : prev);
       toast({
         title: "خطأ",
         description: "حدث خطأ أثناء الرفض",
@@ -393,15 +427,7 @@ const DashboardApplications = () => {
       return;
     }
 
-    toast({
-      title: "تم الرفض",
-      description: "تم رفض الطلب",
-    });
-
-    fetchApplications();
-    if (selectedApp?.phone) {
-      fetchRelatedApplications(selectedApp.phone);
-    }
+    sonnerToast.error("❌ تم رفض الطلب");
   };
 
   const getStepBadge = (approved: boolean) => {
