@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 // دالة مساعدة لجلب IP
 const getVisitorIP = async (): Promise<string | null> => {
-  // أولاً نحاول من localStorage
   let ip = localStorage.getItem('visitor_ip');
   if (ip) return ip;
 
-  // إذا لم يكن موجوداً، نجلبه من الـ edge function
   try {
     const { data } = await supabase.functions.invoke('get-visitor-ip');
     if (data?.ip) {
@@ -22,9 +20,10 @@ const getVisitorIP = async (): Promise<string | null> => {
 
 export const useApplicationData = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
+  const isCreatingRef = useRef(false);
+  const pendingCreateRef = useRef<Promise<string | null> | null>(null);
 
   useEffect(() => {
-    // Try to get existing application ID from localStorage
     const storedId = localStorage.getItem('applicationId');
     if (storedId) {
       setApplicationId(storedId);
@@ -32,34 +31,61 @@ export const useApplicationData = () => {
   }, []);
 
   const createOrUpdateApplication = async (data: Record<string, any>) => {
+    // Check localStorage directly to avoid stale state
+    const currentId = applicationId || localStorage.getItem('applicationId');
+    
     try {
-      if (applicationId) {
-        // Update existing application - also update IP if not set
+      if (currentId) {
         const ipAddress = await getVisitorIP();
         const { error } = await supabase
           .from('customer_applications')
           .update({ ...data, ip_address: ipAddress })
-          .eq('id', applicationId);
-
-        if (error) throw error;
-      } else {
-        // Create new application with IP address
-        const ipAddress = await getVisitorIP();
-        const { data: newApp, error } = await supabase
-          .from('customer_applications')
-          .insert([{ ...data, ip_address: ipAddress }])
-          .select()
-          .single();
+          .eq('id', currentId);
 
         if (error) throw error;
         
-        if (newApp) {
-          setApplicationId(newApp.id);
-          localStorage.setItem('applicationId', newApp.id);
+        // Sync state if it was from localStorage
+        if (!applicationId) {
+          setApplicationId(currentId);
+        }
+        return currentId;
+      } else {
+        // Prevent duplicate creation with a lock
+        if (isCreatingRef.current && pendingCreateRef.current) {
+          // Wait for the existing creation to finish
+          return await pendingCreateRef.current;
+        }
+        
+        isCreatingRef.current = true;
+        
+        const createPromise = (async () => {
+          const ipAddress = await getVisitorIP();
+          const { data: newApp, error } = await supabase
+            .from('customer_applications')
+            .insert([{ ...data, ip_address: ipAddress }])
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          if (newApp) {
+            setApplicationId(newApp.id);
+            localStorage.setItem('applicationId', newApp.id);
+            return newApp.id;
+          }
+          return null;
+        })();
+        
+        pendingCreateRef.current = createPromise;
+        
+        try {
+          const result = await createPromise;
+          return result;
+        } finally {
+          isCreatingRef.current = false;
+          pendingCreateRef.current = null;
         }
       }
-
-      return applicationId;
     } catch (error) {
       console.error('Error creating/updating application:', error);
       throw error;
