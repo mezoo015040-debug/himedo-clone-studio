@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -73,6 +73,19 @@ const getPageName = (step: string): string => {
   return pages[step] || step || 'غير معروف';
 };
 
+// Shared AudioContext - reuse across all sounds to prevent lag
+let sharedAudioCtx: AudioContext | null = null;
+const getAudioContext = (): AudioContext => {
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  // Resume if suspended (browser autoplay policy)
+  if (sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume();
+  }
+  return sharedAudioCtx;
+};
+
 const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -86,7 +99,7 @@ const DashboardApplications = () => {
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
   const previousStepsRef = useRef<Map<string, string>>(new Map());
-
+  
   // تتبع الإشعارات المُرسلة لتفادي التكرار
   const notifiedRef = useRef<Set<string>>(new Set());
 
@@ -202,163 +215,111 @@ const DashboardApplications = () => {
   }, [navigate]);
 
   // صوت تنبيه عند تغيير الصفحة
-  const playPageChangeSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
+  const playPageChangeSound = useCallback(() => {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
     oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
+    gainNode.connect(ctx.destination);
     oscillator.frequency.value = 440;
     oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  };
+    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.3);
+  }, []);
 
-  // صوت تنبيه لصفحة النموذج الأولى (صوت ناعم ومختلف)
-  const playQuoteFormSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    // نبضة واحدة طويلة بتردد منخفض
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 500; // تردد أقل لصوت أنعم
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.8);
-    
-    // نبضة ثانية بتردد أعلى قليلاً
-    setTimeout(() => {
-      const osc2 = audioContext.createOscillator();
-      const gain2 = audioContext.createGain();
-      osc2.connect(gain2);
-      gain2.connect(audioContext.destination);
-      osc2.frequency.value = 650;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
-      osc2.start(audioContext.currentTime);
-      osc2.stop(audioContext.currentTime + 0.6);
-    }, 900);
-  };
+  const playQuoteFormSound = useCallback(() => {
+    const ctx = getAudioContext();
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.frequency.value = 500;
+    osc1.type = 'sine';
+    gain1.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.8);
 
-  // صوت تنبيه لصفحة الدفع (صوت قوي ومتكرر)
-  const playNotificationSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.5);
-    
-    setTimeout(() => {
-      const osc2 = audioContext.createOscillator();
-      const gain2 = audioContext.createGain();
-      osc2.connect(gain2);
-      gain2.connect(audioContext.destination);
-      osc2.frequency.value = 800;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      osc2.start(audioContext.currentTime);
-      osc2.stop(audioContext.currentTime + 0.5);
-    }, 600);
-    
-    setTimeout(() => {
-      const osc3 = audioContext.createOscillator();
-      const gain3 = audioContext.createGain();
-      osc3.connect(gain3);
-      gain3.connect(audioContext.destination);
-      osc3.frequency.value = 800;
-      osc3.type = 'sine';
-      gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gain3.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      osc3.start(audioContext.currentTime);
-      osc3.stop(audioContext.currentTime + 0.5);
-    }, 1200);
-  };
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.frequency.value = 650;
+    osc2.type = 'sine';
+    const startTime = ctx.currentTime + 0.9;
+    gain2.gain.setValueAtTime(0.2, startTime);
+    gain2.gain.exponentialRampToValueAtTime(0.01, startTime + 0.6);
+    osc2.start(startTime);
+    osc2.stop(startTime + 0.6);
+  }, []);
 
-  // صوت تنبيه مميز لكود OTP - نغمة تصاعدية حادة ومتميزة
-  const playOTPSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    const frequencies = [523, 659, 784, 1047]; // C5 - E5 - G5 - C6 (accord صاعد)
-    frequencies.forEach((freq, i) => {
-      setTimeout(() => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.frequency.value = freq;
-        osc.type = 'triangle';
-        gain.gain.setValueAtTime(0.35, audioContext.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
-        osc.start(audioContext.currentTime);
-        osc.stop(audioContext.currentTime + 0.25);
-      }, i * 150);
+  const playNotificationSound = useCallback(() => {
+    const ctx = getAudioContext();
+    [0, 0.6, 1.2].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      osc.type = 'sine';
+      const t = ctx.currentTime + delay;
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+      osc.start(t);
+      osc.stop(t + 0.5);
     });
+  }, []);
 
-    // نبضة أخيرة مزدوجة للتأكيد
-    setTimeout(() => {
-      [900, 1100].forEach((freq, i) => {
-        setTimeout(() => {
-          const osc = audioContext.createOscillator();
-          const gain = audioContext.createGain();
-          osc.connect(gain);
-          gain.connect(audioContext.destination);
-          osc.frequency.value = freq;
-          osc.type = 'square';
-          gain.gain.setValueAtTime(0.2, audioContext.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-          osc.start(audioContext.currentTime);
-          osc.stop(audioContext.currentTime + 0.2);
-        }, i * 220);
-      });
-    }, 700);
-  };
+  const playOTPSound = useCallback(() => {
+    const ctx = getAudioContext();
+    const frequencies = [523, 659, 784, 1047];
+    frequencies.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'triangle';
+      const t = ctx.currentTime + i * 0.15;
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+      osc.start(t);
+      osc.stop(t + 0.25);
+    });
+    [900, 1100].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'square';
+      const t = ctx.currentTime + 0.7 + i * 0.22;
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+      osc.start(t);
+      osc.stop(t + 0.2);
+    });
+  }, []);
 
-  // صوت مميز للتحقق من الهوية - نغمة هادئة ومتصاعدة
-  const playIDVerificationSound = () => {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    // نغمة تصاعدية ثم هبوط كأنها "تأكيد هوية"
+  const playIDVerificationSound = useCallback(() => {
+    const ctx = getAudioContext();
     const pattern = [440, 550, 660, 880, 660];
     pattern.forEach((freq, i) => {
-      setTimeout(() => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.frequency.value = freq;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        osc.start(audioContext.currentTime);
-        osc.stop(audioContext.currentTime + 0.3);
-      }, i * 180);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      const t = ctx.currentTime + i * 0.18;
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+      osc.start(t);
+      osc.stop(t + 0.3);
     });
-  };
+  }, []);
 
   const fetchApplications = async () => {
     setRefreshing(true);
