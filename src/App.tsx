@@ -38,6 +38,7 @@ const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockReason, setBlockReason] = useState<string | null>(null);
+  const [visitorIP, setVisitorIP] = useState<string | null>(null);
   const location = useLocation();
 
   const checkBlockedIP = useCallback(async () => {
@@ -48,7 +49,6 @@ const AppContent = () => {
     }
 
     try {
-      // Don't use cached IP - always check fresh from server
       const { data, error } = await supabase.functions.invoke('get-visitor-ip');
       
       if (error) {
@@ -60,6 +60,7 @@ const AppContent = () => {
       if (data) {
         if (data.ip) {
           localStorage.setItem('visitor_ip', data.ip);
+          setVisitorIP(data.ip);
         }
         setIsBlocked(data.isBlocked || false);
         setBlockReason(data.blockReason || null);
@@ -76,19 +77,52 @@ const AppContent = () => {
     checkBlockedIP();
   }, [checkBlockedIP]);
 
-  // إعادة فحص عند تغيير المسار (التنقل بين الصفحات)
+  // إعادة فحص عند تغيير المسار
   useEffect(() => {
-    checkBlockedIP();
-  }, [location.pathname, checkBlockedIP]);
+    if (!isLoading) checkBlockedIP();
+  }, [location.pathname, checkBlockedIP, isLoading]);
 
-  // إعادة فحص الحظر كل 15 ثانية (بدل 30) للتأكد من حظر المستخدمين بسرعة
+  // ⚡ الاستماع الفوري لجدول الحظر - بمجرد إضافة IP يتم الحظر فوراً
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) return;
+
+    const channel = supabase
+      .channel('blocked_ips_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'blocked_ips'
+        },
+        (payload) => {
+          const blockedIP = payload.new as { ip_address: string; reason: string | null };
+          const currentIP = visitorIP || localStorage.getItem('visitor_ip');
+          
+          console.log('🚫 New IP blocked:', blockedIP.ip_address, 'My IP:', currentIP);
+          
+          if (currentIP && blockedIP.ip_address === currentIP) {
+            setIsBlocked(true);
+            setBlockReason(blockedIP.reason || null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [visitorIP]);
+
+  // فحص دوري احتياطي كل 30 ثانية
   useEffect(() => {
     const currentPath = window.location.pathname;
     if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) return;
 
     const interval = setInterval(() => {
       checkBlockedIP();
-    }, 15000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [checkBlockedIP]);
