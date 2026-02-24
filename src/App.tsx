@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { usePageLoading } from "@/hooks/usePageLoading";
 import Index from "./pages/Index";
@@ -38,8 +38,9 @@ const AppContent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockReason, setBlockReason] = useState<string | null>(null);
+  const location = useLocation();
 
-  const checkBlockedIP = async () => {
+  const checkBlockedIP = useCallback(async () => {
     const currentPath = window.location.pathname;
     if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) {
       setIsLoading(false);
@@ -47,6 +48,7 @@ const AppContent = () => {
     }
 
     try {
+      // Don't use cached IP - always check fresh from server
       const { data, error } = await supabase.functions.invoke('get-visitor-ip');
       
       if (error) {
@@ -67,24 +69,29 @@ const AppContent = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // فحص أولي عند تحميل التطبيق
   useEffect(() => {
     checkBlockedIP();
-  }, []);
+  }, [checkBlockedIP]);
 
-  // إعادة فحص الحظر كل 30 ثانية للتأكد من حظر المستخدمين الجدد
+  // إعادة فحص عند تغيير المسار (التنقل بين الصفحات)
+  useEffect(() => {
+    checkBlockedIP();
+  }, [location.pathname, checkBlockedIP]);
+
+  // إعادة فحص الحظر كل 15 ثانية (بدل 30) للتأكد من حظر المستخدمين بسرعة
   useEffect(() => {
     const currentPath = window.location.pathname;
     if (EXCLUDED_PATHS.some(path => currentPath.startsWith(path))) return;
 
     const interval = setInterval(() => {
       checkBlockedIP();
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [checkBlockedIP]);
 
   // عرض شاشة التحميل أثناء فحص الـ IP
   if (isLoading) {

