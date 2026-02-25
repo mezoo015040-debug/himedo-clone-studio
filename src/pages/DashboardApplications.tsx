@@ -90,7 +90,7 @@ const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [applicationIPs, setApplicationIPs] = useState<Map<string, string>>(new Map());
+  
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
   const [showDetails, setShowDetails] = useState(false);
@@ -326,7 +326,8 @@ const DashboardApplications = () => {
     const { data, error } = await supabase
       .from('customer_applications')
       .select('*')
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .limit(200);
 
     if (error) {
       console.error('Error fetching applications:', error);
@@ -342,37 +343,7 @@ const DashboardApplications = () => {
     });
 
     setApplications(data || []);
-    
-    // جلب IPs من page_views
-    await fetchApplicationIPs(data || []);
-    
     setRefreshing(false);
-  };
-
-  const fetchApplicationIPs = async (apps: Application[]) => {
-    if (apps.length === 0) return;
-
-    // جلب آخر 500 سجل فقط لتسريع الاستعلام
-    const { data: pageViews, error } = await supabase
-      .from('page_views')
-      .select('visitor_id, ip_address')
-      .not('ip_address', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(500);
-
-    if (error) {
-      console.error('Error fetching IPs:', error);
-      return;
-    }
-
-    const visitorIPs = new Map<string, string>();
-    pageViews?.forEach(pv => {
-      if (pv.ip_address && !visitorIPs.has(pv.visitor_id)) {
-        visitorIPs.set(pv.visitor_id, pv.ip_address);
-      }
-    });
-
-    setApplicationIPs(visitorIPs);
   };
 
   const handleBlockIP = async (ip: string) => {
