@@ -27,37 +27,46 @@ export const DashboardAnalytics = () => {
     try {
       setLoading(true);
 
-      // إجمالي الزوار (unique visitors)
-      const { data: allVisitors, error: visitorsError } = await supabase
-        .from('page_views')
-        .select('visitor_id');
+      // جلب جميع السجلات مع التعامل مع حد الـ 1000
+      let allRecords: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (visitorsError) throw visitorsError;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('page_views')
+          .select('visitor_id, referrer_source, created_at')
+          .range(page * pageSize, (page + 1) * pageSize - 1);
 
-      const uniqueVisitors = new Set(allVisitors?.map(v => v.visitor_id) || []);
+        if (error) {
+          console.error('Error fetching page views:', error);
+          break;
+        }
+
+        if (data && data.length > 0) {
+          allRecords = [...allRecords, ...data];
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      const uniqueVisitors = new Set(allRecords.map(v => v.visitor_id));
 
       // زوار اليوم
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
-      const { data: todayData, error: todayError } = await supabase
-        .from('page_views')
-        .select('visitor_id')
-        .gte('created_at', today.toISOString());
-
-      if (todayError) throw todayError;
-
-      const uniqueTodayVisitors = new Set(todayData?.map(v => v.visitor_id) || []);
+      const uniqueTodayVisitors = new Set(
+        allRecords
+          .filter(v => new Date(v.created_at) >= today)
+          .map(v => v.visitor_id)
+      );
 
       // أفضل مصادر الزيارة
-      const { data: sourcesData, error: sourcesError } = await supabase
-        .from('page_views')
-        .select('referrer_source');
-
-      if (sourcesError) throw sourcesError;
-
       const sourceCounts: { [key: string]: number } = {};
-      sourcesData?.forEach(item => {
+      allRecords.forEach(item => {
         const source = item.referrer_source || 'مباشر';
         sourceCounts[source] = (sourceCounts[source] || 0) + 1;
       });
