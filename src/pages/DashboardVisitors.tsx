@@ -107,6 +107,25 @@ const DashboardVisitors = () => {
     checkAuth();
   }, [navigate]);
 
+  // الاستماع اللحظي لجدول page_views
+  useEffect(() => {
+    const channel = supabase
+      .channel('page_views_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'page_views' },
+        () => {
+          // تحديث الإحصائيات عند وصول زيارة جديدة
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchStats = async () => {
     try {
       setRefreshing(true);
@@ -122,12 +141,34 @@ const DashboardVisitors = () => {
       monthAgo.setDate(monthAgo.getDate() - 30);
       monthAgo.setHours(0, 0, 0, 0);
 
-      // إجمالي الزوار
-      const { data: allVisitors } = await supabase
-        .from('page_views')
-        .select('visitor_id, referrer_source, created_at');
+      // جلب جميع السجلات مع التعامل مع حد الـ 1000
+      let allVisitors: any[] = [];
+      let page = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (!allVisitors) {
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('page_views')
+          .select('visitor_id, referrer_source, created_at')
+          .range(page * pageSize, (page + 1) * pageSize - 1)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching page views:', error);
+          break;
+        }
+
+        if (data && data.length > 0) {
+          allVisitors = [...allVisitors, ...data];
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      if (allVisitors.length === 0) {
         setLoading(false);
         setRefreshing(false);
         return;
