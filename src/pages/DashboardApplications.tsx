@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
