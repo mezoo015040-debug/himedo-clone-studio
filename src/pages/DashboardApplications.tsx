@@ -839,6 +839,34 @@ const DashboardApplications = () => {
                     </Card>
                   );
                 })}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-4" dir="rtl">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={safeCurrentPage <= 1}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                          السابق
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          صفحة {safeCurrentPage} من {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={safeCurrentPage >= totalPages}
+                        >
+                          التالي
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Dialog لعرض التفاصيل الكاملة */}
