@@ -164,10 +164,11 @@ const DashboardApplications = () => {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
             
-            // تحديث السجل في الـ state
-            setApplications(prev =>
-              prev.map(app => app.id === newData.id ? { ...app, ...newData } : app)
-            );
+            // تحديث السجل ونقله لأعلى القائمة ليراه المسؤول فوراً
+            setApplications(prev => {
+              const updated = prev.filter(app => app.id !== newData.id);
+              return [{ ...newData }, ...updated];
+            });
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
