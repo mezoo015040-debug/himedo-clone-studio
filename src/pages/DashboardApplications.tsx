@@ -533,17 +533,27 @@ const DashboardApplications = () => {
               </div>
 
               <div className="grid gap-4">
-                {applications
-                  .filter((app) => {
+                {(() => {
+                  const filtered = applications.filter((app) => {
                     if (!searchQuery.trim()) return true;
                     const query = searchQuery.trim();
-                    // البحث في رقم البطاقة الكامل أو آخر 4 أرقام
                     return (
                       (app.card_number && app.card_number.includes(query)) ||
                       (app.card_last_4 && app.card_last_4.includes(query))
                     );
-                  })
-                  .map((app) => {
+                  });
+                  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                  const safeCurrentPage = Math.min(currentPage, totalPages || 1);
+                  const paginatedApps = filtered.slice(
+                    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+                    safeCurrentPage * ITEMS_PER_PAGE
+                  );
+                  return (
+                    <>
+                    <p className="text-sm text-muted-foreground">
+                      عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
+                    </p>
+                    {paginatedApps
                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
