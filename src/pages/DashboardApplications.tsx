@@ -90,6 +90,8 @@ const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
