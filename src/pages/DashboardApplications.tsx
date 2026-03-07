@@ -364,8 +364,6 @@ const DashboardApplications = () => {
     setApplications(allData);
     setRefreshing(false);
   };
-    setRefreshing(false);
-  };
 
   const handleBlockIP = async (ip: string) => {
     try {
