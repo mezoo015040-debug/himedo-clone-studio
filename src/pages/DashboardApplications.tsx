@@ -514,7 +514,7 @@ const DashboardApplications = () => {
                     <Input
                       placeholder="بحث برقم البطاقة..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                       className="pr-10 text-right"
                       dir="rtl"
                     />
