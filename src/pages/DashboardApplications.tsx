@@ -553,8 +553,8 @@ const DashboardApplications = () => {
                     <p className="text-sm text-muted-foreground">
                       عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
                     </p>
-                    {paginatedApps
-                  const userOnline = onlineUsers.get(app.id);
+                    {paginatedApps.map((app) => {
+                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
