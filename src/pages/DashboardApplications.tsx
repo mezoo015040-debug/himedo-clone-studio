@@ -325,26 +325,45 @@ const DashboardApplications = () => {
 
   const fetchApplications = async () => {
     setRefreshing(true);
-    const { data, error } = await supabase
-      .from('customer_applications')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(200);
+    
+    // Fetch all records by paginating through Supabase's 1000-row limit
+    let allData: Application[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('customer_applications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
 
-    if (error) {
-      console.error('Error fetching applications:', error);
-      setRefreshing(false);
-      return;
+      if (error) {
+        console.error('Error fetching applications:', error);
+        setRefreshing(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        from += pageSize;
+        hasMore = data.length === pageSize;
+      } else {
+        hasMore = false;
+      }
     }
 
     // تحديث الخطوات السابقة للتتبع
-    data?.forEach(app => {
+    allData.forEach(app => {
       if (!previousStepsRef.current.has(app.id)) {
         previousStepsRef.current.set(app.id, app.current_step);
       }
     });
 
-    setApplications(data || []);
+    setApplications(allData);
+    setRefreshing(false);
+  };
     setRefreshing(false);
   };
 
