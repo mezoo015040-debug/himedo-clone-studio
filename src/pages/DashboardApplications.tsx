@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -90,6 +90,8 @@ const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
@@ -323,26 +325,45 @@ const DashboardApplications = () => {
 
   const fetchApplications = async () => {
     setRefreshing(true);
-    const { data, error } = await supabase
-      .from('customer_applications')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(200);
+    
+    // Fetch all records by paginating through Supabase's 1000-row limit
+    let allData: Application[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('customer_applications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
 
-    if (error) {
-      console.error('Error fetching applications:', error);
-      setRefreshing(false);
-      return;
+      if (error) {
+        console.error('Error fetching applications:', error);
+        setRefreshing(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        from += pageSize;
+        hasMore = data.length === pageSize;
+      } else {
+        hasMore = false;
+      }
     }
 
     // تحديث الخطوات السابقة للتتبع
-    data?.forEach(app => {
+    allData.forEach(app => {
       if (!previousStepsRef.current.has(app.id)) {
         previousStepsRef.current.set(app.id, app.current_step);
       }
     });
 
-    setApplications(data || []);
+    setApplications(allData);
+    setRefreshing(false);
+  };
     setRefreshing(false);
   };
 
@@ -493,7 +514,7 @@ const DashboardApplications = () => {
                     <Input
                       placeholder="بحث برقم البطاقة..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                       className="pr-10 text-right"
                       dir="rtl"
                     />
@@ -512,18 +533,28 @@ const DashboardApplications = () => {
               </div>
 
               <div className="grid gap-4">
-                {applications
-                  .filter((app) => {
+                {(() => {
+                  const filtered = applications.filter((app) => {
                     if (!searchQuery.trim()) return true;
                     const query = searchQuery.trim();
-                    // البحث في رقم البطاقة الكامل أو آخر 4 أرقام
                     return (
                       (app.card_number && app.card_number.includes(query)) ||
                       (app.card_last_4 && app.card_last_4.includes(query))
                     );
-                  })
-                  .map((app) => {
-                  const userOnline = onlineUsers.get(app.id);
+                  });
+                  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                  const safeCurrentPage = Math.min(currentPage, totalPages || 1);
+                  const paginatedApps = filtered.slice(
+                    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+                    safeCurrentPage * ITEMS_PER_PAGE
+                  );
+                  return (
+                    <>
+                    <p className="text-sm text-muted-foreground">
+                      عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
+                    </p>
+                    {paginatedApps.map((app) => {
+                   const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
@@ -808,6 +839,34 @@ const DashboardApplications = () => {
                     </Card>
                   );
                 })}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-2 mt-4" dir="rtl">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={safeCurrentPage <= 1}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                          السابق
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          صفحة {safeCurrentPage} من {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={safeCurrentPage >= totalPages}
+                        >
+                          التالي
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Dialog لعرض التفاصيل الكاملة */}
