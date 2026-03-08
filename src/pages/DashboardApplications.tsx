@@ -100,6 +100,8 @@ const DashboardApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
