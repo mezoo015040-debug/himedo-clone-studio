@@ -601,27 +601,33 @@ const DashboardApplications = () => {
                  </div>
               </div>
 
-              <div className="grid gap-4">
-                {(() => {
-                  const filtered = applications.filter((app) => {
-                    if (!searchQuery.trim()) return true;
-                    const query = searchQuery.trim();
-                    return (
-                      (app.card_number && app.card_number.includes(query)) ||
-                      (app.card_last_4 && app.card_last_4.includes(query))
-                    );
-                  });
-                  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-                  const safeCurrentPage = Math.min(currentPage, totalPages || 1);
-                  const paginatedApps = filtered.slice(
-                    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
-                    safeCurrentPage * ITEMS_PER_PAGE
-                  );
-                  return (
-                    <>
-                    <p className="text-sm text-muted-foreground">
-                      عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
-                    </p>
+               <div className="grid gap-4">
+                 {(() => {
+                   const filtered = applications.filter((app) => {
+                     const query = searchQuery.trim();
+                     const cardMatch = !query || (app.card_number && app.card_number.includes(query)) || (app.card_last_4 && app.card_last_4.includes(query));
+                     
+                     // فلتر التاريخ
+                     const createdDate = new Date(app.created_at);
+                     const startOfDay = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()) : null;
+                     const endOfDay = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59) : null;
+                     
+                     const dateMatch = (!startOfDay && !endOfDay) || 
+                       ((startOfDay === null || createdDate >= startOfDay) && (endOfDay === null || createdDate <= endOfDay));
+                     
+                     return cardMatch && dateMatch;
+                   });
+                   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                   const safeCurrentPage = Math.min(currentPage, totalPages || 1);
+                   const paginatedApps = filtered.slice(
+                     (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+                     safeCurrentPage * ITEMS_PER_PAGE
+                   );
+                   return (
+                     <>
+                     <p className="text-sm text-muted-foreground">
+                       عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
+                     </p>
                     {paginatedApps.map((app) => {
                    const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
