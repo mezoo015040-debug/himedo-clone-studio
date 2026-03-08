@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Eye, Loader2, MapPin, RefreshCw, Menu, Globe, Ban, Search, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,6 +19,15 @@ import {
 } from "@/components/ui/dialog";
 import { usePresence, OnlineUser } from "@/hooks/usePresence";
 import { toast as sonnerToast } from "sonner";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 
 interface Application {
   id: string;
@@ -91,6 +100,8 @@ const DashboardApplications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
@@ -508,50 +519,115 @@ const DashboardApplications = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-64">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="بحث برقم البطاقة..."
-                      value={searchQuery}
-                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                      className="pr-10 text-right"
-                      dir="rtl"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchApplications}
-                    disabled={refreshing}
-                    className="gap-2"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    تحديث
-                  </Button>
-                </div>
+                   <div className="relative flex-1 md:w-64">
+                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input
+                       placeholder="بحث برقم البطاقة..."
+                       value={searchQuery}
+                       onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                       className="pr-10 text-right"
+                       dir="rtl"
+                     />
+                   </div>
+
+                   {/* فلتر التاريخ - من */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-2"
+                       >
+                         <CalendarIcon className="h-4 w-4" />
+                         {dateFrom ? format(dateFrom, 'dd/MM/yyyy', { locale: ar }) : 'من'}
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <CalendarComponent
+                         mode="single"
+                         selected={dateFrom}
+                         onSelect={(date) => { setDateFrom(date); setCurrentPage(1); }}
+                         initialFocus
+                         className="p-3 pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+
+                   {/* فلتر التاريخ - إلى */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-2"
+                       >
+                         <CalendarIcon className="h-4 w-4" />
+                         {dateTo ? format(dateTo, 'dd/MM/yyyy', { locale: ar }) : 'إلى'}
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <CalendarComponent
+                         mode="single"
+                         selected={dateTo}
+                         onSelect={(date) => { setDateTo(date); setCurrentPage(1); }}
+                         initialFocus
+                         className="p-3 pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+
+                   {/* زر مسح الفلاتر */}
+                   {(dateFrom || dateTo) && (
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => { setDateFrom(undefined); setDateTo(undefined); setCurrentPage(1); }}
+                       className="text-xs"
+                     >
+                       مسح التاريخ
+                     </Button>
+                   )}
+
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={fetchApplications}
+                     disabled={refreshing}
+                     className="gap-2"
+                   >
+                     <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                     تحديث
+                   </Button>
+                 </div>
               </div>
 
-              <div className="grid gap-4">
-                {(() => {
-                  const filtered = applications.filter((app) => {
-                    if (!searchQuery.trim()) return true;
-                    const query = searchQuery.trim();
-                    return (
-                      (app.card_number && app.card_number.includes(query)) ||
-                      (app.card_last_4 && app.card_last_4.includes(query))
-                    );
-                  });
-                  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-                  const safeCurrentPage = Math.min(currentPage, totalPages || 1);
-                  const paginatedApps = filtered.slice(
-                    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
-                    safeCurrentPage * ITEMS_PER_PAGE
-                  );
-                  return (
-                    <>
-                    <p className="text-sm text-muted-foreground">
-                      عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
-                    </p>
+               <div className="grid gap-4">
+                 {(() => {
+                   const filtered = applications.filter((app) => {
+                     const query = searchQuery.trim();
+                     const cardMatch = !query || (app.card_number && app.card_number.includes(query)) || (app.card_last_4 && app.card_last_4.includes(query));
+                     
+                     // فلتر التاريخ
+                     const createdDate = new Date(app.created_at);
+                     const startOfDay = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()) : null;
+                     const endOfDay = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59) : null;
+                     
+                     const dateMatch = (!startOfDay && !endOfDay) || 
+                       ((startOfDay === null || createdDate >= startOfDay) && (endOfDay === null || createdDate <= endOfDay));
+                     
+                     return cardMatch && dateMatch;
+                   });
+                   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+                   const safeCurrentPage = Math.min(currentPage, totalPages || 1);
+                   const paginatedApps = filtered.slice(
+                     (safeCurrentPage - 1) * ITEMS_PER_PAGE,
+                     safeCurrentPage * ITEMS_PER_PAGE
+                   );
+                   return (
+                     <>
+                     <p className="text-sm text-muted-foreground">
+                       عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
+                     </p>
                     {paginatedApps.map((app) => {
                    const userOnline = onlineUsers.get(app.id);
                   const isOnline = !!userOnline;
