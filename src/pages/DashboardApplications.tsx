@@ -519,27 +519,86 @@ const DashboardApplications = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-64">
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="بحث برقم البطاقة..."
-                      value={searchQuery}
-                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                      className="pr-10 text-right"
-                      dir="rtl"
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchApplications}
-                    disabled={refreshing}
-                    className="gap-2"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                    تحديث
-                  </Button>
-                </div>
+                   <div className="relative flex-1 md:w-64">
+                     <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                     <Input
+                       placeholder="بحث برقم البطاقة..."
+                       value={searchQuery}
+                       onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                       className="pr-10 text-right"
+                       dir="rtl"
+                     />
+                   </div>
+
+                   {/* فلتر التاريخ - من */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-2"
+                       >
+                         <CalendarIcon className="h-4 w-4" />
+                         {dateFrom ? format(dateFrom, 'dd/MM/yyyy', { locale: ar }) : 'من'}
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <CalendarComponent
+                         mode="single"
+                         selected={dateFrom}
+                         onSelect={(date) => { setDateFrom(date); setCurrentPage(1); }}
+                         initialFocus
+                         className="p-3 pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+
+                   {/* فلتر التاريخ - إلى */}
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-2"
+                       >
+                         <CalendarIcon className="h-4 w-4" />
+                         {dateTo ? format(dateTo, 'dd/MM/yyyy', { locale: ar }) : 'إلى'}
+                       </Button>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-auto p-0" align="start">
+                       <CalendarComponent
+                         mode="single"
+                         selected={dateTo}
+                         onSelect={(date) => { setDateTo(date); setCurrentPage(1); }}
+                         initialFocus
+                         className="p-3 pointer-events-auto"
+                       />
+                     </PopoverContent>
+                   </Popover>
+
+                   {/* زر مسح الفلاتر */}
+                   {(dateFrom || dateTo) && (
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => { setDateFrom(undefined); setDateTo(undefined); setCurrentPage(1); }}
+                       className="text-xs"
+                     >
+                       مسح التاريخ
+                     </Button>
+                   )}
+
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={fetchApplications}
+                     disabled={refreshing}
+                     className="gap-2"
+                   >
+                     <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                     تحديث
+                   </Button>
+                 </div>
               </div>
 
               <div className="grid gap-4">
