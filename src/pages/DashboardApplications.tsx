@@ -649,7 +649,7 @@ const DashboardApplications = () => {
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-3 flex-wrap">
-                              <h3 className="text-xl font-bold">{displayName}</h3>
+                              <h3 className="text-base font-bold">{displayName}</h3>
                               {isOnline && (
                                 <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
                                   <div className="relative">
