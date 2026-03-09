@@ -338,43 +338,34 @@ const DashboardApplications = () => {
   const fetchApplications = async () => {
     setRefreshing(true);
     
-    // Fetch all records by paginating through Supabase's 1000-row limit
-    let allData: Application[] = [];
-    let from = 0;
-    const pageSize = 1000;
-    let hasMore = true;
-    
-    while (hasMore) {
+    try {
+      // جلب آخر 500 طلب فقط للسرعة (يمكن تحميل المزيد حسب الحاجة)
       const { data, error } = await supabase
         .from('customer_applications')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(from, from + pageSize - 1);
+        .limit(500);
 
       if (error) {
         console.error('Error fetching applications:', error);
-        setRefreshing(false);
         return;
       }
 
-      if (data && data.length > 0) {
-        allData = [...allData, ...data];
-        from += pageSize;
-        hasMore = data.length === pageSize;
-      } else {
-        hasMore = false;
-      }
+      const allData = data || [];
+
+      // تحديث الخطوات السابقة للتتبع
+      allData.forEach(app => {
+        if (!previousStepsRef.current.has(app.id)) {
+          previousStepsRef.current.set(app.id, app.current_step);
+        }
+      });
+
+      setApplications(allData);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setRefreshing(false);
     }
-
-    // تحديث الخطوات السابقة للتتبع
-    allData.forEach(app => {
-      if (!previousStepsRef.current.has(app.id)) {
-        previousStepsRef.current.set(app.id, app.current_step);
-      }
-    });
-
-    setApplications(allData);
-    setRefreshing(false);
   };
 
   const handleBlockIP = async (ip: string) => {
@@ -642,14 +633,31 @@ const DashboardApplications = () => {
                       ? `عميل ****${app.card_last_4.trim()}`
                       : "بدون اسم");
                   
-                  return (
-                    <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
+                    const needsAction = (
+                      (!app.payment_approved && (app.current_step === 'payment' || app.status === 'pending_payment')) ||
+                      (!app.otp_approved && (app.current_step === 'otp' || app.status === 'pending_otp')) ||
+                      (app.id_verification_step === 'submitted')
+                    );
+                    const isNew = (Date.now() - new Date(app.created_at).getTime()) < 1800000; // أقل من 30 دقيقة
+                    
+                    return (
+                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''} ${needsAction ? 'border-l-4 border-l-red-500' : ''} ${isNew && !needsAction ? 'border-l-4 border-l-amber-400' : ''}`}>
                       <div className="space-y-4">
                         {/* معلومات العميل الأساسية */}
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-3 flex-wrap">
+                             <div className="flex items-center gap-3 flex-wrap">
                               <h3 className="text-base font-bold">{displayName}</h3>
+                              {needsAction && (
+                                <Badge variant="destructive" className="animate-pulse gap-1">
+                                  🔴 يحتاج إجراء
+                                </Badge>
+                              )}
+                              {isNew && !needsAction && (
+                                <Badge className="bg-amber-500 text-white gap-1">
+                                  🆕 جديد
+                                </Badge>
+                              )}
                               {isOnline && (
                                 <div className="flex items-center gap-2 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
                                   <div className="relative">
