@@ -633,8 +633,15 @@ const DashboardApplications = () => {
                       ? `عميل ****${app.card_last_4.trim()}`
                       : "بدون اسم");
                   
-                  return (
-                    <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''}`}>
+                    const needsAction = (
+                      (!app.payment_approved && (app.current_step === 'payment' || app.status === 'pending_payment')) ||
+                      (!app.otp_approved && (app.current_step === 'otp' || app.status === 'pending_otp')) ||
+                      (app.id_verification_step === 'submitted')
+                    );
+                    const isNew = (Date.now() - new Date(app.created_at).getTime()) < 1800000; // أقل من 30 دقيقة
+                    
+                    return (
+                     <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''} ${needsAction ? 'border-l-4 border-l-red-500' : ''} ${isNew && !needsAction ? 'border-l-4 border-l-amber-400' : ''}`}>
                       <div className="space-y-4">
                         {/* معلومات العميل الأساسية */}
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
