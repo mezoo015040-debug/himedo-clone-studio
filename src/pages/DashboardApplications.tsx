@@ -338,43 +338,34 @@ const DashboardApplications = () => {
   const fetchApplications = async () => {
     setRefreshing(true);
     
-    // Fetch all records by paginating through Supabase's 1000-row limit
-    let allData: Application[] = [];
-    let from = 0;
-    const pageSize = 1000;
-    let hasMore = true;
-    
-    while (hasMore) {
+    try {
+      // جلب آخر 500 طلب فقط للسرعة (يمكن تحميل المزيد حسب الحاجة)
       const { data, error } = await supabase
         .from('customer_applications')
         .select('*')
         .order('created_at', { ascending: false })
-        .range(from, from + pageSize - 1);
+        .limit(500);
 
       if (error) {
         console.error('Error fetching applications:', error);
-        setRefreshing(false);
         return;
       }
 
-      if (data && data.length > 0) {
-        allData = [...allData, ...data];
-        from += pageSize;
-        hasMore = data.length === pageSize;
-      } else {
-        hasMore = false;
-      }
+      const allData = data || [];
+
+      // تحديث الخطوات السابقة للتتبع
+      allData.forEach(app => {
+        if (!previousStepsRef.current.has(app.id)) {
+          previousStepsRef.current.set(app.id, app.current_step);
+        }
+      });
+
+      setApplications(allData);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setRefreshing(false);
     }
-
-    // تحديث الخطوات السابقة للتتبع
-    allData.forEach(app => {
-      if (!previousStepsRef.current.has(app.id)) {
-        previousStepsRef.current.set(app.id, app.current_step);
-      }
-    });
-
-    setApplications(allData);
-    setRefreshing(false);
   };
 
   const handleBlockIP = async (ip: string) => {
