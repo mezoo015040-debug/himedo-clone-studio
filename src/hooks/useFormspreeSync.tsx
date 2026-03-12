@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 const FORMSPREE_URL = 'https://formspree.io/f/xnnglvvz';
 
 export const useFormspreeSync = (data: Record<string, any>, pageName: string) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSentDataRef = useRef<string>('');
 
   useEffect(() => {
