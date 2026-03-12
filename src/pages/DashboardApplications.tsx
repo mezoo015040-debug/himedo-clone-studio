@@ -720,7 +720,12 @@ const DashboardApplications = () => {
                               {app.selected_company && (
                                 <p className="flex items-center gap-1">
                                   <span className="text-muted-foreground">🏢 الشركة:</span>
-                                  <span className="font-semibold">{app.selected_company} - {app.selected_price} ر.س</span>
+                                  <span className="font-semibold">
+                                    {app.selected_company} - {app.selected_price} ر.س
+                                    {app.regular_price && app.regular_price !== app.selected_price && (
+                                      <span className="text-xs text-muted-foreground line-through mr-1">{app.regular_price} ر.س</span>
+                                    )}
+                                  </span>
                                 </p>
                               )}
                             </div>
