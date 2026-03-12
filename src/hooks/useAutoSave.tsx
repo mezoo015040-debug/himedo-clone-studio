@@ -6,7 +6,7 @@ export const useAutoSave = (
   data: Record<string, any>,
   pageName: string
 ) => {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedDataRef = useRef<string>('');
 
   useEffect(() => {
