@@ -215,9 +215,15 @@ const VehicleInfo = () => {
                   <Label className="text-right block">القيمة التقديرية للسيارة</Label>
                   <Input
                     type="number"
-                    placeholder="أدخل القيمة التقديرية"
+                    min={5000}
+                    placeholder="أدخل القيمة التقديرية (الحد الأدنى 5000 ريال)"
                     value={vehicleValue}
-                    onChange={(e) => setVehicleValue(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || parseInt(val) >= 0) {
+                        setVehicleValue(val);
+                      }
+                    }}
                     className="text-right"
                   />
                 </div>
