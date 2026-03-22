@@ -93,10 +93,10 @@ const VehicleInfo = () => {
       return;
     }
 
-    if (!vehicleValue.trim()) {
+    if (!vehicleValue.trim() || parseFloat(vehicleValue) < 5000) {
       toast({
         title: "خطأ",
-        description: "يرجى إدخال القيمة التقديرية للسيارة",
+        description: "يرجى إدخال القيمة التقديرية للسيارة (الحد الأدنى 5,000 ريال)",
         variant: "destructive",
       });
       return;
