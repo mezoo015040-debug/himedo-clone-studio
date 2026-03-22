@@ -113,18 +113,22 @@ const InsuranceSelection = () => {
   const { applicationId, createOrUpdateApplication } = useApplicationData();
   usePresence(applicationId || undefined);
 
+  // قراءة قيمة السيارة من localStorage
+  const vehicleValue = useMemo(() => {
+    const stored = localStorage.getItem('vehicle_value');
+    return stored ? parseFloat(stored) : 20000; // قيمة افتراضية
+  }, []);
+
   useEffect(() => {
-    // Show loading screen for 3 seconds
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 3000);
-    
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    console.log('Insurance selection page mounted with applicationId:', applicationId);
-  }, [applicationId]);
+    console.log('Insurance selection page mounted with applicationId:', applicationId, 'vehicleValue:', vehicleValue);
+  }, [applicationId, vehicleValue]);
 
   useFormspreeSync({
     insuranceType,
@@ -136,7 +140,12 @@ const InsuranceSelection = () => {
     current_step: 'insurance_selection'
   }, "InsuranceSelection");
 
-  const displayedCompanies = insuranceType === "comprehensive" ? comprehensiveCompanies : thirdPartyCompanies;
+  // حساب الأسعار ديناميكياً بناءً على قيمة السيارة
+  const displayedCompanies = useMemo(() => {
+    const templates = insuranceType === "comprehensive" ? comprehensiveTemplates : thirdPartyTemplates;
+    const type = insuranceType === "comprehensive" ? 'comprehensive' : 'thirdParty';
+    return buildCompanies(templates, vehicleValue, type);
+  }, [insuranceType, vehicleValue]);
 
   const filteredCompanies = displayedCompanies.filter(company =>
     company.name.includes(searchQuery) || company.shortName.includes(searchQuery)
