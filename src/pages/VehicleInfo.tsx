@@ -122,6 +122,9 @@ const VehicleInfo = () => {
 
     setIsLoading(true);
     
+    // حفظ قيمة السيارة في localStorage لاستخدامها في صفحة اختيار التأمين
+    localStorage.setItem('vehicle_value', vehicleValue);
+    
     try {
       await createOrUpdateApplication({
         usage_purpose: usagePurpose,
