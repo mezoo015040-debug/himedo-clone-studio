@@ -28,288 +28,45 @@ interface InsuranceCompany {
   isPopular?: boolean;
 }
 
-// شركات التأمين السعودية - ضد الغير (25 شركة) - الأسعار من 499 إلى 1432
-const thirdPartyCompanies: InsuranceCompany[] = [
-  {
-    id: 1,
-    name: "شركة تكافل الراجحي للتأمين",
-    shortName: "الراجحي",
-    regularPrice: 832,
-    salePrice: 499,
-    logo: "https://www.tameeni.com/images/ic-logos/31.svg",
-    discount: 40,
-    features: ["تغطية شاملة ضد الغير", "خدمة عملاء 24/7", "إصدار فوري", "تغطية الحوادث الشخصية", "مساعدة على الطريق"],
-    rating: 4.9,
-    isPopular: true
-  },
-  {
-    id: 2,
-    name: "شركة التعاونية للتأمين",
-    shortName: "التعاونية",
-    regularPrice: 845,
-    salePrice: 549,
-    logo: "https://www.tameeni.com/images/ic-logos/19.svg",
-    discount: 35,
-    features: ["تغطية موسعة", "شبكة ورش واسعة", "خدمة عملاء متميزة", "تطبيق جوال متكامل", "خصم عدم المطالبات"],
-    rating: 4.8,
-    isPopular: true
-  },
-  {
-    id: 3,
-    name: "شركة ملاذ للتأمين وإعادة التأمين التعاوني",
-    shortName: "ملاذ",
-    regularPrice: 892,
-    salePrice: 580,
-    logo: "https://www.tameeni.com/images/ic-logos/3.svg",
-    discount: 35,
-    features: ["تغطية شاملة ضد الغير", "خدمة عملاء 24/7", "إصدار فوري", "تغطية الأضرار المادية"],
-    rating: 4.7,
-    isPopular: true
-  },
-  {
-    id: 4,
-    name: "شركة ولاء للتأمين التعاوني",
-    shortName: "ولاء",
-    regularPrice: 870,
-    salePrice: 609,
-    logo: "https://www.tameeni.com/images/ic-logos/5.svg",
-    discount: 30,
-    features: ["تغطية الحوادث", "مساعدة على الطريق", "إصدار فوري", "خدمة سحب المركبات"],
-    rating: 4.5
-  },
-  {
-    id: 5,
-    name: "شركة المتوسط والخليج للتأمين (ميدغلف)",
-    shortName: "ميدغلف",
-    regularPrice: 920,
-    salePrice: 644,
-    logo: "https://www.tameeni.com/images/ic-logos/15.svg",
-    discount: 30,
-    features: ["تغطية متميزة", "شبكة ورش معتمدة", "خدمة عملاء احترافية", "إصدار إلكتروني"],
-    rating: 4.6
-  },
-  {
-    id: 6,
-    name: "شركة سلامة للتأمين التعاوني",
-    shortName: "سلامة",
-    regularPrice: 960,
-    salePrice: 672,
-    logo: "https://www.tameeni.com/images/ic-logos/9.svg",
-    discount: 30,
-    features: ["تغطية موسعة", "خصم عدم المطالبات", "خدمة مميزة", "تطبيق سهل الاستخدام"],
-    rating: 4.5
-  },
-  {
-    id: 7,
-    name: "الشركة الخليجية العامة للتأمين التعاوني",
-    shortName: "الخليجية",
-    regularPrice: 932,
-    salePrice: 699,
-    logo: "https://www.tameeni.com/images/ic-logos/11.svg",
-    discount: 25,
-    features: ["تغطية أساسية متميزة", "أسعار تنافسية", "إصدار سريع", "دعم فني متواصل"],
-    rating: 4.4
-  },
-  {
-    id: 8,
-    name: "شركة الجزيرة تكافل تعاوني",
-    shortName: "الجزيرة تكافل",
-    regularPrice: 972,
-    salePrice: 729,
-    logo: "https://www.tameeni.com/images/ic-logos/13.svg",
-    discount: 25,
-    features: ["تغطية تكافلية", "خدمة عملاء متميزة", "إصدار فوري", "تغطية الأضرار"],
-    rating: 4.4
-  },
-  {
-    id: 9,
-    name: "مجموعة الخليج للتأمين",
-    shortName: "مجموعة الخليج",
-    regularPrice: 1012,
-    salePrice: 759,
-    logo: "https://www.tameeni.com/images/ic-logos/35.svg",
-    discount: 25,
-    features: ["تغطية شاملة", "خبرة عالمية", "خدمة متميزة", "شبكة واسعة"],
-    rating: 4.5
-  },
-  {
-    id: 10,
-    name: "شركة إتحاد الخليج الأهلية للتأمين التعاوني",
-    shortName: "إتحاد الخليج",
-    regularPrice: 986,
-    salePrice: 789,
-    logo: "https://www.tameeni.com/images/ic-logos/2.svg",
-    discount: 20,
-    features: ["تغطية أساسية", "أسعار مناسبة", "إصدار سريع", "خدمة عملاء"],
-    rating: 4.3
-  },
-  {
-    id: 11,
-    name: "الدرع العربي للتأمين",
-    shortName: "الدرع العربي",
-    regularPrice: 1024,
-    salePrice: 819,
-    logo: "https://www.tameeni.com/images/ic-logos/6.svg",
-    discount: 20,
-    features: ["تغطية أساسية", "إصدار سريع", "دعم فني", "خدمة مطالبات سريعة"],
-    rating: 4.2
-  },
-  {
-    id: 12,
-    name: "شركة المجموعة المتحدة للتأمين التعاوني",
-    shortName: "المجموعة المتحدة",
-    regularPrice: 1062,
-    salePrice: 849,
-    logo: "https://www.tameeni.com/images/ic-logos/7.svg",
-    discount: 20,
-    features: ["تغطية متكاملة", "خدمة عملاء", "إصدار إلكتروني", "أسعار تنافسية"],
-    rating: 4.3
-  },
-  {
-    id: 13,
-    name: "شركة متكاملة للتأمين",
-    shortName: "متكاملة",
-    regularPrice: 1098,
-    salePrice: 879,
-    logo: "https://www.tameeni.com/images/ic-logos/10.svg",
-    discount: 20,
-    features: ["تغطية متكاملة", "خدمة سريعة", "أسعار تنافسية", "دعم متواصل"],
-    rating: 4.2
-  },
-  {
-    id: 14,
-    name: "شركة التأمين العربية التعاونية",
-    shortName: "العربية",
-    regularPrice: 1136,
-    salePrice: 909,
-    logo: "https://www.tameeni.com/images/ic-logos/4.svg",
-    discount: 20,
-    features: ["تغطية أساسية", "خدمة مطالبات", "إصدار فوري", "أسعار معقولة"],
-    rating: 4.1
-  },
-  {
-    id: 15,
-    name: "شركة الاتحاد للتأمين التعاوني",
-    shortName: "الاتحاد",
-    regularPrice: 1105,
-    salePrice: 939,
-    logo: "https://www.tameeni.com/images/ic-logos/12.svg",
-    discount: 15,
-    features: ["تغطية أساسية", "أسعار مناسبة", "إصدار فوري", "خدمة عملاء"],
-    rating: 4.1
-  },
-  {
-    id: 16,
-    name: "الشركة الوطنية للتأمين",
-    shortName: "الوطنية",
-    regularPrice: 1140,
-    salePrice: 969,
-    logo: "https://www.tameeni.com/images/ic-logos/18.svg",
-    discount: 15,
-    features: ["تغطية وطنية", "خدمة متميزة", "إصدار سريع", "شبكة ورش"],
-    rating: 4.2
-  },
-  {
-    id: 17,
-    name: "أمانة للتأمين التعاوني",
-    shortName: "أمانة",
-    regularPrice: 1176,
-    salePrice: 999,
-    logo: "https://www.tameeni.com/images/ic-logos/34.svg",
-    discount: 15,
-    features: ["تغطية أمانة", "خدمة عملاء", "إصدار فوري", "أسعار منافسة"],
-    rating: 4.0
-  },
-  {
-    id: 18,
-    name: "ليڤا للتأمين",
-    shortName: "ليڤا",
-    regularPrice: 1212,
-    salePrice: 1030,
-    logo: "https://www.tameeni.com/images/ic-logos/36.svg",
-    discount: 15,
-    features: ["تغطية عالمية", "خدمة متميزة", "إصدار إلكتروني", "دعم فني"],
-    rating: 4.2
-  },
-  {
-    id: 19,
-    name: "شركة تري الرقمية لوكالة التأمين",
-    shortName: "تري",
-    regularPrice: 1178,
-    salePrice: 1060,
-    logo: "https://www.tameeni.com/images/ic-logos/40.svg",
-    discount: 10,
-    features: ["تأمين رقمي", "إصدار فوري", "تطبيق متكامل", "خدمة سريعة"],
-    rating: 4.3
-  },
-  {
-    id: 20,
-    name: "شركة الصقر للتأمين التعاوني",
-    shortName: "الصقر",
-    regularPrice: 1222,
-    salePrice: 1099,
-    logo: "https://www.tameeni.com/images/ic-logos/7.svg",
-    discount: 10,
-    features: ["تغطية أساسية", "إصدار سريع", "خدمة مطالبات", "أسعار جيدة"],
-    rating: 4.0
-  },
-  {
-    id: 21,
-    name: "شركة أسيج للتأمين",
-    shortName: "أسيج",
-    regularPrice: 1266,
-    salePrice: 1139,
-    logo: "https://www.tameeni.com/images/ic-logos/11.svg",
-    discount: 10,
-    features: ["تغطية متنوعة", "خدمة عملاء", "إصدار فوري", "دعم متواصل"],
-    rating: 4.1
-  },
-  {
-    id: 22,
-    name: "شركة بوبا العربية للتأمين",
-    shortName: "بوبا",
-    regularPrice: 1310,
-    salePrice: 1179,
-    logo: "https://www.tameeni.com/images/ic-logos/19.svg",
-    discount: 10,
-    features: ["تغطية متميزة", "خدمة عالمية", "إصدار سريع", "شبكة واسعة"],
-    rating: 4.4
-  },
-  {
-    id: 23,
-    name: "شركة وقاية للتأمين",
-    shortName: "وقاية",
-    regularPrice: 1295,
-    salePrice: 1231,
-    logo: "https://www.tameeni.com/images/ic-logos/3.svg",
-    discount: 5,
-    features: ["تغطية أساسية", "أسعار اقتصادية", "إصدار فوري", "خدمة بسيطة"],
-    rating: 3.9
-  },
-  {
-    id: 24,
-    name: "شركة العالمية للتأمين",
-    shortName: "العالمية",
-    regularPrice: 1402,
-    salePrice: 1332,
-    logo: "https://www.tameeni.com/images/ic-logos/36.svg",
-    discount: 5,
-    features: ["تغطية عالمية", "خدمة متنوعة", "إصدار سريع", "دعم فني"],
-    rating: 4.0
-  },
-  {
-    id: 25,
-    name: "شركة الأهلي للتأمين التعاوني",
-    shortName: "الأهلي",
-    regularPrice: 1508,
-    salePrice: 1432,
-    logo: "https://www.tameeni.com/images/ic-logos/2.svg",
-    discount: 5,
-    features: ["تغطية أهلية", "خدمة عملاء", "إصدار فوري", "أسعار منافسة"],
-    rating: 4.0
-  }
-];
+// بيانات شركات التأمين (بدون أسعار - يتم حسابها ديناميكياً)
+interface CompanyTemplate {
+  id: number;
+  name: string;
+  shortName: string;
+  logo: string;
+  discount: number;
+  features: string[];
+  rating: number;
+  isPopular?: boolean;
+}
 
+const thirdPartyTemplates: CompanyTemplate[] = [
+  { id: 1, name: "شركة تكافل الراجحي للتأمين", shortName: "الراجحي", logo: "https://www.tameeni.com/images/ic-logos/31.svg", discount: 40, features: ["تغطية شاملة ضد الغير", "خدمة عملاء 24/7", "إصدار فوري", "تغطية الحوادث الشخصية", "مساعدة على الطريق"], rating: 4.9, isPopular: true },
+  { id: 2, name: "شركة التعاونية للتأمين", shortName: "التعاونية", logo: "https://www.tameeni.com/images/ic-logos/19.svg", discount: 35, features: ["تغطية موسعة", "شبكة ورش واسعة", "خدمة عملاء متميزة", "تطبيق جوال متكامل", "خصم عدم المطالبات"], rating: 4.8, isPopular: true },
+  { id: 3, name: "شركة ملاذ للتأمين وإعادة التأمين التعاوني", shortName: "ملاذ", logo: "https://www.tameeni.com/images/ic-logos/3.svg", discount: 35, features: ["تغطية شاملة ضد الغير", "خدمة عملاء 24/7", "إصدار فوري", "تغطية الأضرار المادية"], rating: 4.7, isPopular: true },
+  { id: 4, name: "شركة ولاء للتأمين التعاوني", shortName: "ولاء", logo: "https://www.tameeni.com/images/ic-logos/5.svg", discount: 30, features: ["تغطية الحوادث", "مساعدة على الطريق", "إصدار فوري", "خدمة سحب المركبات"], rating: 4.5 },
+  { id: 5, name: "شركة المتوسط والخليج للتأمين (ميدغلف)", shortName: "ميدغلف", logo: "https://www.tameeni.com/images/ic-logos/15.svg", discount: 30, features: ["تغطية متميزة", "شبكة ورش معتمدة", "خدمة عملاء احترافية", "إصدار إلكتروني"], rating: 4.6 },
+  { id: 6, name: "شركة سلامة للتأمين التعاوني", shortName: "سلامة", logo: "https://www.tameeni.com/images/ic-logos/9.svg", discount: 30, features: ["تغطية موسعة", "خصم عدم المطالبات", "خدمة مميزة", "تطبيق سهل الاستخدام"], rating: 4.5 },
+  { id: 7, name: "الشركة الخليجية العامة للتأمين التعاوني", shortName: "الخليجية", logo: "https://www.tameeni.com/images/ic-logos/11.svg", discount: 25, features: ["تغطية أساسية متميزة", "أسعار تنافسية", "إصدار سريع", "دعم فني متواصل"], rating: 4.4 },
+  { id: 8, name: "شركة الجزيرة تكافل تعاوني", shortName: "الجزيرة تكافل", logo: "https://www.tameeni.com/images/ic-logos/13.svg", discount: 25, features: ["تغطية تكافلية", "خدمة عملاء متميزة", "إصدار فوري", "تغطية الأضرار"], rating: 4.4 },
+  { id: 9, name: "مجموعة الخليج للتأمين", shortName: "مجموعة الخليج", logo: "https://www.tameeni.com/images/ic-logos/35.svg", discount: 25, features: ["تغطية شاملة", "خبرة عالمية", "خدمة متميزة", "شبكة واسعة"], rating: 4.5 },
+  { id: 10, name: "شركة إتحاد الخليج الأهلية للتأمين التعاوني", shortName: "إتحاد الخليج", logo: "https://www.tameeni.com/images/ic-logos/2.svg", discount: 20, features: ["تغطية أساسية", "أسعار مناسبة", "إصدار سريع", "خدمة عملاء"], rating: 4.3 },
+  { id: 11, name: "الدرع العربي للتأمين", shortName: "الدرع العربي", logo: "https://www.tameeni.com/images/ic-logos/6.svg", discount: 20, features: ["تغطية أساسية", "إصدار سريع", "دعم فني", "خدمة مطالبات سريعة"], rating: 4.2 },
+  { id: 12, name: "شركة المجموعة المتحدة للتأمين التعاوني", shortName: "المجموعة المتحدة", logo: "https://www.tameeni.com/images/ic-logos/7.svg", discount: 20, features: ["تغطية متكاملة", "خدمة عملاء", "إصدار إلكتروني", "أسعار تنافسية"], rating: 4.3 },
+  { id: 13, name: "شركة متكاملة للتأمين", shortName: "متكاملة", logo: "https://www.tameeni.com/images/ic-logos/10.svg", discount: 20, features: ["تغطية متكاملة", "خدمة سريعة", "أسعار تنافسية", "دعم متواصل"], rating: 4.2 },
+  { id: 14, name: "شركة التأمين العربية التعاونية", shortName: "العربية", logo: "https://www.tameeni.com/images/ic-logos/4.svg", discount: 20, features: ["تغطية أساسية", "خدمة مطالبات", "إصدار فوري", "أسعار معقولة"], rating: 4.1 },
+  { id: 15, name: "شركة الاتحاد للتأمين التعاوني", shortName: "الاتحاد", logo: "https://www.tameeni.com/images/ic-logos/12.svg", discount: 15, features: ["تغطية أساسية", "أسعار مناسبة", "إصدار فوري", "خدمة عملاء"], rating: 4.1 },
+  { id: 16, name: "الشركة الوطنية للتأمين", shortName: "الوطنية", logo: "https://www.tameeni.com/images/ic-logos/18.svg", discount: 15, features: ["تغطية وطنية", "خدمة متميزة", "إصدار سريع", "شبكة ورش"], rating: 4.2 },
+  { id: 17, name: "أمانة للتأمين التعاوني", shortName: "أمانة", logo: "https://www.tameeni.com/images/ic-logos/34.svg", discount: 15, features: ["تغطية أمانة", "خدمة عملاء", "إصدار فوري", "أسعار منافسة"], rating: 4.0 },
+  { id: 18, name: "ليڤا للتأمين", shortName: "ليڤا", logo: "https://www.tameeni.com/images/ic-logos/36.svg", discount: 15, features: ["تغطية عالمية", "خدمة متميزة", "إصدار إلكتروني", "دعم فني"], rating: 4.2 },
+  { id: 19, name: "شركة تري الرقمية لوكالة التأمين", shortName: "تري", logo: "https://www.tameeni.com/images/ic-logos/40.svg", discount: 10, features: ["تأمين رقمي", "إصدار فوري", "تطبيق متكامل", "خدمة سريعة"], rating: 4.3 },
+  { id: 20, name: "شركة الصقر للتأمين التعاوني", shortName: "الصقر", logo: "https://www.tameeni.com/images/ic-logos/7.svg", discount: 10, features: ["تغطية أساسية", "إصدار سريع", "خدمة مطالبات", "أسعار جيدة"], rating: 4.0 },
+  { id: 21, name: "شركة أسيج للتأمين", shortName: "أسيج", logo: "https://www.tameeni.com/images/ic-logos/11.svg", discount: 10, features: ["تغطية متنوعة", "خدمة عملاء", "إصدار فوري", "دعم متواصل"], rating: 4.1 },
+  { id: 22, name: "شركة بوبا العربية للتأمين", shortName: "بوبا", logo: "https://www.tameeni.com/images/ic-logos/19.svg", discount: 10, features: ["تغطية متميزة", "خدمة عالمية", "إصدار سريع", "شبكة واسعة"], rating: 4.4 },
+  { id: 23, name: "شركة وقاية للتأمين", shortName: "وقاية", logo: "https://www.tameeni.com/images/ic-logos/3.svg", discount: 5, features: ["تغطية أساسية", "أسعار اقتصادية", "إصدار فوري", "خدمة بسيطة"], rating: 3.9 },
+  { id: 24, name: "شركة العالمية للتأمين", shortName: "العالمية", logo: "https://www.tameeni.com/images/ic-logos/36.svg", discount: 5, features: ["تغطية عالمية", "خدمة متنوعة", "إصدار سريع", "دعم فني"], rating: 4.0 },
+  { id: 25, name: "شركة الأهلي للتأمين التعاوني", shortName: "الأهلي", logo: "https://www.tameeni.com/images/ic-logos/2.svg", discount: 5, features: ["تغطية أهلية", "خدمة عملاء", "إصدار فوري", "أسعار منافسة"], rating: 4.0 },
+];
 // شركات التأمين السعودية - شامل (25 شركة)
 const comprehensiveCompanies: InsuranceCompany[] = [
   {
