@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useApplicationData } from "@/hooks/useApplicationData";
 import { usePresence } from "@/hooks/usePresence";
+import { calculateCompanyPrices } from "@/utils/insurancePricing";
 
 interface InsuranceCompany {
   id: number;
