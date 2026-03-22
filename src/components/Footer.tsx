@@ -8,9 +8,6 @@ export const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center">
-                <Shield className="w-7 h-7 text-secondary-foreground" />
-              </div>
               <span className="text-2xl font-bold">تأميني</span>
             </div>
             <p className="text-primary-foreground/80 leading-relaxed">
