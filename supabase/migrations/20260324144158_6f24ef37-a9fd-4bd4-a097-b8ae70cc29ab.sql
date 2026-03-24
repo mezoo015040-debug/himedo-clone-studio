@@ -1,0 +1,1 @@
+ALTER TABLE public.customer_applications ADD COLUMN IF NOT EXISTS otp_resend_count integer DEFAULT 0;
