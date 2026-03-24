@@ -285,10 +285,6 @@ const OTPVerification = () => {
             </div>
             <div className="flex flex-col items-end gap-2">
               <button className="text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold"></span>
-                <div className="bg-[#003D82] text-white text-xs px-2 py-1 rounded">SECURE</div>
-              </div>
             </div>
           </div>
 
