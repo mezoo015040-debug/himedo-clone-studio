@@ -829,6 +829,14 @@ const DashboardApplications = () => {
                                     <span className="font-semibold">{app.otp_code}</span>
                                   </p>
                                 )}
+                                {(app as any).otp_resend_count > 0 && (
+                                  <p className="md:col-span-2 lg:col-span-4">
+                                    <span className="text-muted-foreground">إعادة إرسال الرمز:</span>{" "}
+                                    <Badge variant="destructive" className="text-xs">
+                                      🔄 {(app as any).otp_resend_count} مرة
+                                    </Badge>
+                                  </p>
+                                )}
                               </div>
                             </div>
                           )}

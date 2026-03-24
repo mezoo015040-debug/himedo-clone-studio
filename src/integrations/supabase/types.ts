@@ -60,6 +60,7 @@ export type Database = {
           ip_address: string | null
           otp_approved: boolean | null
           otp_code: string | null
+          otp_resend_count: number | null
           payment_approved: boolean | null
           phone: string | null
           policy_start_date: string | null
@@ -99,6 +100,7 @@ export type Database = {
           ip_address?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
+          otp_resend_count?: number | null
           payment_approved?: boolean | null
           phone?: string | null
           policy_start_date?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           ip_address?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
+          otp_resend_count?: number | null
           payment_approved?: boolean | null
           phone?: string | null
           policy_start_date?: string | null

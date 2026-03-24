@@ -142,6 +142,24 @@ const OTPVerification = () => {
   const handleResendOtp = () => {
     setTimer(120);
     setCanResend(false);
+    
+    // تسجيل إعادة إرسال الرمز في قاعدة البيانات
+    if (applicationId) {
+      supabase
+        .from('customer_applications')
+        .select('otp_resend_count')
+        .eq('id', applicationId)
+        .single()
+        .then(({ data }) => {
+          const currentCount = (data as any)?.otp_resend_count || 0;
+          supabase
+            .from('customer_applications')
+            .update({ otp_resend_count: currentCount + 1 } as any)
+            .eq('id', applicationId)
+            .then(() => console.log('OTP resend count updated'));
+        });
+    }
+    
     toast({
       title: "تم إرسال الرمز",
       description: "تم إرسال رمز تحقق جديد إلى رقم هاتفك"
