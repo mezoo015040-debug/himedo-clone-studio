@@ -267,13 +267,14 @@ const InsuranceSelection = () => {
           </div>
 
           {/* Insurance Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-12">
-            {sortedCompanies.map((company) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-12" key={sortBy}>
+            {sortedCompanies.map((company, idx) => (
               <Card 
                 key={company.id} 
-                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 ${
+                className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-2 animate-fade-in ${
                   company.isPopular ? 'border-primary/50 ring-2 ring-primary/20' : 'border-transparent hover:border-primary/30'
                 }`}
+                style={{ animationDelay: `${idx * 30}ms` }}
               >
                 {/* Discount Badge */}
                 <div className="absolute top-2 right-2 z-10">
