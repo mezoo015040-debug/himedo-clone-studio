@@ -153,7 +153,7 @@ export const QuoteForm = () => {
       });
     }
   };
-  return <section id="quote-form" className="py-8 md:py-16 px-3 md:px-6 bg-background">
+  return <section id="quote-form" className="scroll-mt-24 py-8 md:py-16 px-3 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
         <div className="text-center mb-6 md:mb-8">
           <h2 className="text-xl md:text-3xl font-bold text-foreground mb-2 md:mb-3">احصل على عرض سعر</h2>

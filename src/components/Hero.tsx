@@ -6,7 +6,14 @@ export const Hero = () => {
   const scrollToForm = () => {
     const formSection = document.getElementById('quote-form');
     if (formSection) {
-      formSection.scrollIntoView({ behavior: 'smooth' });
+      const headerOffset = 96;
+      const targetPosition = formSection.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+      window.history.replaceState(null, '', '#quote-form');
+      window.scrollTo({
+        top: Math.max(targetPosition, 0),
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -32,6 +39,7 @@ export const Hero = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-end">
               <Button 
+                type="button"
                 size="lg" 
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                 onClick={scrollToForm}
