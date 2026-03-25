@@ -16,11 +16,11 @@ export interface OnlineVisitor {
 export const useRealtimePresence = () => {
   const [onlineCount, setOnlineCount] = useState(0);
   const [onlineVisitors, setOnlineVisitors] = useState<OnlineVisitor[]>([]);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [visitorsFromVisitorChannel, setVisitorsFromVisitorChannel] = useState<OnlineVisitor[]>([]);
+  const [visitorsFromCustomerChannel, setVisitorsFromCustomerChannel] = useState<OnlineVisitor[]>([]);
 
-  const parsePresenceState = useCallback((state: Record<string, any[]>) => {
+  const parseVisitorPresence = useCallback((state: Record<string, any[]>): OnlineVisitor[] => {
     const visitors: OnlineVisitor[] = [];
-    
     Object.entries(state).forEach(([key, presences]) => {
       if (presences && presences.length > 0) {
         const presence = presences[0];
@@ -36,40 +36,68 @@ export const useRealtimePresence = () => {
         });
       }
     });
+    return visitors;
+  }, []);
+
+  const parseCustomerPresence = useCallback((state: Record<string, any[]>): OnlineVisitor[] => {
+    const visitors: OnlineVisitor[] = [];
+    Object.entries(state).forEach(([key, presences]) => {
+      if (presences && presences.length > 0) {
+        const presence = presences[0];
+        // Skip dashboard users from the customer channel
+        if (key === 'dashboard') return;
+        visitors.push({
+          visitorId: key,
+          currentPage: presence.current_page || '/',
+          onlineAt: presence.online_at || new Date().toISOString(),
+          lastActivity: presence.online_at || new Date().toISOString(),
+          applicationId: presence.application_id,
+          fullName: presence.full_name,
+          phone: presence.phone,
+          ipAddress: presence.ip_address,
+        });
+      }
+    });
+    return visitors;
+  }, []);
+
+  // Merge both channels, deduplicate by visitorId
+  useEffect(() => {
+    const merged = new Map<string, OnlineVisitor>();
     
-    return visitors.sort((a, b) => 
+    // Customer channel visitors take priority (have more info)
+    visitorsFromCustomerChannel.forEach(v => merged.set(v.visitorId, v));
+    visitorsFromVisitorChannel.forEach(v => {
+      if (!merged.has(v.visitorId)) {
+        merged.set(v.visitorId, v);
+      }
+    });
+
+    const sorted = Array.from(merged.values()).sort((a, b) =>
       new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
     );
-  }, []);
+    
+    setOnlineVisitors(sorted);
+    setOnlineCount(sorted.length);
+  }, [visitorsFromVisitorChannel, visitorsFromCustomerChannel]);
 
   useEffect(() => {
     const visitorId = localStorage.getItem('visitor_id') || `visitor_${Date.now()}`;
-    
-    const presenceChannel = supabase.channel('online-visitors', {
-      config: {
-        presence: {
-          key: visitorId,
-        },
-      },
+
+    // Channel 1: online-visitors (dashboard/general tracking)
+    const visitorChannel = supabase.channel('online-visitors', {
+      config: { presence: { key: visitorId } },
     });
 
-    presenceChannel
+    visitorChannel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const count = Object.keys(state).length;
-        setOnlineCount(count);
-        setOnlineVisitors(parsePresenceState(state));
-      })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('User joined:', key, newPresences);
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('User left:', key, leftPresences);
+        const state = visitorChannel.presenceState();
+        setVisitorsFromVisitorChannel(parseVisitorPresence(state));
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           const visitorIp = localStorage.getItem('visitor_ip') || undefined;
-          await presenceChannel.track({
+          await visitorChannel.track({
             online_at: new Date().toISOString(),
             last_activity: new Date().toISOString(),
             page: window.location.pathname,
@@ -78,30 +106,36 @@ export const useRealtimePresence = () => {
         }
       });
 
-    setChannel(presenceChannel);
+    // Channel 2: online-customers (customer-facing pages)
+    const customerChannel = supabase.channel('online-customers-dashboard', {
+      config: { presence: { key: 'dashboard' } },
+    });
 
-    // تحديث الصفحة عند التنقل
+    customerChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = customerChannel.presenceState();
+        setVisitorsFromCustomerChannel(parseCustomerPresence(state));
+      })
+      .subscribe();
+
     const handleLocationChange = async () => {
-      if (presenceChannel) {
-        const visitorIp = localStorage.getItem('visitor_ip') || undefined;
-        await presenceChannel.track({
-          online_at: new Date().toISOString(),
-          last_activity: new Date().toISOString(),
-          page: window.location.pathname,
-          ip_address: visitorIp,
-        });
-      }
+      const visitorIp = localStorage.getItem('visitor_ip') || undefined;
+      await visitorChannel.track({
+        online_at: new Date().toISOString(),
+        last_activity: new Date().toISOString(),
+        page: window.location.pathname,
+        ip_address: visitorIp,
+      });
     };
 
     window.addEventListener('popstate', handleLocationChange);
 
     return () => {
       window.removeEventListener('popstate', handleLocationChange);
-      if (presenceChannel) {
-        presenceChannel.unsubscribe();
-      }
+      visitorChannel.unsubscribe();
+      customerChannel.unsubscribe();
     };
-  }, [parsePresenceState]);
+  }, [parseVisitorPresence, parseCustomerPresence]);
 
-  return { onlineCount, onlineVisitors, channel };
+  return { onlineCount, onlineVisitors };
 };
