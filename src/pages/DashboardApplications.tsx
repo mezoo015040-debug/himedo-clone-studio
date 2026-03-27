@@ -339,28 +339,48 @@ const DashboardApplications = () => {
     setRefreshing(true);
     
     try {
-      // جلب آخر 500 طلب فقط للسرعة (يمكن تحميل المزيد حسب الحاجة)
-      const { data, error } = await supabase
-        .from('customer_applications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
+      // جلب جميع الطلبات بدون حد أقصى
+      let allData: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const { data: batch, error: batchError } = await supabase
+          .from('customer_applications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+        
+        if (batchError) throw batchError;
+        
+        if (batch && batch.length > 0) {
+          allData = [...allData, ...batch];
+          from += pageSize;
+          hasMore = batch.length === pageSize;
+        } else {
+          hasMore = false;
+        }
+      }
+      
+      const data = allData;
+      const error = null;
 
       if (error) {
         console.error('Error fetching applications:', error);
         return;
       }
 
-      const allData = data || [];
+      const allApps = data || [];
 
       // تحديث الخطوات السابقة للتتبع
-      allData.forEach(app => {
+      allApps.forEach(app => {
         if (!previousStepsRef.current.has(app.id)) {
           previousStepsRef.current.set(app.id, app.current_step);
         }
       });
 
-      setApplications(allData);
+      setApplications(allApps);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
