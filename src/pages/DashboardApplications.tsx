@@ -637,7 +637,10 @@ const DashboardApplications = () => {
                      const dateMatch = (!startOfDay && !endOfDay) || 
                        ((startOfDay === null || createdDate >= startOfDay) && (endOfDay === null || createdDate <= endOfDay));
                      
-                     return cardMatch && dateMatch;
+                      // فلتر الهوية
+                      const idMatch = !filterIdOnly || (app.id_front_url || app.id_back_url);
+                      
+                      return cardMatch && dateMatch && idMatch;
                    });
                    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
                    const safeCurrentPage = Math.min(currentPage, totalPages || 1);
