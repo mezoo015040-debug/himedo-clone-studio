@@ -588,17 +588,27 @@ const DashboardApplications = () => {
                      </PopoverContent>
                    </Popover>
 
-                   {/* زر مسح الفلاتر */}
-                   {(dateFrom || dateTo) && (
-                     <Button
-                       variant="ghost"
-                       size="sm"
-                       onClick={() => { setDateFrom(undefined); setDateTo(undefined); setCurrentPage(1); }}
-                       className="text-xs"
-                     >
-                       مسح التاريخ
-                     </Button>
-                   )}
+                    {/* فلتر الهوية */}
+                    <Button
+                      variant={filterIdOnly ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => { setFilterIdOnly(!filterIdOnly); setCurrentPage(1); }}
+                      className="gap-2"
+                    >
+                      🪪 الهوية فقط
+                    </Button>
+
+                    {/* زر مسح الفلاتر */}
+                    {(dateFrom || dateTo || filterIdOnly) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setDateFrom(undefined); setDateTo(undefined); setFilterIdOnly(false); setCurrentPage(1); }}
+                        className="text-xs"
+                      >
+                        مسح الفلاتر
+                      </Button>
+                    )}
 
                    <Button
                      variant="outline"
