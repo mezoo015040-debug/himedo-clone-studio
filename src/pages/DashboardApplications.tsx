@@ -102,6 +102,7 @@ const DashboardApplications = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [filterIdOnly, setFilterIdOnly] = useState(false);
   const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
