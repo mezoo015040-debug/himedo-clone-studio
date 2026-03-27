@@ -371,7 +371,7 @@ const DashboardApplications = () => {
         return;
       }
 
-      const allData = data || [];
+      const allApps = data || [];
 
       // تحديث الخطوات السابقة للتتبع
       allData.forEach(app => {
