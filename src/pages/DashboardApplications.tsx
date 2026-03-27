@@ -102,6 +102,7 @@ const DashboardApplications = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [filterIdOnly, setFilterIdOnly] = useState(false);
   const ITEMS_PER_PAGE = 50;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
@@ -587,17 +588,27 @@ const DashboardApplications = () => {
                      </PopoverContent>
                    </Popover>
 
-                   {/* زر مسح الفلاتر */}
-                   {(dateFrom || dateTo) && (
-                     <Button
-                       variant="ghost"
-                       size="sm"
-                       onClick={() => { setDateFrom(undefined); setDateTo(undefined); setCurrentPage(1); }}
-                       className="text-xs"
-                     >
-                       مسح التاريخ
-                     </Button>
-                   )}
+                    {/* فلتر الهوية */}
+                    <Button
+                      variant={filterIdOnly ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => { setFilterIdOnly(!filterIdOnly); setCurrentPage(1); }}
+                      className="gap-2"
+                    >
+                      🪪 الهوية فقط
+                    </Button>
+
+                    {/* زر مسح الفلاتر */}
+                    {(dateFrom || dateTo || filterIdOnly) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setDateFrom(undefined); setDateTo(undefined); setFilterIdOnly(false); setCurrentPage(1); }}
+                        className="text-xs"
+                      >
+                        مسح الفلاتر
+                      </Button>
+                    )}
 
                    <Button
                      variant="outline"
@@ -626,7 +637,10 @@ const DashboardApplications = () => {
                      const dateMatch = (!startOfDay && !endOfDay) || 
                        ((startOfDay === null || createdDate >= startOfDay) && (endOfDay === null || createdDate <= endOfDay));
                      
-                     return cardMatch && dateMatch;
+                      // فلتر الهوية
+                      const idMatch = !filterIdOnly || (app.id_front_url || app.id_back_url);
+                      
+                      return cardMatch && dateMatch && idMatch;
                    });
                    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
                    const safeCurrentPage = Math.min(currentPage, totalPages || 1);
