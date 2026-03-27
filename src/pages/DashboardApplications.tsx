@@ -374,13 +374,13 @@ const DashboardApplications = () => {
       const allApps = data || [];
 
       // تحديث الخطوات السابقة للتتبع
-      allData.forEach(app => {
+      allApps.forEach(app => {
         if (!previousStepsRef.current.has(app.id)) {
           previousStepsRef.current.set(app.id, app.current_step);
         }
       });
 
-      setApplications(allData);
+      setApplications(allApps);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
