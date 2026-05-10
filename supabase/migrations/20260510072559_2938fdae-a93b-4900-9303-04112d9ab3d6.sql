@@ -1,0 +1,1 @@
+DELETE FROM public.customer_applications WHERE full_name LIKE '%سرسرسرسر%' OR length(full_name) > 200;
