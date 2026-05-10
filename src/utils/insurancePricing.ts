@@ -16,14 +16,14 @@ const priceTiers: PriceTier[] = [
   {
     minVehicleValue: 30000,
     maxVehicleValue: 80000,
-    thirdParty: { min: 899, max: 2999 },
-    comprehensive: { min: 1299, max: 3599 },
+    thirdParty: { min: 699, max: 2999 },
+    comprehensive: { min: 999, max: 3599 },
   },
   {
     minVehicleValue: 80000,
     maxVehicleValue: 200000,
-    thirdParty: { min: 1399, max: 3999 },
-    comprehensive: { min: 2299, max: 5599 },
+    thirdParty: { min: 999, max: 3999 },
+    comprehensive: { min: 1999, max: 5599 },
   },
 ];
 
