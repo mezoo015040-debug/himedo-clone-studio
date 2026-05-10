@@ -79,6 +79,16 @@ export const QuoteForm = () => {
   );
 
   const handleSubmit = async () => {
+    // helper: يكشف الأنماط المتكررة (مثل سرسرسرسر أو ااااا أو 12121212)
+    const hasRepeatedPattern = (text: string): boolean => {
+      const t = text.replace(/\s+/g, '');
+      // نفس الحرف مكرر 4+ مرات متتالية
+      if (/(.)\1{3,}/.test(t)) return true;
+      // مقطع من حرفين/ثلاثة مكرر 3+ مرات (سرسرسر، ابابابا)
+      if (/(.{2,3})\1{2,}/.test(t)) return true;
+      return false;
+    };
+
     // التحقق من جميع الحقول
     if (!idNumber.trim()) {
       toast({
@@ -88,8 +98,18 @@ export const QuoteForm = () => {
       });
       return;
     }
-    
-    if (!ownerName.trim()) {
+
+    if (idNumber.length !== 10 || !/^[12]\d{9}$/.test(idNumber)) {
+      toast({
+        title: "رقم هوية غير صحيح",
+        description: "يجب أن يتكون من 10 أرقام ويبدأ بـ 1 أو 2",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const trimmedName = ownerName.trim();
+    if (!trimmedName) {
       toast({
         title: "خطأ",
         description: "يرجى إدخال اسم مالك الوثيقة",
@@ -97,7 +117,34 @@ export const QuoteForm = () => {
       });
       return;
     }
-    
+
+    if (trimmedName.length < 6 || trimmedName.length > 60) {
+      toast({
+        title: "اسم غير صحيح",
+        description: "يرجى إدخال الاسم كاملاً (بين 6 و 60 حرف)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!trimmedName.includes(' ')) {
+      toast({
+        title: "اسم غير مكتمل",
+        description: "يرجى إدخال الاسم الثلاثي أو الرباعي كاملاً",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasRepeatedPattern(trimmedName)) {
+      toast({
+        title: "اسم غير صحيح",
+        description: "يرجى إدخال اسم حقيقي بدون تكرار للحروف",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!phoneNumber.trim()) {
       toast({
         title: "خطأ",
@@ -106,7 +153,16 @@ export const QuoteForm = () => {
       });
       return;
     }
-    
+
+    if (!/^05\d{8}$/.test(phoneNumber)) {
+      toast({
+        title: "رقم جوال غير صحيح",
+        description: "يجب أن يبدأ بـ 05 ويتكون من 10 أرقام",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!birthDate) {
       toast({
         title: "خطأ",
