@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { publicApplications } from "@/lib/applicationPublic";
 import { supabase } from "@/integrations/supabase/client";
 import madaLogo from "@/assets/mada-logo.png";
 import {
