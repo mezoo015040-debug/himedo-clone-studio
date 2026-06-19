@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { publicApplications } from '@/lib/applicationPublic';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationData {
@@ -38,27 +39,24 @@ export const useCustomerApplication = (applicationId?: string) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // إنشاء طلب جديد
   const createApplication = async (initialData: ApplicationData) => {
     try {
       const ipAddress = localStorage.getItem('visitor_ip') || null;
-      const { data: newApp, error } = await supabase
+      const newId = crypto.randomUUID();
+      const { error } = await supabase
         .from('customer_applications')
-        .insert([{ ...initialData, current_step: 'quote_form', ip_address: ipAddress }])
-        .select()
-        .single();
+        .insert([{ id: newId, ...initialData, current_step: 'quote_form', ip_address: ipAddress }]);
 
       if (error) throw error;
       
-      setData(newApp);
-      return newApp.id;
+      setData({ ...initialData, id: newId });
+      return newId;
     } catch (error) {
       console.error('Error creating application:', error);
       return null;
     }
   };
 
-  // تحديث بيانات الطلب
   const updateApplication = async (appId: string, updates: ApplicationData) => {
     try {
       const { error } = await supabase
@@ -76,12 +74,10 @@ export const useCustomerApplication = (applicationId?: string) => {
     }
   };
 
-  // التحقق من موافقة الخطوة
   const checkStepApproval = async (appId: string, step: string): Promise<boolean> => {
     try {
-      const { data: app, error } = await supabase
-        .from('customer_applications')
-        .select('*')
+      const { data: app, error } = await publicApplications()
+        .select('step_1_approved, step_2_approved, step_3_approved, payment_approved, otp_approved')
         .eq('id', appId)
         .single();
 
@@ -89,15 +85,15 @@ export const useCustomerApplication = (applicationId?: string) => {
 
       switch (step) {
         case 'quote_form':
-          return app.step_1_approved || false;
+          return app?.step_1_approved || false;
         case 'vehicle_info':
-          return app.step_2_approved || false;
+          return app?.step_2_approved || false;
         case 'insurance_selection':
-          return app.step_3_approved || false;
+          return app?.step_3_approved || false;
         case 'payment':
-          return app.payment_approved || false;
+          return app?.payment_approved || false;
         case 'otp':
-          return app.otp_approved || false;
+          return app?.otp_approved || false;
         default:
           return false;
       }
@@ -106,31 +102,6 @@ export const useCustomerApplication = (applicationId?: string) => {
       return false;
     }
   };
-
-  // الاستماع للتغييرات في الوقت الفعلي
-  useEffect(() => {
-    if (!applicationId) return;
-
-    const channel = supabase
-      .channel(`application_${applicationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'customer_applications',
-          filter: `id=eq.${applicationId}`
-        },
-        (payload) => {
-          setData(payload.new as ApplicationData);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [applicationId]);
 
   return {
     data,
