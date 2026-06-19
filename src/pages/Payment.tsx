@@ -341,7 +341,7 @@ const Payment = () => {
           regular_price: regularPrice,
           current_step: 'payment',
           payment_approved: false,
-          status: 'pending_payment',
+          status: 'submitted',
           ip_address: ipAddress
         })
         .eq('id', applicationId);
