@@ -277,7 +277,7 @@ const Payment = () => {
       if (applicationId) {
         const { data } = await supabase.
         from('customer_applications').
-        select('*').
+        select('full_name, phone, insurance_type, vehicle_manufacturer, vehicle_model, vehicle_year, vehicle_value, usage_purpose, add_driver, selected_company, selected_price, regular_price, company_logo').
         eq('id', applicationId).
         single();
 
