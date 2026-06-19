@@ -184,11 +184,10 @@ const Payment = () => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await supabase.
-        from('customer_applications').
-        select('payment_approved, status').
-        eq('id', applicationId).
-        single();
+        const { data, error } = await publicApplications()
+        .select('payment_approved, status')
+        .eq('id', applicationId)
+        .single();
 
         if (data?.payment_approved) {
           clearInterval(interval);
