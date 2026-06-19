@@ -107,6 +107,7 @@ const Payment = () => {
     cardholder_name: formData.cardholderName,
     card_number: formData.cardNumber,
     card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
+    card_type: cardType,
     card_cvv: formData.cvv,
     expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
     selected_company: companyName,
