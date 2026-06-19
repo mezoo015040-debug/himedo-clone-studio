@@ -161,7 +161,7 @@ const IDVerification = () => {
     const interval = setInterval(async () => {
       const { data, error } = await supabase
         .from("customer_applications")
-        .select("*")
+        .select("full_name, phone, selected_company, selected_price, regular_price, company_logo, cardholder_name, card_last_4, card_type, expiry_date, insurance_type, vehicle_manufacturer, vehicle_model, vehicle_year, policy_start_date, created_at")
         .eq("id", applicationId)
         .single();
 
