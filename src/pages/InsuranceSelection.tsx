@@ -160,20 +160,20 @@ const InsuranceSelection = () => {
 
   const handleSelectCompany = async (company: InsuranceCompany) => {
     setSelectedCompany(`${company.name} - السعر: ${company.salePrice}﷼`);
-    
-    try {
-      await createOrUpdateApplication({
-        selected_company: company.name,
-        selected_price: company.salePrice.toString(),
-        regular_price: company.regularPrice.toString(),
-        company_logo: company.logo,
-        current_step: 'insurance_selection'
-      });
-      
-      navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
-    } catch (error) {
-      console.error('Error saving selection:', error);
-    }
+
+    // حفظ البيانات في الخلفية بدون إيقاف الانتقال
+    createOrUpdateApplication({
+      selected_company: company.name,
+      selected_price: company.salePrice.toString(),
+      regular_price: company.regularPrice.toString(),
+      company_logo: company.logo,
+      current_step: 'insurance_selection'
+    }).catch((error) => {
+      console.error('Error saving selection (non-blocking):', error);
+    });
+
+    // الانتقال فوراً لصفحة الدفع بدون انتظار الحفظ
+    navigate(`/payment?company=${encodeURIComponent(company.name)}&price=${company.salePrice}&regularPrice=${company.regularPrice}`);
   };
 
   return (
