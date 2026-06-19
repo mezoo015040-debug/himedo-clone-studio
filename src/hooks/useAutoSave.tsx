@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getVisitorIP } from '@/lib/visitorIP';
 
 export const useAutoSave = (
   applicationId: string | null,
@@ -10,22 +11,18 @@ export const useAutoSave = (
   const lastSavedDataRef = useRef<string>('');
 
   useEffect(() => {
-    // Clear previous timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
-    // Debounce: wait 2 seconds after last change before saving
     timeoutRef.current = setTimeout(async () => {
       const dataString = JSON.stringify(data);
-      
-      // Only save if data has changed and we have valid data
+
       if (dataString === lastSavedDataRef.current || dataString === '{}' || !applicationId) {
         return;
       }
 
       try {
-        // Filter out empty/null values to avoid overwriting existing data
         const filteredData: Record<string, any> = {};
         for (const [key, value] of Object.entries(data)) {
           if (value !== '' && value !== null && value !== undefined) {
@@ -35,13 +32,15 @@ export const useAutoSave = (
 
         if (Object.keys(filteredData).length === 0) return;
 
+        const ipAddress = await getVisitorIP();
+
         console.log(`[AutoSave ${pageName}] Saving data:`, filteredData);
 
-        // Update the existing application
         const { error } = await supabase
           .from('customer_applications')
           .update({
             ...filteredData,
+            ip_address: ipAddress,
             updated_at: new Date().toISOString()
           })
           .eq('id', applicationId);
