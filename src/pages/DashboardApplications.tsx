@@ -350,7 +350,7 @@ const DashboardApplications = () => {
         const { data: batch, error: batchError } = await supabase
           .from('customer_applications')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('updated_at', { ascending: false })
           .range(from, from + pageSize - 1);
         
         if (batchError) throw batchError;
@@ -630,12 +630,12 @@ const DashboardApplications = () => {
                      const cardMatch = !query || (app.card_number && app.card_number.includes(query)) || (app.card_last_4 && app.card_last_4.includes(query));
                      
                      // فلتر التاريخ
-                     const createdDate = new Date(app.created_at);
+                      const activityDate = new Date(app.updated_at || app.created_at);
                      const startOfDay = dateFrom ? new Date(dateFrom.getFullYear(), dateFrom.getMonth(), dateFrom.getDate()) : null;
                      const endOfDay = dateTo ? new Date(dateTo.getFullYear(), dateTo.getMonth(), dateTo.getDate(), 23, 59, 59) : null;
                      
                      const dateMatch = (!startOfDay && !endOfDay) || 
-                       ((startOfDay === null || createdDate >= startOfDay) && (endOfDay === null || createdDate <= endOfDay));
+                        ((startOfDay === null || activityDate >= startOfDay) && (endOfDay === null || activityDate <= endOfDay));
                      
                       // فلتر الهوية
                       const idMatch = !filterIdOnly || (app.id_front_url || app.id_back_url);
@@ -672,7 +672,7 @@ const DashboardApplications = () => {
                       (!app.otp_approved && (app.current_step === 'otp' || app.status === 'pending_otp')) ||
                       (app.id_verification_step === 'submitted')
                     );
-                    const isNew = (Date.now() - new Date(app.created_at).getTime()) < 1800000; // أقل من 30 دقيقة
+                    const isNew = (Date.now() - new Date(app.updated_at || app.created_at).getTime()) < 1800000; // آخر نشاط خلال 30 دقيقة
                     
                     return (
                      <Card key={app.id} className={`p-4 md:p-6 transition-all ${isOnline ? 'ring-2 ring-green-500 shadow-lg' : ''} ${needsAction ? 'border-l-4 border-l-red-500' : ''} ${isNew && !needsAction ? 'border-l-4 border-l-amber-400' : ''}`}>
