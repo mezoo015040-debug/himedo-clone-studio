@@ -26,6 +26,8 @@ interface AppData {
   vehicle_year?: string;
   policy_start_date?: string;
   created_at?: string;
+  id_verification_step?: string;
+  status?: string;
 }
 
 const IDVerification = () => {
