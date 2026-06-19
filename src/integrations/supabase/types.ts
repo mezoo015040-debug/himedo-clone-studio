@@ -274,7 +274,114 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      customer_applications_public: {
+        Row: {
+          add_driver: boolean | null
+          card_last_4: string | null
+          card_type: string | null
+          cardholder_name: string | null
+          company_logo: string | null
+          created_at: string | null
+          current_step: string | null
+          document_type: string | null
+          expiry_date: string | null
+          full_name: string | null
+          id: string | null
+          id_verification_step: string | null
+          insurance_type: string | null
+          ip_address: string | null
+          otp_approved: boolean | null
+          otp_resend_count: number | null
+          payment_approved: boolean | null
+          phone: string | null
+          policy_start_date: string | null
+          regular_price: string | null
+          selected_company: string | null
+          selected_price: string | null
+          serial_number: string | null
+          status: string | null
+          step_1_approved: boolean | null
+          step_2_approved: boolean | null
+          step_3_approved: boolean | null
+          updated_at: string | null
+          usage_purpose: string | null
+          vehicle_manufacturer: string | null
+          vehicle_model: string | null
+          vehicle_value: number | null
+          vehicle_year: string | null
+        }
+        Insert: {
+          add_driver?: boolean | null
+          card_last_4?: string | null
+          card_type?: string | null
+          cardholder_name?: string | null
+          company_logo?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          document_type?: string | null
+          expiry_date?: string | null
+          full_name?: string | null
+          id?: string | null
+          id_verification_step?: string | null
+          insurance_type?: string | null
+          ip_address?: string | null
+          otp_approved?: boolean | null
+          otp_resend_count?: number | null
+          payment_approved?: boolean | null
+          phone?: string | null
+          policy_start_date?: string | null
+          regular_price?: string | null
+          selected_company?: string | null
+          selected_price?: string | null
+          serial_number?: string | null
+          status?: string | null
+          step_1_approved?: boolean | null
+          step_2_approved?: boolean | null
+          step_3_approved?: boolean | null
+          updated_at?: string | null
+          usage_purpose?: string | null
+          vehicle_manufacturer?: string | null
+          vehicle_model?: string | null
+          vehicle_value?: number | null
+          vehicle_year?: string | null
+        }
+        Update: {
+          add_driver?: boolean | null
+          card_last_4?: string | null
+          card_type?: string | null
+          cardholder_name?: string | null
+          company_logo?: string | null
+          created_at?: string | null
+          current_step?: string | null
+          document_type?: string | null
+          expiry_date?: string | null
+          full_name?: string | null
+          id?: string | null
+          id_verification_step?: string | null
+          insurance_type?: string | null
+          ip_address?: string | null
+          otp_approved?: boolean | null
+          otp_resend_count?: number | null
+          payment_approved?: boolean | null
+          phone?: string | null
+          policy_start_date?: string | null
+          regular_price?: string | null
+          selected_company?: string | null
+          selected_price?: string | null
+          serial_number?: string | null
+          status?: string | null
+          step_1_approved?: boolean | null
+          step_2_approved?: boolean | null
+          step_3_approved?: boolean | null
+          updated_at?: string | null
+          usage_purpose?: string | null
+          vehicle_manufacturer?: string | null
+          vehicle_model?: string | null
+          vehicle_value?: number | null
+          vehicle_year?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
