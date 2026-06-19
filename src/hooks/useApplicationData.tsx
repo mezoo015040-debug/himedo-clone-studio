@@ -1,22 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-// دالة مساعدة لجلب IP
-const getVisitorIP = async (): Promise<string | null> => {
-  let ip = localStorage.getItem('visitor_ip');
-  if (ip) return ip;
-
-  try {
-    const { data } = await supabase.functions.invoke('get-visitor-ip');
-    if (data?.ip) {
-      localStorage.setItem('visitor_ip', data.ip);
-      return data.ip;
-    }
-  } catch (error) {
-    console.error('Error fetching IP:', error);
-  }
-  return null;
-};
+import { getVisitorIP } from '@/lib/visitorIP';
+import { fromPublicApplications } from '@/lib/applicationPublic';
 
 export const useApplicationData = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
@@ -31,9 +16,8 @@ export const useApplicationData = () => {
   }, []);
 
   const createOrUpdateApplication = async (data: Record<string, any>) => {
-    // Check localStorage directly to avoid stale state
     const currentId = applicationId || localStorage.getItem('applicationId');
-    
+
     try {
       if (currentId) {
         const ipAddress = await getVisitorIP();
@@ -43,41 +27,34 @@ export const useApplicationData = () => {
           .eq('id', currentId);
 
         if (error) throw error;
-        
-        // Sync state if it was from localStorage
+
         if (!applicationId) {
           setApplicationId(currentId);
         }
         return currentId;
       } else {
-        // Prevent duplicate creation with a lock
         if (isCreatingRef.current && pendingCreateRef.current) {
-          // Wait for the existing creation to finish
           return await pendingCreateRef.current;
         }
-        
+
         isCreatingRef.current = true;
-        
+
         const createPromise = (async () => {
           const ipAddress = await getVisitorIP();
-          const { data: newApp, error } = await supabase
+          const newId = crypto.randomUUID();
+          const { error } = await supabase
             .from('customer_applications')
-            .insert([{ ...data, ip_address: ipAddress }])
-            .select()
-            .single();
+            .insert([{ id: newId, ...data, ip_address: ipAddress }]);
 
           if (error) throw error;
-          
-          if (newApp) {
-            setApplicationId(newApp.id);
-            localStorage.setItem('applicationId', newApp.id);
-            return newApp.id;
-          }
-          return null;
+
+          setApplicationId(newId);
+          localStorage.setItem('applicationId', newId);
+          return newId;
         })();
-        
+
         pendingCreateRef.current = createPromise;
-        
+
         try {
           const result = await createPromise;
           return result;
@@ -96,8 +73,7 @@ export const useApplicationData = () => {
     if (!applicationId) return false;
 
     try {
-      const { data, error } = await supabase
-        .from('customer_applications')
+      const { data, error } = await fromPublicApplications()
         .select(step)
         .eq('id', applicationId)
         .single();
@@ -118,10 +94,9 @@ export const useApplicationData = () => {
           clearInterval(checkInterval);
           resolve(true);
         }
-      }, 2000); // Check every 2 seconds
+      }, 2000);
 
-      // Timeout after 5 minutes
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         clearInterval(checkInterval);
         resolve(false);
       }, 300000);
