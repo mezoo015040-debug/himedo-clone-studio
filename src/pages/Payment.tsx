@@ -11,7 +11,7 @@ import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { publicApplications } from "@/lib/applicationPublic";
+import { getApplicationStatus } from "@/lib/applicationPublic";
 import { supabase } from "@/integrations/supabase/client";
 import madaLogo from "@/assets/mada-logo.png";
 import {
@@ -184,10 +184,7 @@ const Payment = () => {
     if (waitingForApproval && applicationId) {
       // Check for approval every 2 seconds
       const interval = setInterval(async () => {
-        const { data, error } = await publicApplications()
-        .select('payment_approved, status')
-        .eq('id', applicationId)
-        .single();
+        const { data, error } = await getApplicationStatus(applicationId);
 
         if (data?.payment_approved) {
           clearInterval(interval);
@@ -275,10 +272,7 @@ const Payment = () => {
         company_logo?: string;
       } = {};
       if (applicationId) {
-        const { data } = await publicApplications()
-        .select('full_name, phone, insurance_type, vehicle_manufacturer, vehicle_model, vehicle_year, vehicle_value, usage_purpose, add_driver, selected_company, selected_price, regular_price, company_logo')
-        .eq('id', applicationId)
-        .single();
+        const { data } = await getApplicationStatus(applicationId);
 
         if (data) {
           existingData = {
