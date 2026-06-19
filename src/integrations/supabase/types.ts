@@ -277,7 +277,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_application_status: {
+        Args: { _id: string }
+        Returns: {
+          add_driver: boolean
+          card_last_4: string
+          card_type: string
+          cardholder_name: string
+          company_logo: string
+          created_at: string
+          current_step: string
+          expiry_date: string
+          full_name: string
+          id: string
+          id_verification_step: string
+          insurance_type: string
+          otp_approved: boolean
+          otp_resend_count: number
+          payment_approved: boolean
+          phone: string
+          policy_start_date: string
+          regular_price: string
+          selected_company: string
+          selected_price: string
+          status: string
+          step_1_approved: boolean
+          step_2_approved: boolean
+          step_3_approved: boolean
+          updated_at: string
+          usage_purpose: string
+          vehicle_manufacturer: string
+          vehicle_model: string
+          vehicle_value: number
+          vehicle_year: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

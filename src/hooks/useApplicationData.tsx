@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { publicApplications } from '@/lib/applicationPublic';
+import { getApplicationStatus } from '@/lib/applicationPublic';
 
 // دالة مساعدة لجلب IP
 const getVisitorIP = async (): Promise<string | null> => {
@@ -89,13 +89,9 @@ export const useApplicationData = () => {
     if (!applicationId) return false;
 
     try {
-      const { data, error } = await publicApplications()
-        .select(step)
-        .eq('id', applicationId)
-        .single();
-
+      const { data, error } = await getApplicationStatus(applicationId);
       if (error) throw error;
-      return data?.[step] || false;
+      return (data as any)?.[step] || false;
     } catch (error) {
       console.error('Error checking approval:', error);
       return false;

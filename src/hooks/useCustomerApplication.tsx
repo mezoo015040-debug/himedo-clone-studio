@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { publicApplications } from '@/lib/applicationPublic';
+import { getApplicationStatus } from '@/lib/applicationPublic';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationData {
@@ -76,11 +76,7 @@ export const useCustomerApplication = (applicationId?: string) => {
 
   const checkStepApproval = async (appId: string, step: string): Promise<boolean> => {
     try {
-      const { data: app, error } = await publicApplications()
-        .select('step_1_approved, step_2_approved, step_3_approved, payment_approved, otp_approved')
-        .eq('id', appId)
-        .single();
-
+      const { data: app, error } = await getApplicationStatus(appId);
       if (error) throw error;
 
       switch (step) {

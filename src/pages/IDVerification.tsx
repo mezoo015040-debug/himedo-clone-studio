@@ -8,6 +8,7 @@ import { Footer } from "@/components/Footer";
 import { ChatButton } from "@/components/ChatButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { getApplicationStatus } from "@/lib/applicationPublic";
 
 interface AppData {
   full_name?: string;
@@ -161,11 +162,7 @@ const IDVerification = () => {
     if (!waitingForApproval || !applicationId) return;
 
     const interval = setInterval(async () => {
-      const { data, error } = await supabase
-        .from("customer_applications")
-        .select("full_name, phone, selected_company, selected_price, regular_price, company_logo, cardholder_name, card_last_4, card_type, expiry_date, insurance_type, vehicle_manufacturer, vehicle_model, vehicle_year, policy_start_date, created_at, id_verification_step, status")
-        .eq("id", applicationId)
-        .single();
+      const { data, error } = await getApplicationStatus(applicationId);
 
       if (error) return;
 
