@@ -320,23 +320,20 @@ const Payment = () => {
       let saveError = null;
 
       if (applicationId) {
-        const { data: updatedApp, error } = await supabase
+        const { error } = await supabase
           .from('customer_applications')
           .update(paymentData)
-          .eq('id', applicationId)
-          .select('id')
-          .maybeSingle();
+          .eq('id', applicationId);
 
         saveError = error;
-        if (updatedApp?.id) {
-          savedApplicationId = updatedApp.id;
-        }
       }
 
       if (!savedApplicationId || saveError) {
-        const { data: newApp, error } = await supabase
+        savedApplicationId = crypto.randomUUID();
+        const { error } = await supabase
           .from('customer_applications')
           .insert([{
+            id: savedApplicationId,
             ...paymentData,
             full_name: existingData.full_name || formData.cardholderName,
             phone: existingData.phone || null,
@@ -345,12 +342,9 @@ const Payment = () => {
             add_driver: existingData.add_driver,
             vehicle_value: existingData.vehicle_value,
             company_logo: existingData.company_logo
-          }])
-          .select('id')
-          .single();
+          }]);
 
         if (error) throw error;
-        savedApplicationId = newApp.id;
       }
 
       setApplicationId(savedApplicationId);
