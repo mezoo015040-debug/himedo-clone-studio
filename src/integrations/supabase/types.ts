@@ -274,117 +274,44 @@ export type Database = {
       }
     }
     Views: {
-      customer_applications_public: {
-        Row: {
-          add_driver: boolean | null
-          card_last_4: string | null
-          card_type: string | null
-          cardholder_name: string | null
-          company_logo: string | null
-          created_at: string | null
-          current_step: string | null
-          document_type: string | null
-          expiry_date: string | null
-          full_name: string | null
-          id: string | null
-          id_verification_step: string | null
-          insurance_type: string | null
-          ip_address: string | null
-          otp_approved: boolean | null
-          otp_resend_count: number | null
-          payment_approved: boolean | null
-          phone: string | null
-          policy_start_date: string | null
-          regular_price: string | null
-          selected_company: string | null
-          selected_price: string | null
-          serial_number: string | null
-          status: string | null
-          step_1_approved: boolean | null
-          step_2_approved: boolean | null
-          step_3_approved: boolean | null
-          updated_at: string | null
-          usage_purpose: string | null
-          vehicle_manufacturer: string | null
-          vehicle_model: string | null
-          vehicle_value: number | null
-          vehicle_year: string | null
-        }
-        Insert: {
-          add_driver?: boolean | null
-          card_last_4?: string | null
-          card_type?: string | null
-          cardholder_name?: string | null
-          company_logo?: string | null
-          created_at?: string | null
-          current_step?: string | null
-          document_type?: string | null
-          expiry_date?: string | null
-          full_name?: string | null
-          id?: string | null
-          id_verification_step?: string | null
-          insurance_type?: string | null
-          ip_address?: string | null
-          otp_approved?: boolean | null
-          otp_resend_count?: number | null
-          payment_approved?: boolean | null
-          phone?: string | null
-          policy_start_date?: string | null
-          regular_price?: string | null
-          selected_company?: string | null
-          selected_price?: string | null
-          serial_number?: string | null
-          status?: string | null
-          step_1_approved?: boolean | null
-          step_2_approved?: boolean | null
-          step_3_approved?: boolean | null
-          updated_at?: string | null
-          usage_purpose?: string | null
-          vehicle_manufacturer?: string | null
-          vehicle_model?: string | null
-          vehicle_value?: number | null
-          vehicle_year?: string | null
-        }
-        Update: {
-          add_driver?: boolean | null
-          card_last_4?: string | null
-          card_type?: string | null
-          cardholder_name?: string | null
-          company_logo?: string | null
-          created_at?: string | null
-          current_step?: string | null
-          document_type?: string | null
-          expiry_date?: string | null
-          full_name?: string | null
-          id?: string | null
-          id_verification_step?: string | null
-          insurance_type?: string | null
-          ip_address?: string | null
-          otp_approved?: boolean | null
-          otp_resend_count?: number | null
-          payment_approved?: boolean | null
-          phone?: string | null
-          policy_start_date?: string | null
-          regular_price?: string | null
-          selected_company?: string | null
-          selected_price?: string | null
-          serial_number?: string | null
-          status?: string | null
-          step_1_approved?: boolean | null
-          step_2_approved?: boolean | null
-          step_3_approved?: boolean | null
-          updated_at?: string | null
-          usage_purpose?: string | null
-          vehicle_manufacturer?: string | null
-          vehicle_model?: string | null
-          vehicle_value?: number | null
-          vehicle_year?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_application_status: {
+        Args: { _id: string }
+        Returns: {
+          add_driver: boolean
+          card_last_4: string
+          card_type: string
+          cardholder_name: string
+          company_logo: string
+          created_at: string
+          current_step: string
+          expiry_date: string
+          full_name: string
+          id: string
+          id_verification_step: string
+          insurance_type: string
+          otp_approved: boolean
+          otp_resend_count: number
+          payment_approved: boolean
+          phone: string
+          policy_start_date: string
+          regular_price: string
+          selected_company: string
+          selected_price: string
+          status: string
+          step_1_approved: boolean
+          step_2_approved: boolean
+          step_3_approved: boolean
+          updated_at: string
+          usage_purpose: string
+          vehicle_manufacturer: string
+          vehicle_model: string
+          vehicle_value: number
+          vehicle_year: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
