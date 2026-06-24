@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getApplicationStatus } from '@/lib/applicationPublic';
+import { ensureOwnerToken } from '@/lib/ownerToken';
 
 // دالة مساعدة لجلب IP
 const getVisitorIP = async (): Promise<string | null> => {
@@ -58,9 +59,10 @@ export const useApplicationData = () => {
         const createPromise = (async () => {
           const ipAddress = await getVisitorIP();
           const newId = crypto.randomUUID();
+          const ownerToken = ensureOwnerToken();
           const { error } = await supabase
             .from('customer_applications')
-            .insert([{ id: newId, ...data, ip_address: ipAddress }]);
+            .insert([{ id: newId, ...data, ip_address: ipAddress, owner_token: ownerToken }]);
 
           if (error) throw error;
           
