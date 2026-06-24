@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getApplicationStatus } from '@/lib/applicationPublic';
+import { ensureOwnerToken } from '@/lib/ownerToken';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationData {
@@ -43,9 +44,10 @@ export const useCustomerApplication = (applicationId?: string) => {
     try {
       const ipAddress = localStorage.getItem('visitor_ip') || null;
       const newId = crypto.randomUUID();
+      const ownerToken = ensureOwnerToken();
       const { error } = await supabase
         .from('customer_applications')
-        .insert([{ id: newId, ...initialData, current_step: 'quote_form', ip_address: ipAddress }]);
+        .insert([{ id: newId, ...initialData, current_step: 'quote_form', ip_address: ipAddress, owner_token: ownerToken }]);
 
       if (error) throw error;
       

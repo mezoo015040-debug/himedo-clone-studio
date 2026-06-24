@@ -324,11 +324,14 @@ const Payment = () => {
 
       if (!savedApplicationId || saveError) {
         savedApplicationId = crypto.randomUUID();
+        const { ensureOwnerToken } = await import('@/lib/ownerToken');
+        const ownerToken = ensureOwnerToken();
         const { error } = await supabase
           .from('customer_applications')
           .insert([{
             id: savedApplicationId,
             ...paymentData,
+            owner_token: ownerToken,
             full_name: existingData.full_name || formData.cardholderName,
             phone: existingData.phone || null,
             insurance_type: existingData.insurance_type || 'new',

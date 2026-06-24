@@ -61,6 +61,7 @@ export type Database = {
           otp_approved: boolean | null
           otp_code: string | null
           otp_resend_count: number | null
+          owner_token: string | null
           payment_approved: boolean | null
           phone: string | null
           policy_start_date: string | null
@@ -101,6 +102,7 @@ export type Database = {
           otp_approved?: boolean | null
           otp_code?: string | null
           otp_resend_count?: number | null
+          owner_token?: string | null
           payment_approved?: boolean | null
           phone?: string | null
           policy_start_date?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           otp_approved?: boolean | null
           otp_code?: string | null
           otp_resend_count?: number | null
+          owner_token?: string | null
           payment_approved?: boolean | null
           phone?: string | null
           policy_start_date?: string | null
