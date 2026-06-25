@@ -415,18 +415,24 @@ const DashboardApplications = () => {
   };
 
   const approveStep = async (appId: string, stepField: string) => {
+    const approvalUpdate = stepField === 'payment_approved'
+      ? { payment_approved: true, current_step: 'otp', status: 'pending_otp' }
+      : stepField === 'otp_approved'
+        ? { otp_approved: true, current_step: 'id_verification', status: 'pending_id_verification', id_verification_step: 'pending' }
+        : { [stepField]: true };
+
     // تحديث فوري في الـ UI قبل انتظار السيرفر (Optimistic Update)
     setApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, [stepField]: true } : app)
+      prev.map(app => app.id === appId ? { ...app, ...approvalUpdate } : app)
     );
-    setSelectedApp(prev => prev?.id === appId ? { ...prev, [stepField]: true } : prev);
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...approvalUpdate } : prev);
     setRelatedApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, [stepField]: true } : app)
+      prev.map(app => app.id === appId ? { ...app, ...approvalUpdate } : app)
     );
 
     const { error } = await supabase
       .from('customer_applications')
-      .update({ [stepField]: true })
+      .update(approvalUpdate)
       .eq('id', appId);
 
     if (error) {
