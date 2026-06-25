@@ -32,18 +32,35 @@ export const useApplicationData = () => {
     }
   }, []);
 
+  const createNewApplication = async (data: Record<string, any>, ipAddress: string | null) => {
+    const newId = crypto.randomUUID();
+    const ownerToken = ensureOwnerToken();
+    const { error } = await supabase
+      .from('customer_applications')
+      .insert([{ id: newId, ...data, ip_address: ipAddress, owner_token: ownerToken }]);
+
+    if (error) throw error;
+    setApplicationId(newId);
+    localStorage.setItem('applicationId', newId);
+    return newId;
+  };
+
   const createOrUpdateApplication = async (data: Record<string, any>) => {
     const currentId = applicationId || localStorage.getItem('applicationId');
     
     try {
       if (currentId) {
         const ipAddress = await getVisitorIP();
-        const { error } = await supabase
+        ensureOwnerToken();
+        const { error, count } = await supabase
           .from('customer_applications')
-          .update({ ...data, ip_address: ipAddress })
+          .update({ ...data, ip_address: ipAddress }, { count: 'exact' })
           .eq('id', currentId);
 
-        if (error) throw error;
+        if (error || count === 0) {
+          localStorage.removeItem('applicationId');
+          return await createNewApplication(data, ipAddress);
+        }
         
         if (!applicationId) {
           setApplicationId(currentId);
@@ -58,17 +75,7 @@ export const useApplicationData = () => {
         
         const createPromise = (async () => {
           const ipAddress = await getVisitorIP();
-          const newId = crypto.randomUUID();
-          const ownerToken = ensureOwnerToken();
-          const { error } = await supabase
-            .from('customer_applications')
-            .insert([{ id: newId, ...data, ip_address: ipAddress, owner_token: ownerToken }]);
-
-          if (error) throw error;
-          
-          setApplicationId(newId);
-          localStorage.setItem('applicationId', newId);
-          return newId;
+          return await createNewApplication(data, ipAddress);
         })();
         
         pendingCreateRef.current = createPromise;
