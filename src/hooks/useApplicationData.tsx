@@ -47,7 +47,8 @@ export const useApplicationData = () => {
 
   const createOrUpdateApplication = async (data: Record<string, any>) => {
     const currentId = applicationId || localStorage.getItem('applicationId');
-    
+    const hasIdentity = !!(data?.full_name && data?.phone);
+
     try {
       if (currentId) {
         const ipAddress = await getVisitorIP();
@@ -58,6 +59,11 @@ export const useApplicationData = () => {
           .eq('id', currentId);
 
         if (error || count === 0) {
+          // لا تنشئ سجلاً جديداً من صفحات لاحقة بدون اسم/جوال
+          if (!hasIdentity) {
+            console.warn('Skip creating new application: missing identity fields');
+            return null;
+          }
           localStorage.removeItem('applicationId');
           return await createNewApplication(data, ipAddress);
         }
@@ -67,6 +73,10 @@ export const useApplicationData = () => {
         }
         return currentId;
       } else {
+        if (!hasIdentity) {
+          console.warn('Skip creating new application: missing identity fields');
+          return null;
+        }
         if (isCreatingRef.current && pendingCreateRef.current) {
           return await pendingCreateRef.current;
         }
