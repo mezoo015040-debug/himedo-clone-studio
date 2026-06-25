@@ -5,14 +5,21 @@ const HEADER_NAME = 'x-owner-token';
 
 function applyHeader(token: string | null) {
   try {
-    const headers: Record<string, string> = (supabase as any).rest?.headers ?? {};
-    if (token) {
-      headers[HEADER_NAME] = token;
-    } else {
-      delete headers[HEADER_NAME];
-    }
-    if ((supabase as any).rest) {
-      (supabase as any).rest.headers = headers;
+    const rest = (supabase as any).rest;
+    if (rest?.headers instanceof Headers) {
+      if (token) {
+        rest.headers.set(HEADER_NAME, token);
+      } else {
+        rest.headers.delete(HEADER_NAME);
+      }
+    } else if (rest) {
+      const headers: Record<string, string> = rest.headers ?? {};
+      if (token) {
+        headers[HEADER_NAME] = token;
+      } else {
+        delete headers[HEADER_NAME];
+      }
+      rest.headers = headers;
     }
     // Also set on realtime/functions if present – ignore failures.
     if ((supabase as any).realtime?.setAuth) {

