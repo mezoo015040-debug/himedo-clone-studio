@@ -1282,7 +1282,7 @@ const DashboardApplications = () => {
                               </Badge>
                             )}
                           </div>
-                          {!app.otp_approved && app.status !== 'rejected' && (
+                          {(app.current_step === 'otp' || app.status === 'pending_otp') && Boolean(app.otp_code) && !app.otp_approved && app.status !== 'rejected' && (
                             <div className="flex gap-2">
                               <Button
                                 onClick={() => approveStep(app.id, 'otp_approved')}

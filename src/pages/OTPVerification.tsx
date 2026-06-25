@@ -178,7 +178,7 @@ const OTPVerification = () => {
             otp_code: otp,
             current_step: 'otp',
             otp_approved: false,
-            status: 'pending'
+            status: 'pending_otp'
           })
           .eq('id', applicationId);
 
