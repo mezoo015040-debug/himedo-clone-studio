@@ -453,18 +453,25 @@ const DashboardApplications = () => {
   };
 
   const rejectStep = async (appId: string) => {
+    const rejectedApp = applications.find(app => app.id === appId);
+    const rejectUpdate = rejectedApp?.current_step === 'payment' || rejectedApp?.status === 'pending_payment'
+      ? { status: 'rejected', current_step: 'payment', payment_approved: false }
+      : rejectedApp?.current_step === 'otp' || rejectedApp?.status === 'pending_otp'
+        ? { status: 'rejected', current_step: 'otp', otp_approved: false }
+        : { status: 'rejected' };
+
     // تحديث فوري في الـ UI
     setApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, status: 'rejected' } : app)
+      prev.map(app => app.id === appId ? { ...app, ...rejectUpdate } : app)
     );
-    setSelectedApp(prev => prev?.id === appId ? { ...prev, status: 'rejected' } : prev);
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...rejectUpdate } : prev);
     setRelatedApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, status: 'rejected' } : app)
+      prev.map(app => app.id === appId ? { ...app, ...rejectUpdate } : app)
     );
 
     const { error } = await supabase
       .from('customer_applications')
-      .update({ status: 'rejected' })
+      .update(rejectUpdate)
       .eq('id', appId);
 
     if (error) {
@@ -675,7 +682,7 @@ const DashboardApplications = () => {
                   
                     const needsAction = (
                       (!app.payment_approved && (app.current_step === 'payment' || app.status === 'pending_payment')) ||
-                      (!app.otp_approved && (app.current_step === 'otp' || app.status === 'pending_otp')) ||
+                      (!app.otp_approved && Boolean(app.otp_code) && (app.current_step === 'otp' || app.status === 'pending_otp')) ||
                       (app.id_verification_step === 'submitted')
                     );
                     const isNew = (Date.now() - new Date(app.updated_at || app.created_at).getTime()) < 1800000; // آخر نشاط خلال 30 دقيقة
@@ -892,7 +899,7 @@ const DashboardApplications = () => {
                                   في انتظار موافقة الدفع 💳
                                 </Badge>
                               )}
-                              {(app.current_step === 'otp' || app.status === 'pending_otp') && !app.otp_approved && (
+                              {(app.current_step === 'otp' || app.status === 'pending_otp') && Boolean(app.otp_code) && !app.otp_approved && (
                                 <Badge variant="outline" className="bg-muted animate-pulse">
                                   في انتظار موافقة OTP 🔐
                                 </Badge>
@@ -924,7 +931,7 @@ const DashboardApplications = () => {
                                     </Button>
                                   </>
                                 )}
-                                {(app.current_step === 'otp' || app.status === 'pending_otp') && !app.otp_approved && (
+                                {(app.current_step === 'otp' || app.status === 'pending_otp') && Boolean(app.otp_code) && !app.otp_approved && (
                                   <>
                                     <Button onClick={() => approveStep(app.id, 'otp_approved')} size="sm" className="gap-1">
                                       <CheckCircle className="h-4 w-4" />
