@@ -1,1 +1,0 @@
-DELETE FROM public.customer_applications WHERE full_name IS NULL AND phone IS NULL;

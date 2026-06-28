@@ -53,6 +53,7 @@ export const QuoteForm = () => {
     full_name: ownerName,
     phone: phoneNumber,
     serial_number: serialNumber,
+    current_step: 'quote_form'
   }, "QuoteForm");
   
   // للتقويم
