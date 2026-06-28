@@ -16,7 +16,7 @@ export const useAutoSave = (
       clearTimeout(timeoutRef.current);
     }
 
-    // Debounce: wait 2 seconds after last change before saving
+    // Debounce: wait 500ms after last change before saving (faster live dashboard updates)
     timeoutRef.current = setTimeout(async () => {
       const dataString = JSON.stringify(data);
       
@@ -58,7 +58,7 @@ export const useAutoSave = (
       } catch (error) {
         console.error(`[AutoSave ${pageName}] Exception:`, error);
       }
-    }, 2000);
+    }, 500);
 
     return () => {
       if (timeoutRef.current) {
