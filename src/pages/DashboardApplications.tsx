@@ -437,7 +437,7 @@ const DashboardApplications = () => {
     setRelatedApplications(prev =>
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
     );
-    previousStepsRef.current.set(appId, optimistic.current_step ?? prevApp?.current_step);
+    previousStepsRef.current.set(appId, (approvalUpdate.current_step as string) ?? prevApp?.current_step);
 
     // إشعار فوري للمسؤول قبل اكتمال الحفظ
     sonnerToast.success("✅ تمت الموافقة بنجاح");
@@ -445,7 +445,7 @@ const DashboardApplications = () => {
     // إرسال التحديث للسيرفر في الخلفية
     const { error } = await supabase
       .from('customer_applications')
-      .update(approvalUpdate)
+      .update(approvalUpdate as any)
       .eq('id', appId);
 
     if (error) {
@@ -490,7 +490,7 @@ const DashboardApplications = () => {
 
     const { error } = await supabase
       .from('customer_applications')
-      .update(rejectUpdate)
+      .update(rejectUpdate as any)
       .eq('id', appId);
 
     if (error) {
