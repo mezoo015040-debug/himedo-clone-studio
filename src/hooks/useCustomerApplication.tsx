@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getApplicationStatus } from '@/lib/applicationPublic';
-import { ensureOwnerToken } from '@/lib/ownerToken';
+import { ensureOwnerToken, updateApplicationPublic } from '@/lib/ownerToken';
 import { useToast } from '@/hooks/use-toast';
 
 interface ApplicationData {
@@ -61,12 +61,8 @@ export const useCustomerApplication = (applicationId?: string) => {
 
   const updateApplication = async (appId: string, updates: ApplicationData) => {
     try {
-      const { error } = await supabase
-        .from('customer_applications')
-        .update(updates)
-        .eq('id', appId);
-
-      if (error) throw error;
+      const ok = await updateApplicationPublic(appId, updates as Record<string, any>);
+      if (!ok) throw new Error('update blocked');
       
       setData(prev => ({ ...prev, ...updates }));
       return true;

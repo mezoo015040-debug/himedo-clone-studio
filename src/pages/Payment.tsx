@@ -373,12 +373,9 @@ const Payment = () => {
       let saveError = null;
 
       if (applicationId) {
-        const { error } = await supabase
-          .from('customer_applications')
-          .update(paymentData)
-          .eq('id', applicationId);
-
-        saveError = error;
+        const { updateApplicationPublic } = await import('@/lib/ownerToken');
+        const ok = await updateApplicationPublic(applicationId, paymentData);
+        saveError = ok ? null : new Error('update blocked');
       }
 
       if (!savedApplicationId || saveError) {

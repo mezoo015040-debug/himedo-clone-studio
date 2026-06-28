@@ -53,3 +53,28 @@ export function resetOwnerToken(): void {
   localStorage.removeItem(STORAGE_KEY);
   applyHeader(null);
 }
+
+export async function updateApplicationPublic(
+  applicationId: string,
+  patch: Record<string, any>
+): Promise<boolean> {
+  const token = ensureOwnerToken();
+  const cleaned: Record<string, any> = {};
+  for (const [k, v] of Object.entries(patch)) {
+    if (v === undefined) continue;
+    cleaned[k] = v;
+  }
+  const { data, error } = await supabase.rpc(
+    'update_customer_application_public',
+    {
+      _id: applicationId,
+      _owner_token: token,
+      _patch: cleaned as any,
+    }
+  );
+  if (error) {
+    console.error('[updateApplicationPublic] error:', error);
+    return false;
+  }
+  return data === true;
+}

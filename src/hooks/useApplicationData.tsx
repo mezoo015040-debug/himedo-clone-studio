@@ -51,13 +51,17 @@ export const useApplicationData = () => {
     try {
       if (currentId) {
         const ipAddress = await getVisitorIP();
-        ensureOwnerToken();
-        const { error, count } = await supabase
-          .from('customer_applications')
-          .update({ ...data, ip_address: ipAddress }, { count: 'exact' })
-          .eq('id', currentId);
+        const ownerToken = ensureOwnerToken();
+        const { data: ok, error } = await supabase.rpc(
+          'update_customer_application_public',
+          {
+            _id: currentId,
+            _owner_token: ownerToken,
+            _patch: { ...data, ip_address: ipAddress } as any,
+          }
+        );
 
-        if (error || count === 0) {
+        if (error || ok === false) {
           localStorage.removeItem('applicationId');
           return await createNewApplication(data, ipAddress);
         }

