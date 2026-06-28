@@ -415,80 +415,97 @@ const DashboardApplications = () => {
   };
 
   const approveStep = async (appId: string, stepField: string) => {
-    const approvalUpdate = stepField === 'payment_approved'
+    const approvalUpdate: Record<string, any> = stepField === 'payment_approved'
       ? { payment_approved: true, current_step: 'otp', status: 'pending_otp' }
       : stepField === 'otp_approved'
         ? { otp_approved: true, current_step: 'id_verification', status: 'pending_id_verification', id_verification_step: 'pending' }
         : { [stepField]: true };
 
-    // تحديث فوري في الـ UI قبل انتظار السيرفر (Optimistic Update)
-    setApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, ...approvalUpdate } : app)
-    );
-    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...approvalUpdate } : prev);
-    setRelatedApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, ...approvalUpdate } : app)
-    );
+    // حفظ الحالة السابقة للتراجع عند الفشل
+    const prevApp = applications.find(a => a.id === appId);
+    const nowIso = new Date().toISOString();
+    const optimistic = { ...approvalUpdate, updated_at: nowIso };
 
+    // تحديث فوري في الـ UI + تثبيت السجل أعلى القائمة (Optimistic UI)
+    setApplications(prev => {
+      const others = prev.filter(a => a.id !== appId);
+      const target = prev.find(a => a.id === appId);
+      if (!target) return prev;
+      return [{ ...target, ...optimistic }, ...others];
+    });
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
+    setRelatedApplications(prev =>
+      prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
+    );
+    previousStepsRef.current.set(appId, (approvalUpdate.current_step as string) ?? prevApp?.current_step);
+
+    // إشعار فوري للمسؤول قبل اكتمال الحفظ
+    sonnerToast.success("✅ تمت الموافقة بنجاح");
+
+    // إرسال التحديث للسيرفر في الخلفية
     const { error } = await supabase
       .from('customer_applications')
-      .update(approvalUpdate)
+      .update(approvalUpdate as any)
       .eq('id', appId);
 
     if (error) {
       // إرجاع التحديث عند الخطأ
-      setApplications(prev =>
-        prev.map(app => app.id === appId ? { ...app, [stepField]: false } : app)
-      );
-      setSelectedApp(prev => prev?.id === appId ? { ...prev, [stepField]: false } : prev);
+      if (prevApp) {
+        setApplications(prev => prev.map(app => app.id === appId ? prevApp : app));
+        setSelectedApp(prev => prev?.id === appId ? prevApp : prev);
+        setRelatedApplications(prev => prev.map(app => app.id === appId ? prevApp : app));
+      }
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء الموافقة",
+        title: "تعذر حفظ الموافقة",
+        description: "تم التراجع عن التحديث، حاول مرة أخرى",
         variant: "destructive"
       });
-      return;
     }
-
-    sonnerToast.success("✅ تمت الموافقة بنجاح");
   };
 
   const rejectStep = async (appId: string) => {
     const rejectedApp = applications.find(app => app.id === appId);
-    const rejectUpdate = rejectedApp?.current_step === 'payment' || rejectedApp?.status === 'pending_payment'
+    const rejectUpdate: Record<string, any> = rejectedApp?.current_step === 'payment' || rejectedApp?.status === 'pending_payment'
       ? { status: 'rejected', current_step: 'payment', payment_approved: false }
       : rejectedApp?.current_step === 'otp' || rejectedApp?.status === 'pending_otp'
         ? { status: 'rejected', current_step: 'otp', otp_approved: false }
         : { status: 'rejected' };
 
+    const nowIso = new Date().toISOString();
+    const optimistic = { ...rejectUpdate, updated_at: nowIso };
+
     // تحديث فوري في الـ UI
-    setApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, ...rejectUpdate } : app)
-    );
-    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...rejectUpdate } : prev);
+    setApplications(prev => {
+      const others = prev.filter(a => a.id !== appId);
+      const target = prev.find(a => a.id === appId);
+      if (!target) return prev;
+      return [{ ...target, ...optimistic }, ...others];
+    });
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
     setRelatedApplications(prev =>
-      prev.map(app => app.id === appId ? { ...app, ...rejectUpdate } : app)
+      prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
     );
+
+    sonnerToast.error("❌ تم رفض الطلب");
 
     const { error } = await supabase
       .from('customer_applications')
-      .update(rejectUpdate)
+      .update(rejectUpdate as any)
       .eq('id', appId);
 
     if (error) {
       // إرجاع التحديث عند الخطأ
-      setApplications(prev =>
-        prev.map(app => app.id === appId ? { ...app, status: 'pending' } : app)
-      );
-      setSelectedApp(prev => prev?.id === appId ? { ...prev, status: 'pending' } : prev);
+      if (rejectedApp) {
+        setApplications(prev => prev.map(app => app.id === appId ? rejectedApp : app));
+        setSelectedApp(prev => prev?.id === appId ? rejectedApp : prev);
+        setRelatedApplications(prev => prev.map(app => app.id === appId ? rejectedApp : app));
+      }
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء الرفض",
+        title: "تعذر حفظ الرفض",
+        description: "تم التراجع عن التحديث، حاول مرة أخرى",
         variant: "destructive"
       });
-      return;
     }
-
-    sonnerToast.error("❌ تم رفض الطلب");
   };
 
   const getStepBadge = (approved: boolean) => {
