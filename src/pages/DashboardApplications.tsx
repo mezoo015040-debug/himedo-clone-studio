@@ -229,6 +229,14 @@ const DashboardApplications = () => {
     };
   }, [navigate]);
 
+  // تحديث تلقائي كل 10 ثوانٍ
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchApplications();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   // صوت تنبيه عند تغيير الصفحة
   const playPageChangeSound = useCallback(() => {
     const ctx = getAudioContext();
