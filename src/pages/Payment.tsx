@@ -189,6 +189,8 @@ const Payment = () => {
       filteredValue = value.replace(/\D/g, "").slice(0, 16);
       // إضافة مسافات كل 4 أرقام
       filteredValue = filteredValue.replace(/(\d{4})/g, "$1 ").trim();
+      statusHandledRef.current = false;
+      setApprovalStatus('waiting');
     }
 
     // CVV - أرقام فقط، بحد أقصى 4
@@ -273,6 +275,7 @@ const Payment = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    statusHandledRef.current = false;
 
     // التحقق من الحقول
     if (!formData.cardholderName.trim()) {
