@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
 import { supabase } from "@/integrations/supabase/client";
 import { getApplicationStatus } from "@/lib/applicationPublic";
+import { updateApplicationPublic } from "@/lib/ownerToken";
 import { usePresence } from "@/hooks/usePresence";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import madaLogo from "@/assets/mada-logo.png";
