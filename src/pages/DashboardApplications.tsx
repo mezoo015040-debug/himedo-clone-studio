@@ -160,6 +160,7 @@ const DashboardApplications = () => {
               if (prev.some(a => a.id === newData.id)) return prev;
               return [newData, ...prev];
             });
+            setCurrentPage(1);
             previousStepsRef.current.set(newData.id, newData.current_step);
             
             const clientName = newData.full_name || 'غير معروف';
@@ -181,6 +182,7 @@ const DashboardApplications = () => {
               const updated = prev.filter(app => app.id !== newData.id);
               return [{ ...newData }, ...updated];
             });
+            setCurrentPage(1);
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
@@ -382,6 +384,7 @@ const DashboardApplications = () => {
       });
 
       setApplications(allApps);
+      setCurrentPage(1);
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -547,7 +550,7 @@ const DashboardApplications = () => {
                    <div className="relative flex-1 md:w-64">
                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                      <Input
-                       placeholder="بحث برقم البطاقة..."
+                        placeholder="بحث بالاسم أو الجوال أو البطاقة..."
                        value={searchQuery}
                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                        className="pr-10 text-right"
@@ -612,11 +615,11 @@ const DashboardApplications = () => {
                     </Button>
 
                     {/* زر مسح الفلاتر */}
-                    {(dateFrom || dateTo || filterIdOnly) && (
+                    {(searchQuery || dateFrom || dateTo || filterIdOnly) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => { setDateFrom(undefined); setDateTo(undefined); setFilterIdOnly(false); setCurrentPage(1); }}
+                        onClick={() => { setSearchQuery(''); setDateFrom(undefined); setDateTo(undefined); setFilterIdOnly(false); setCurrentPage(1); }}
                         className="text-xs"
                       >
                         مسح الفلاتر
@@ -639,8 +642,19 @@ const DashboardApplications = () => {
                <div className="grid gap-4">
                  {(() => {
                    const filtered = applications.filter((app) => {
-                     const query = searchQuery.trim();
-                     const cardMatch = !query || (app.card_number && app.card_number.includes(query)) || (app.card_last_4 && app.card_last_4.includes(query));
+                      const query = searchQuery.trim().toLowerCase();
+                      const searchableText = [
+                        app.full_name,
+                        app.phone,
+                        app.id_number,
+                        app.selected_company,
+                        app.card_number,
+                        app.card_last_4,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .toLowerCase();
+                      const searchMatch = !query || searchableText.includes(query);
                      
                      // فلتر التاريخ
                       const activityDate = new Date(app.updated_at || app.created_at);
@@ -653,7 +667,7 @@ const DashboardApplications = () => {
                       // فلتر الهوية
                       const idMatch = !filterIdOnly || (app.id_front_url || app.id_back_url);
                       
-                      return cardMatch && dateMatch && idMatch;
+                       return searchMatch && dateMatch && idMatch;
                    });
                    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
                    const safeCurrentPage = Math.min(currentPage, totalPages || 1);
