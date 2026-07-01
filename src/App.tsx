@@ -28,6 +28,7 @@ import DashboardApplications from "./pages/DashboardApplications";
 import DashboardVisitors from "./pages/DashboardVisitors";
 import DashboardBlockedIPs from "./pages/DashboardBlockedIPs";
 import IDVerification from "./pages/IDVerification";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const AppContent = () => {
   const [blockReason, setBlockReason] = useState<string | null>(null);
   const [visitorIP, setVisitorIP] = useState<string | null>(null);
   const location = useLocation();
+  useVisitorTracking(location.pathname);
 
   const checkBlockedIP = useCallback(async () => {
     const currentPath = window.location.pathname;

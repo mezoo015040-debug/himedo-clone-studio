@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ensureOwnerToken } from '@/lib/ownerToken';
+import { getVisitorContext } from '@/lib/visitor';
 
 export const useAutoSave = (
   applicationId: string | null,
@@ -39,12 +40,13 @@ export const useAutoSave = (
         console.log(`[AutoSave ${pageName}] Saving data:`, filteredData);
 
         const ownerToken = ensureOwnerToken();
+        const visitorContext = getVisitorContext();
         const { data: ok, error } = await supabase.rpc(
           'update_customer_application_public',
           {
             _id: applicationId,
             _owner_token: ownerToken,
-            _patch: filteredData as any,
+            _patch: { ...visitorContext, ...filteredData } as any,
           }
         );
 

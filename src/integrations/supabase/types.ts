@@ -58,6 +58,7 @@ export type Database = {
           id_verification_step: string | null
           insurance_type: string | null
           ip_address: string | null
+          landing_domain: string | null
           otp_approved: boolean | null
           otp_code: string | null
           otp_resend_count: number | null
@@ -79,6 +80,7 @@ export type Database = {
           vehicle_model: string | null
           vehicle_value: number | null
           vehicle_year: string | null
+          visitor_id: string | null
         }
         Insert: {
           add_driver?: boolean | null
@@ -99,6 +101,7 @@ export type Database = {
           id_verification_step?: string | null
           insurance_type?: string | null
           ip_address?: string | null
+          landing_domain?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
           otp_resend_count?: number | null
@@ -120,6 +123,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_value?: number | null
           vehicle_year?: string | null
+          visitor_id?: string | null
         }
         Update: {
           add_driver?: boolean | null
@@ -140,6 +144,7 @@ export type Database = {
           id_verification_step?: string | null
           insurance_type?: string | null
           ip_address?: string | null
+          landing_domain?: string | null
           otp_approved?: boolean | null
           otp_code?: string | null
           otp_resend_count?: number | null
@@ -161,6 +166,7 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_value?: number | null
           vehicle_year?: string | null
+          visitor_id?: string | null
         }
         Relationships: []
       }
@@ -169,6 +175,7 @@ export type Database = {
           created_at: string
           id: string
           ip_address: string | null
+          landing_domain: string | null
           page_path: string
           referrer: string | null
           referrer_source: string | null
@@ -179,6 +186,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          landing_domain?: string | null
           page_path: string
           referrer?: string | null
           referrer_source?: string | null
@@ -189,6 +197,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip_address?: string | null
+          landing_domain?: string | null
           page_path?: string
           referrer?: string | null
           referrer_source?: string | null
