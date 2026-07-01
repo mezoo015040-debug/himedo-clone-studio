@@ -42,7 +42,7 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
         ip_address: visitorIp,
       });
     }
-  }, [channel, applicationId, userData]);
+  }, [channel, applicationId, userData?.fullName, userData?.phone]);
 
   useEffect(() => {
     const presenceChannel = supabase.channel('online-customers', {
@@ -107,14 +107,14 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
     return () => {
       presenceChannel.unsubscribe();
     };
-  }, [applicationId, currentPage, userData?.fullName, userData?.phone]);
+  }, [applicationId]);
 
   // Update presence when page changes
   useEffect(() => {
     if (channel && applicationId && currentPage) {
       updatePresence(currentPage);
     }
-  }, [currentPage, channel, applicationId, updatePresence]);
+  }, [currentPage, channel, applicationId, userData?.fullName, userData?.phone, updatePresence]);
 
   return { onlineUsers, channel, updatePresence };
 };
