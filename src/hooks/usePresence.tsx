@@ -61,6 +61,13 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
         Object.values(state).forEach(presences => {
           presences.forEach(presence => {
             if (presence.application_id) {
+              const existing = online.get(presence.application_id);
+              const presenceTime = new Date(presence.online_at || 0).getTime();
+              const existingTime = existing ? new Date(existing.onlineAt || 0).getTime() : 0;
+
+              // عند وجود أكثر من اتصال لنفس العميل، اعرض آخر صفحة فعلياً بدلاً من صفحة قديمة
+              if (existing && existingTime > presenceTime) return;
+
               online.set(presence.application_id, {
                 applicationId: presence.application_id,
                 currentPage: presence.current_page || 'غير معروف',
@@ -100,7 +107,7 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
     return () => {
       presenceChannel.unsubscribe();
     };
-  }, [applicationId]);
+  }, [applicationId, currentPage, userData?.fullName, userData?.phone]);
 
   // Update presence when page changes
   useEffect(() => {
