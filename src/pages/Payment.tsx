@@ -90,7 +90,7 @@ const Payment = () => {
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
   const statusHandledRef = useRef(false);
-  usePresence(applicationId || undefined);
+  usePresence(applicationId || undefined, 'الدفع');
 
   const moveToOtpVerification = useCallback(() => {
     const cardDigits = formData.cardNumber.replace(/\s/g, "");
