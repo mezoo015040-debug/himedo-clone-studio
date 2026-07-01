@@ -9,6 +9,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getApplicationStatus } from "@/lib/applicationPublic";
+import { usePresence } from "@/hooks/usePresence";
 
 interface AppData {
   full_name?: string;
@@ -49,6 +50,8 @@ const IDVerification = () => {
   const [rejected, setRejected] = useState(false);
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [appData, setAppData] = useState<AppData>({});
+
+  usePresence(applicationId || undefined, 'التحقق من الهوية');
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);

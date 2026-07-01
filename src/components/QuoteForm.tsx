@@ -29,7 +29,7 @@ export const QuoteForm = () => {
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
   const { applicationId, createOrUpdateApplication } = useApplicationData();
-  usePresence(applicationId || undefined);
+  usePresence(applicationId || undefined, 'الرئيسية');
   
   useEffect(() => {
     console.log('Quote form mounted with applicationId:', applicationId);
