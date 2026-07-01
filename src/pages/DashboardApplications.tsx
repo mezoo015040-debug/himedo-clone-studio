@@ -250,6 +250,32 @@ const DashboardApplications = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // جلب مصدر الزيارة (الدومين) للطلب المحدد
+  useEffect(() => {
+    if (!selectedApp) {
+      setReferrerInfo(null);
+      return;
+    }
+    const ip = selectedApp.ip_address;
+    if (!ip) {
+      setReferrerInfo({ referrer: null, source: null });
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('page_views')
+        .select('referrer, referrer_source, created_at')
+        .eq('ip_address', ip)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      const row = data?.[0];
+      setReferrerInfo({
+        referrer: row?.referrer || null,
+        source: row?.referrer_source || null,
+      });
+    })();
+  }, [selectedApp?.id, selectedApp?.ip_address]);
+
   // صوت تنبيه عند تغيير الصفحة
   const playPageChangeSound = useCallback(() => {
     const ctx = getAudioContext();
