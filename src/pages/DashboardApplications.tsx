@@ -78,6 +78,18 @@ const getPageName = (step: string): string => {
     'otp': '🔐 صفحة التحقق OTP',
     'id_verification': '🪪 صفحة التحقق من الهوية',
     'completed': '✅ مكتمل',
+    'الرئيسية': '📝 صفحة النموذج الأول',
+    'صفحة النموذج الأول': '📝 صفحة النموذج الأول',
+    'بيانات المركبة': '🚗 صفحة معلومات المركبة',
+    'اختيار التأمين': '🏢 صفحة اختيار التأمين',
+    'الدفع': '💳 صفحة الدفع',
+    'التحقق من الهوية': '🪪 صفحة التحقق من الهوية',
+    '/': '📝 صفحة النموذج الأول',
+    '/vehicle-info': '🚗 صفحة معلومات المركبة',
+    '/insurance-selection': '🏢 صفحة اختيار التأمين',
+    '/payment': '💳 صفحة الدفع',
+    '/otp-verification': '🔐 صفحة التحقق OTP',
+    '/id-verification': '🪪 صفحة التحقق من الهوية',
   };
   return pages[step] || step || 'غير معروف';
 };
@@ -692,8 +704,9 @@ const DashboardApplications = () => {
                        عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
                      </p>
                     {paginatedApps.map((app) => {
-                   const userOnline = onlineUsers.get(app.id);
-                  const isOnline = !!userOnline;
+                    const userOnline = onlineUsers.get(app.id);
+                   const isOnline = !!userOnline;
+                   const currentPageLabel = getPageName(isOnline && userOnline?.currentPage ? userOnline.currentPage : app.current_step);
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
 
@@ -839,7 +852,7 @@ const DashboardApplications = () => {
                                 <span className="text-xs text-muted-foreground">الصفحة الحالية:</span>
                               </div>
                               <p className={`font-bold text-sm mt-1 ${isOnline ? 'text-green-700 dark:text-green-300' : ''}`}>
-                                {getPageName(app.current_step)}
+                                {currentPageLabel}
                               </p>
                             </div>
                             
@@ -1061,7 +1074,7 @@ const DashboardApplications = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">الصفحة الحالية</p>
                       <p className={`text-lg font-bold ${onlineUsers.has(selectedApp.id) ? 'text-green-700 dark:text-green-300' : ''}`}>
-                        {getPageName(selectedApp.current_step)}
+                        {getPageName(onlineUsers.get(selectedApp.id)?.currentPage || selectedApp.current_step)}
                       </p>
                     </div>
                   </div>

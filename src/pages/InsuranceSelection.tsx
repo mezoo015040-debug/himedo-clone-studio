@@ -111,7 +111,7 @@ const InsuranceSelection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { applicationId, createOrUpdateApplication } = useApplicationData();
-  usePresence(applicationId || undefined, 'اختيار التأمين');
+  usePresence(applicationId || undefined, 'insurance_selection');
 
   // قراءة قيمة السيارة من localStorage
   const vehicleValue = useMemo(() => {

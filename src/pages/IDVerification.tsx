@@ -51,7 +51,7 @@ const IDVerification = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [appData, setAppData] = useState<AppData>({});
 
-  usePresence(applicationId || undefined, 'التحقق من الهوية');
+  usePresence(applicationId || undefined, 'id_verification');
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
