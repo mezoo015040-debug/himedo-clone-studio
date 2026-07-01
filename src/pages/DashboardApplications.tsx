@@ -1159,6 +1159,27 @@ const DashboardApplications = () => {
                     <p className="font-semibold text-base">{selectedApp.serial_number || 'غير متوفر'}</p>
                   </div>
                   <div>
+                    <p className="text-xs text-muted-foreground mb-1">🌐 مصدر الزيارة:</p>
+                    <p className="font-semibold text-base break-all" dir="ltr">
+                      {(() => {
+                        const ref = referrerInfo?.referrer;
+                        if (ref) {
+                          try {
+                            return new URL(ref).hostname.replace(/^www\./, '');
+                          } catch {
+                            return ref;
+                          }
+                        }
+                        return referrerInfo?.source || 'مباشر';
+                      })()}
+                    </p>
+                    {referrerInfo?.referrer && (
+                      <p className="text-[10px] text-muted-foreground mt-1 break-all" dir="ltr">
+                        {referrerInfo.referrer}
+                      </p>
+                    )}
+                  </div>
+                  <div>
                     <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
                     <p className="font-semibold text-base">
                       {selectedApp.created_at 
