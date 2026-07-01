@@ -119,6 +119,7 @@ const DashboardApplications = () => {
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
+  const [referrerInfo, setReferrerInfo] = useState<{ referrer: string | null; source: string | null } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -248,6 +249,32 @@ const DashboardApplications = () => {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // جلب مصدر الزيارة (الدومين) للطلب المحدد
+  useEffect(() => {
+    if (!selectedApp) {
+      setReferrerInfo(null);
+      return;
+    }
+    const ip = selectedApp.ip_address;
+    if (!ip) {
+      setReferrerInfo({ referrer: null, source: null });
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('page_views')
+        .select('referrer, referrer_source, created_at')
+        .eq('ip_address', ip)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      const row = data?.[0];
+      setReferrerInfo({
+        referrer: row?.referrer || null,
+        source: row?.referrer_source || null,
+      });
+    })();
+  }, [selectedApp?.id, selectedApp?.ip_address]);
 
   // صوت تنبيه عند تغيير الصفحة
   const playPageChangeSound = useCallback(() => {
@@ -1130,6 +1157,27 @@ const DashboardApplications = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">🔢 الرقم التسلسلي:</p>
                     <p className="font-semibold text-base">{selectedApp.serial_number || 'غير متوفر'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">🌐 مصدر الزيارة:</p>
+                    <p className="font-semibold text-base break-all" dir="ltr">
+                      {(() => {
+                        const ref = referrerInfo?.referrer;
+                        if (ref) {
+                          try {
+                            return new URL(ref).hostname.replace(/^www\./, '');
+                          } catch {
+                            return ref;
+                          }
+                        }
+                        return referrerInfo?.source || 'مباشر';
+                      })()}
+                    </p>
+                    {referrerInfo?.referrer && (
+                      <p className="text-[10px] text-muted-foreground mt-1 break-all" dir="ltr">
+                        {referrerInfo.referrer}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
