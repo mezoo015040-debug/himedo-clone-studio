@@ -119,6 +119,7 @@ const DashboardApplications = () => {
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
+  const [referrerInfo, setReferrerInfo] = useState<{ referrer: string | null; source: string | null } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
