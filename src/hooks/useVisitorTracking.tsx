@@ -2,8 +2,25 @@ import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { getLandingDomain, getOrCreateVisitorId } from '@/lib/visitor';
+import { updateApplicationPublic } from '@/lib/ownerToken';
 
 const EXCLUDED_PATHS = ['/login', '/dashboard', '/admin-register-secure-2024'];
+
+const PAGE_STEP_BY_PATH: Record<string, string> = {
+  '/': 'quote_form',
+  '/tamin1': 'quote_form',
+  '/tamin2': 'quote_form',
+  '/tamin3': 'quote_form',
+  '/tamin4': 'quote_form',
+  '/asaar': 'quote_form',
+  '/tasis': 'quote_form',
+  '/ramadan': 'quote_form',
+  '/vehicle-info': 'vehicle_info',
+  '/insurance-selection': 'insurance_selection',
+  '/payment': 'payment',
+  '/otp-verification': 'otp',
+  '/id-verification': 'id_verification',
+};
 
 const isCustomerPath = (path: string): boolean => {
   return !EXCLUDED_PATHS.some(excluded => path.startsWith(excluded));
@@ -39,7 +56,67 @@ const getReferrerSource = (referrer: string): string => {
 
 export const useVisitorTracking = (pagePath = window.location.pathname) => {
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const customerChannelRef = useRef<RealtimeChannel | null>(null);
+  const customerChannelAppIdRef = useRef<string | null>(null);
   const latestPathRef = useRef(pagePath);
+
+  const getStepForPath = useCallback((path: string): string | null => {
+    return PAGE_STEP_BY_PATH[path] || null;
+  }, []);
+
+  const resetCustomerChannel = useCallback(() => {
+    if (customerChannelRef.current) {
+      supabase.removeChannel(customerChannelRef.current);
+      customerChannelRef.current = null;
+    }
+    customerChannelAppIdRef.current = null;
+  }, []);
+
+  const trackCustomerPresence = useCallback(async (path: string) => {
+    if (!isCustomerPath(path)) {
+      resetCustomerChannel();
+      return;
+    }
+
+    const applicationId = localStorage.getItem('applicationId');
+    const currentStep = getStepForPath(path);
+    if (!applicationId || !currentStep) return;
+
+    if (customerChannelAppIdRef.current !== applicationId) {
+      resetCustomerChannel();
+      const customerChannel = supabase.channel('online-customers', {
+        config: { presence: { key: applicationId } },
+      });
+      customerChannelRef.current = customerChannel;
+      customerChannelAppIdRef.current = applicationId;
+      customerChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          void trackCustomerPresence(latestPathRef.current);
+        }
+      });
+      return;
+    }
+
+    const visitorIp = localStorage.getItem('visitor_ip') || undefined;
+    const visitorId = getOrCreateVisitorId();
+    const landingDomain = getLandingDomain();
+
+    await customerChannelRef.current?.track({
+      application_id: applicationId,
+      online_at: new Date().toISOString(),
+      current_page: currentStep,
+      ip_address: visitorIp,
+      visitor_id: visitorId,
+      landing_domain: landingDomain,
+    });
+
+    await updateApplicationPublic(applicationId, {
+      current_step: currentStep,
+      visitor_id: visitorId,
+      landing_domain: landingDomain,
+      ...(visitorIp ? { ip_address: visitorIp } : {}),
+    });
+  }, [getStepForPath, resetCustomerChannel]);
 
   const trackPresence = useCallback(async (path: string) => {
     const channel = channelRef.current;
@@ -47,18 +124,22 @@ export const useVisitorTracking = (pagePath = window.location.pathname) => {
 
     if (!isCustomerPath(path)) {
       await channel.untrack();
+      await trackCustomerPresence(path);
       return;
     }
 
+    const applicationId = localStorage.getItem('applicationId') || undefined;
     await channel.track({
       online_at: new Date().toISOString(),
       last_activity: new Date().toISOString(),
       page: path,
-      application_id: localStorage.getItem('applicationId') || undefined,
+      application_id: applicationId,
       ip_address: localStorage.getItem('visitor_ip') || undefined,
+      visitor_id: getOrCreateVisitorId(),
       landing_domain: getLandingDomain(),
     });
-  }, []);
+    await trackCustomerPresence(path);
+  }, [trackCustomerPresence]);
 
   useEffect(() => {
     const visitorId = getOrCreateVisitorId();
@@ -81,9 +162,10 @@ export const useVisitorTracking = (pagePath = window.location.pathname) => {
     return () => {
       clearInterval(interval);
       supabase.removeChannel(channel);
+      resetCustomerChannel();
       channelRef.current = null;
     };
-  }, [trackPresence]);
+  }, [resetCustomerChannel, trackPresence]);
 
   useEffect(() => {
     const trackVisit = async () => {

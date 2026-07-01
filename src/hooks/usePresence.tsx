@@ -132,19 +132,20 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && applicationId) {
+          const latestPage = latestPageRef.current || currentPage || 'quote_form';
           const visitorIp = localStorage.getItem('visitor_ip') || undefined;
           const visitorId = getOrCreateVisitorId();
           await presenceChannel.track({
             application_id: applicationId,
             online_at: new Date().toISOString(),
-            current_page: currentPage || 'الرئيسية',
+            current_page: latestPage,
             full_name: userData?.fullName,
             phone: userData?.phone,
             ip_address: visitorIp,
             visitor_id: visitorId,
             landing_domain: getLandingDomain(),
           });
-          await persistCurrentPage(currentPage || 'quote_form');
+          await persistCurrentPage(latestPage);
         }
       });
 
@@ -164,6 +165,7 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
           visitor_id: getOrCreateVisitorId(),
           landing_domain: getLandingDomain(),
         });
+        void persistCurrentPage(latestPage);
       }
     }, 10000);
 
