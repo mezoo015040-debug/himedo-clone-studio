@@ -29,7 +29,7 @@ const VehicleInfo = () => {
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleValue, setVehicleValue] = useState("");
   const { applicationId, createOrUpdateApplication } = useApplicationData();
-  usePresence(applicationId || undefined);
+  usePresence(applicationId || undefined, 'بيانات المركبة');
   
   useEffect(() => {
     console.log('Vehicle info page mounted with applicationId:', applicationId);
