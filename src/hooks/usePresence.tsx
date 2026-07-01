@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { ensureOwnerToken } from '@/lib/ownerToken';
+import { getLandingDomain, getOrCreateVisitorId } from '@/lib/visitor';
 
 interface PresenceData {
   application_id: string;
@@ -9,6 +11,8 @@ interface PresenceData {
   full_name?: string;
   phone?: string;
   ip_address?: string;
+  visitor_id?: string;
+  landing_domain?: string;
 }
 
 interface PresenceState {
@@ -24,15 +28,48 @@ export interface OnlineUser {
   fullName?: string;
   phone?: string;
   ipAddress?: string;
+  visitorId?: string;
+  landingDomain?: string;
 }
 
 export const usePresence = (applicationId?: string, currentPage?: string, userData?: { fullName?: string; phone?: string }) => {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<Map<string, OnlineUser>>(new Map());
+  const latestPageRef = useRef(currentPage);
+  const latestUserDataRef = useRef(userData);
+
+  useEffect(() => {
+    latestPageRef.current = currentPage;
+    latestUserDataRef.current = userData;
+  }, [currentPage, userData?.fullName, userData?.phone]);
+
+  const persistCurrentPage = useCallback(async (newPage: string) => {
+    if (!applicationId || !newPage) return;
+
+    try {
+      const visitorIp = localStorage.getItem('visitor_ip') || undefined;
+      const visitorId = getOrCreateVisitorId();
+      const landingDomain = getLandingDomain();
+      const ownerToken = ensureOwnerToken();
+      await supabase.rpc('update_customer_application_public', {
+        _id: applicationId,
+        _owner_token: ownerToken,
+        _patch: {
+          current_step: newPage,
+          visitor_id: visitorId,
+          landing_domain: landingDomain,
+          ...(visitorIp ? { ip_address: visitorIp } : {}),
+        } as any,
+      });
+    } catch (error) {
+      console.error('Error persisting current page:', error);
+    }
+  }, [applicationId]);
 
   const updatePresence = useCallback(async (newPage: string) => {
     if (channel && applicationId) {
       const visitorIp = localStorage.getItem('visitor_ip') || undefined;
+      const visitorId = getOrCreateVisitorId();
       await channel.track({
         application_id: applicationId,
         online_at: new Date().toISOString(),
@@ -40,9 +77,12 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
         full_name: userData?.fullName,
         phone: userData?.phone,
         ip_address: visitorIp,
+        visitor_id: visitorId,
+        landing_domain: getLandingDomain(),
       });
+      await persistCurrentPage(newPage);
     }
-  }, [channel, applicationId, userData?.fullName, userData?.phone]);
+  }, [channel, applicationId, userData?.fullName, userData?.phone, persistCurrentPage]);
 
   useEffect(() => {
     const presenceChannel = supabase.channel('online-customers', {
@@ -75,6 +115,8 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
                 fullName: presence.full_name,
                 phone: presence.phone,
                 ipAddress: presence.ip_address,
+                visitorId: presence.visitor_id,
+                landingDomain: presence.landing_domain,
               });
             }
           });
@@ -91,6 +133,7 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && applicationId) {
           const visitorIp = localStorage.getItem('visitor_ip') || undefined;
+          const visitorId = getOrCreateVisitorId();
           await presenceChannel.track({
             application_id: applicationId,
             online_at: new Date().toISOString(),
@@ -98,13 +141,34 @@ export const usePresence = (applicationId?: string, currentPage?: string, userDa
             full_name: userData?.fullName,
             phone: userData?.phone,
             ip_address: visitorIp,
+            visitor_id: visitorId,
+            landing_domain: getLandingDomain(),
           });
+          await persistCurrentPage(currentPage || 'quote_form');
         }
       });
 
     setChannel(presenceChannel);
 
+    const heartbeat = setInterval(() => {
+      const latestPage = latestPageRef.current;
+      const latestUserData = latestUserDataRef.current;
+      if (applicationId && latestPage) {
+        void presenceChannel.track({
+          application_id: applicationId,
+          online_at: new Date().toISOString(),
+          current_page: latestPage,
+          full_name: latestUserData?.fullName,
+          phone: latestUserData?.phone,
+          ip_address: localStorage.getItem('visitor_ip') || undefined,
+          visitor_id: getOrCreateVisitorId(),
+          landing_domain: getLandingDomain(),
+        });
+      }
+    }, 10000);
+
     return () => {
+      clearInterval(heartbeat);
       presenceChannel.unsubscribe();
     };
   }, [applicationId]);

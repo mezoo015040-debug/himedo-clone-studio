@@ -1,5 +1,13 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+import { getLandingDomain, getOrCreateVisitorId } from '@/lib/visitor';
+
+const EXCLUDED_PATHS = ['/login', '/dashboard', '/admin-register-secure-2024'];
+
+const isCustomerPath = (path: string): boolean => {
+  return !EXCLUDED_PATHS.some(excluded => path.startsWith(excluded));
+};
 
 // دالة لتحديد مصدر الزيارة
 const getReferrerSource = (referrer: string): string => {
@@ -29,26 +37,66 @@ const getReferrerSource = (referrer: string): string => {
   }
 };
 
-// دالة للحصول على أو إنشاء visitor ID
-const getOrCreateVisitorId = (): string => {
-  let visitorId = localStorage.getItem('visitor_id');
-  
-  if (!visitorId) {
-    visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('visitor_id', visitorId);
-  }
-  
-  return visitorId;
-};
+export const useVisitorTracking = (pagePath = window.location.pathname) => {
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const latestPathRef = useRef(pagePath);
 
-export const useVisitorTracking = () => {
+  const trackPresence = useCallback(async (path: string) => {
+    const channel = channelRef.current;
+    if (!channel) return;
+
+    if (!isCustomerPath(path)) {
+      await channel.untrack();
+      return;
+    }
+
+    await channel.track({
+      online_at: new Date().toISOString(),
+      last_activity: new Date().toISOString(),
+      page: path,
+      application_id: localStorage.getItem('applicationId') || undefined,
+      ip_address: localStorage.getItem('visitor_ip') || undefined,
+      landing_domain: getLandingDomain(),
+    });
+  }, []);
+
+  useEffect(() => {
+    const visitorId = getOrCreateVisitorId();
+    const channel = supabase.channel('online-visitors', {
+      config: { presence: { key: visitorId } },
+    });
+
+    channelRef.current = channel;
+
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        void trackPresence(latestPathRef.current);
+      }
+    });
+
+    const interval = setInterval(() => {
+      void trackPresence(latestPathRef.current);
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+      channelRef.current = null;
+    };
+  }, [trackPresence]);
+
   useEffect(() => {
     const trackVisit = async () => {
+      if (!isCustomerPath(pagePath)) {
+        void trackPresence(pagePath);
+        return;
+      }
+
       try {
         const visitorId = getOrCreateVisitorId();
+        const landingDomain = getLandingDomain();
         const referrer = document.referrer;
         const referrerSource = getReferrerSource(referrer);
-        const pagePath = window.location.pathname;
         const userAgent = navigator.userAgent;
 
         // جلب IP من الـ edge function
@@ -75,6 +123,7 @@ export const useVisitorTracking = () => {
             referrer_source: referrerSource,
             user_agent: userAgent,
             ip_address: ipAddress,
+            landing_domain: landingDomain,
           });
 
         if (error) {
@@ -82,11 +131,14 @@ export const useVisitorTracking = () => {
         } else {
           console.log('Visit tracked successfully');
         }
+
+        await trackPresence(pagePath);
       } catch (error) {
         console.error('Error in visitor tracking:', error);
       }
     };
 
+    latestPathRef.current = pagePath;
     trackVisit();
-  }, []);
+  }, [pagePath, trackPresence]);
 };

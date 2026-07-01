@@ -19,11 +19,19 @@ export const useRealtimePresence = () => {
   const [visitorsFromVisitorChannel, setVisitorsFromVisitorChannel] = useState<OnlineVisitor[]>([]);
   const [visitorsFromCustomerChannel, setVisitorsFromCustomerChannel] = useState<OnlineVisitor[]>([]);
 
+  const getLatestPresence = (presences: any[]) => {
+    return [...presences].sort((a, b) => {
+      const bTime = new Date(b.last_activity || b.online_at || 0).getTime();
+      const aTime = new Date(a.last_activity || a.online_at || 0).getTime();
+      return bTime - aTime;
+    })[0];
+  };
+
   const parseVisitorPresence = useCallback((state: Record<string, any[]>): OnlineVisitor[] => {
     const visitors: OnlineVisitor[] = [];
     Object.entries(state).forEach(([key, presences]) => {
       if (presences && presences.length > 0) {
-        const presence = presences[0];
+        const presence = getLatestPresence(presences);
         visitors.push({
           visitorId: key,
           currentPage: presence.page || '/',
@@ -43,7 +51,7 @@ export const useRealtimePresence = () => {
     const visitors: OnlineVisitor[] = [];
     Object.entries(state).forEach(([key, presences]) => {
       if (presences && presences.length > 0) {
-        const presence = presences[0];
+        const presence = getLatestPresence(presences);
         // Skip dashboard users from the customer channel
         if (key === 'dashboard') return;
         visitors.push({
@@ -107,7 +115,7 @@ export const useRealtimePresence = () => {
       });
 
     // Channel 2: online-customers (customer-facing pages)
-    const customerChannel = supabase.channel('online-customers-dashboard', {
+    const customerChannel = supabase.channel('online-customers', {
       config: { presence: { key: 'dashboard' } },
     });
 

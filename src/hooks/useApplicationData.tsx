@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getApplicationStatus } from '@/lib/applicationPublic';
 import { ensureOwnerToken } from '@/lib/ownerToken';
+import { getVisitorContext } from '@/lib/visitor';
 
 // دالة مساعدة لجلب IP
 const getVisitorIP = async (): Promise<string | null> => {
@@ -35,9 +36,10 @@ export const useApplicationData = () => {
   const createNewApplication = async (data: Record<string, any>, ipAddress: string | null) => {
     const newId = crypto.randomUUID();
     const ownerToken = ensureOwnerToken();
+    const visitorContext = getVisitorContext();
     const { error } = await supabase
       .from('customer_applications')
-      .insert([{ id: newId, ...data, ip_address: ipAddress, owner_token: ownerToken }]);
+      .insert([{ id: newId, ...visitorContext, ...data, ip_address: ipAddress, owner_token: ownerToken }]);
 
     if (error) throw error;
     setApplicationId(newId);
@@ -52,12 +54,13 @@ export const useApplicationData = () => {
       if (currentId) {
         const ipAddress = await getVisitorIP();
         const ownerToken = ensureOwnerToken();
+        const visitorContext = getVisitorContext();
         const { data: ok, error } = await supabase.rpc(
           'update_customer_application_public',
           {
             _id: currentId,
             _owner_token: ownerToken,
-            _patch: { ...data, ip_address: ipAddress } as any,
+            _patch: { ...visitorContext, ...data, ip_address: ipAddress } as any,
           }
         );
 

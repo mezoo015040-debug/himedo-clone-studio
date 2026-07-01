@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { normalizeDomain } from "@/lib/visitor";
 
 interface Application {
   id: string;
@@ -64,34 +65,23 @@ interface Application {
   policy_start_date: string;
   add_driver: boolean;
   ip_address?: string;
+  visitor_id?: string | null;
+  landing_domain?: string | null;
   id_front_url?: string | null;
   id_back_url?: string | null;
   id_verification_step?: string | null;
 }
 
 const getPageName = (step: string): string => {
-  const pages: { [key: string]: string } = {
-    'quote_form': '📝 صفحة النموذج الأول',
-    'vehicle_info': '🚗 صفحة معلومات المركبة',
-    'insurance_selection': '🏢 صفحة اختيار التأمين',
-    'payment': '💳 صفحة الدفع',
-    'otp': '🔐 صفحة التحقق OTP',
-    'id_verification': '🪪 صفحة التحقق من الهوية',
-    'completed': '✅ مكتمل',
-    'الرئيسية': '📝 صفحة النموذج الأول',
-    'صفحة النموذج الأول': '📝 صفحة النموذج الأول',
-    'بيانات المركبة': '🚗 صفحة معلومات المركبة',
-    'اختيار التأمين': '🏢 صفحة اختيار التأمين',
-    'الدفع': '💳 صفحة الدفع',
-    'التحقق من الهوية': '🪪 صفحة التحقق من الهوية',
-    '/': '📝 صفحة النموذج الأول',
-    '/vehicle-info': '🚗 صفحة معلومات المركبة',
-    '/insurance-selection': '🏢 صفحة اختيار التأمين',
-    '/payment': '💳 صفحة الدفع',
-    '/otp-verification': '🔐 صفحة التحقق OTP',
-    '/id-verification': '🪪 صفحة التحقق من الهوية',
-  };
-  return pages[step] || step || 'غير معروف';
+  const s = (step || "").toLowerCase();
+  if (s.includes("quote") || s === "الرئيسية" || s === "/" || s.includes("صفحة النموذج الأول")) return "📝 صفحة النموذج الأول";
+  if (s.includes("vehicle") || s === "بيانات المركبة") return "🚗 صفحة معلومات المركبة";
+  if (s.includes("insurance") || s === "اختيار التأمين") return "🏢 صفحة اختيار التأمين";
+  if (s.includes("payment") || s === "الدفع") return "💳 صفحة الدفع";
+  if (s.includes("otp") || s.includes("التحقق")) return "🔐 صفحة التحقق OTP";
+  if (s.includes("id_verification") || s.includes("الهوية")) return "🪪 صفحة التحقق من الهوية";
+  if (s.includes("completed")) return "✅ مكتمل";
+  return step || "غير معروف";
 };
 
 // Shared AudioContext - reuse across all sounds to prevent lag
@@ -119,7 +109,7 @@ const DashboardApplications = () => {
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
-  const [referrerInfo, setReferrerInfo] = useState<{ referrer: string | null; source: string | null } | null>(null);
+  const [referrerInfo, setReferrerInfo] = useState<{ referrer: string | null; domain: string | null } | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -250,31 +240,53 @@ const DashboardApplications = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // جلب مصدر الزيارة (الدومين) للطلب المحدد
+  // جلب الدومين الحقيقي الذي فتح منه العميل الطلب (وليس مصدر الزيارة مثل Google)
   useEffect(() => {
     if (!selectedApp) {
       setReferrerInfo(null);
       return;
     }
-    const ip = selectedApp.ip_address;
-    if (!ip) {
-      setReferrerInfo({ referrer: null, source: null });
+    const savedDomain = normalizeDomain(selectedApp.landing_domain);
+    if (savedDomain) {
+      setReferrerInfo({ referrer: null, domain: savedDomain });
       return;
     }
+
+    const ip = selectedApp.ip_address;
+    const userOnline = onlineUsers.get(selectedApp.id);
+    const visitorId = selectedApp.visitor_id || userOnline?.visitorId;
+    const liveDomain = normalizeDomain(userOnline?.landingDomain);
+
+    if (liveDomain) {
+      setReferrerInfo({ referrer: null, domain: liveDomain });
+      return;
+    }
+
+    if (!ip && !visitorId) {
+      setReferrerInfo({ referrer: null, domain: 'غير محفوظ سابقًا' });
+      return;
+    }
+
     (async () => {
-      const { data } = await supabase
+      const createdAt = selectedApp.created_at ? new Date(selectedApp.created_at) : new Date();
+      const upperBound = new Date(createdAt.getTime() + 5 * 60 * 1000).toISOString();
+      let query = supabase
         .from('page_views')
-        .select('referrer, referrer_source, created_at')
-        .eq('ip_address', ip)
-        .order('created_at', { ascending: true })
+        .select('referrer, referrer_source, landing_domain, created_at')
+        .lte('created_at', upperBound)
+        .order('created_at', { ascending: false })
         .limit(1);
+
+      query = visitorId ? query.eq('visitor_id', visitorId) : query.eq('ip_address', ip);
+
+      const { data } = await query;
       const row = data?.[0];
       setReferrerInfo({
         referrer: row?.referrer || null,
-        source: row?.referrer_source || null,
+        domain: normalizeDomain(row?.landing_domain) || 'غير محفوظ سابقًا',
       });
     })();
-  }, [selectedApp?.id, selectedApp?.ip_address]);
+  }, [selectedApp?.id, selectedApp?.ip_address, selectedApp?.visitor_id, selectedApp?.landing_domain, selectedApp?.created_at, onlineUsers]);
 
   // صوت تنبيه عند تغيير الصفحة
   const playPageChangeSound = useCallback(() => {
@@ -1159,37 +1171,9 @@ const DashboardApplications = () => {
                     <p className="font-semibold text-base">{selectedApp.serial_number || 'غير متوفر'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">🌐 مصدر الزيارة:</p>
+                    <p className="text-xs text-muted-foreground mb-1">🌐 الدومين الذي أتى منه:</p>
                     <p className="font-semibold text-base break-all" dir="ltr">
-                      {(() => {
-                        const ref = referrerInfo?.referrer;
-                        if (ref) {
-                          try {
-                            return new URL(ref).hostname.replace(/^www\./, '');
-                          } catch {
-                            return ref;
-                          }
-                        }
-                        return referrerInfo?.source || 'مباشر';
-                      })()}
-                    </p>
-                    {referrerInfo?.referrer && (
-                      <p className="text-[10px] text-muted-foreground mt-1 break-all" dir="ltr">
-                        {referrerInfo.referrer}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">📅 تاريخ التسجيل:</p>
-                    <p className="font-semibold text-base">
-                      {selectedApp.created_at 
-                        ? new Date(selectedApp.created_at).toLocaleDateString('ar-EG', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            calendar: 'gregory'
-                          })
-                        : 'غير متوفر'}
+                      {referrerInfo?.domain || 'مباشر'}
                     </p>
                   </div>
                   <div>
