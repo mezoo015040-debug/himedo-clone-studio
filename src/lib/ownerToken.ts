@@ -21,6 +21,18 @@ function applyHeader(token: string | null) {
       }
       rest.headers = headers;
     }
+    // Storage client uses its own headers object; keep in sync so
+    // storage RLS policies that read x-owner-token succeed.
+    const storage = (supabase as any).storage;
+    if (storage) {
+      const sHeaders: Record<string, string> = storage.headers ?? {};
+      if (token) {
+        sHeaders[HEADER_NAME] = token;
+      } else {
+        delete sHeaders[HEADER_NAME];
+      }
+      storage.headers = sHeaders;
+    }
     // Also set on realtime/functions if present – ignore failures.
     if ((supabase as any).realtime?.setAuth) {
       // noop – realtime uses jwt, not custom headers
