@@ -13,7 +13,8 @@ export const normalizeDomain = (value?: string | null): string | null => {
   if (!value) return null;
 
   try {
-    return new URL(value).hostname.replace(/^www\./, '') || null;
+    const hostname = new URL(value).hostname.replace(/^www\./, '').trim();
+    return hostname && hostname !== 'undefined' && hostname !== 'null' ? hostname : null;
   } catch {
     const cleaned = value
       .replace(/^https?:\/\//, '')
@@ -22,15 +23,24 @@ export const normalizeDomain = (value?: string | null): string | null => {
       .split('?')[0]
       .trim();
 
-    return cleaned || null;
+    return cleaned && cleaned !== 'undefined' && cleaned !== 'null' ? cleaned : null;
   }
 };
 
 export const getLandingDomain = (): string => {
   const existing = localStorage.getItem('landing_domain');
-  if (existing) return existing;
+  const normalizedExisting = normalizeDomain(existing);
+  if (normalizedExisting) {
+    localStorage.setItem('landing_domain', normalizedExisting);
+    return normalizedExisting;
+  }
+  localStorage.removeItem('landing_domain');
 
-  const domain = normalizeDomain(window.location.hostname) || window.location.hostname || 'غير معروف';
+  const domain =
+    normalizeDomain(window.location.hostname) ||
+    normalizeDomain(window.location.host) ||
+    normalizeDomain(window.location.href) ||
+    'غير معروف';
   localStorage.setItem('landing_domain', domain);
   return domain;
 };
