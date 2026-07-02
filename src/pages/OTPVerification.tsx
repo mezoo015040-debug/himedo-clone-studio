@@ -147,13 +147,19 @@ const OTPVerification = () => {
   const handleResendOtp = () => {
     setTimer(120);
     setCanResend(false);
+    setOtp("");
     
-    // تسجيل إعادة إرسال الرمز في قاعدة البيانات
+    // تسجيل إعادة إرسال الرمز ومسح الرمز القديم حتى يظهر الرمز الجديد فقط في لوحة التحكم
     if (applicationId) {
       getApplicationStatus(applicationId)
         .then(({ data }) => {
           const currentCount = (data as any)?.otp_resend_count || 0;
-          updateApplicationPublic(applicationId, { otp_resend_count: currentCount + 1 })
+          updateApplicationPublic(applicationId, {
+            otp_code: null,
+            current_step: 'otp',
+            status: 'pending_otp',
+            otp_resend_count: currentCount + 1,
+          })
             .then(() => console.log('OTP resend count updated'));
         });
     }
@@ -436,7 +442,11 @@ const OTPVerification = () => {
         setShowErrorDialog(open);
         if (!open) {
           if (applicationId) {
-            updateApplicationPublic(applicationId, { status: 'pending' });
+            updateApplicationPublic(applicationId, {
+              otp_code: null,
+              current_step: 'otp',
+              status: 'pending_otp',
+            });
           }
         }
       }}>
