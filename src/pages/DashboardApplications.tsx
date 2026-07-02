@@ -546,7 +546,7 @@ const DashboardApplications = () => {
     const rejectUpdate: Record<string, any> = rejectedApp?.current_step === 'payment' || rejectedApp?.status === 'pending_payment'
       ? { status: 'rejected', current_step: 'payment', payment_approved: false }
       : rejectedApp?.current_step === 'otp' || rejectedApp?.status === 'pending_otp'
-        ? { status: 'rejected', current_step: 'otp', otp_approved: false }
+        ? { status: 'rejected', current_step: 'otp', otp_approved: false, otp_code: null }
         : { status: 'rejected' };
 
     const nowIso = new Date().toISOString();
