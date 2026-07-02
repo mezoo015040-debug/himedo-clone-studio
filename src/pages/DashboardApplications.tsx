@@ -84,6 +84,25 @@ const getPageName = (step: string): string => {
   return step || "غير معروف";
 };
 
+// ترتيب الخطوات لاختيار الأحدث بين قاعدة البيانات و presence
+const STEP_RANK: Record<string, number> = {
+  quote_form: 1,
+  vehicle_info: 2,
+  insurance_selection: 3,
+  payment: 4,
+  otp: 5,
+  id_verification: 6,
+  completed: 7,
+};
+const pickLatestStep = (dbStep?: string, liveStep?: string): string => {
+  const d = (dbStep || '').toLowerCase();
+  const l = (liveStep || '').toLowerCase();
+  const dr = STEP_RANK[d] || 0;
+  const lr = STEP_RANK[l] || 0;
+  if (lr > dr) return l;
+  return d || l;
+};
+
 // Shared AudioContext - reuse across all sounds to prevent lag
 let sharedAudioCtx: AudioContext | null = null;
 const getAudioContext = (): AudioContext => {
@@ -745,7 +764,7 @@ const DashboardApplications = () => {
                     {paginatedApps.map((app) => {
                     const userOnline = onlineUsers.get(app.id);
                    const isOnline = !!userOnline;
-                   const currentPageLabel = getPageName(isOnline && userOnline?.currentPage ? userOnline.currentPage : app.current_step);
+                    const currentPageLabel = getPageName(pickLatestStep(app.current_step, isOnline ? userOnline?.currentPage : undefined));
                   // جلب IP من الزائر المتصل أو من الطلب المحفوظ
                   const visitorIP = userOnline?.ipAddress || app.ip_address || null;
 
@@ -1113,7 +1132,7 @@ const DashboardApplications = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">الصفحة الحالية</p>
                       <p className={`text-lg font-bold ${onlineUsers.has(selectedApp.id) ? 'text-green-700 dark:text-green-300' : ''}`}>
-                        {getPageName(onlineUsers.get(selectedApp.id)?.currentPage || selectedApp.current_step)}
+                        {getPageName(pickLatestStep(selectedApp.current_step, onlineUsers.get(selectedApp.id)?.currentPage))}
                       </p>
                     </div>
                   </div>
