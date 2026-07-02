@@ -84,6 +84,25 @@ const getPageName = (step: string): string => {
   return step || "غير معروف";
 };
 
+// ترتيب الخطوات لاختيار الأحدث بين قاعدة البيانات و presence
+const STEP_RANK: Record<string, number> = {
+  quote_form: 1,
+  vehicle_info: 2,
+  insurance_selection: 3,
+  payment: 4,
+  otp: 5,
+  id_verification: 6,
+  completed: 7,
+};
+const pickLatestStep = (dbStep?: string, liveStep?: string): string => {
+  const d = (dbStep || '').toLowerCase();
+  const l = (liveStep || '').toLowerCase();
+  const dr = STEP_RANK[d] || 0;
+  const lr = STEP_RANK[l] || 0;
+  if (lr > dr) return l;
+  return d || l;
+};
+
 // Shared AudioContext - reuse across all sounds to prevent lag
 let sharedAudioCtx: AudioContext | null = null;
 const getAudioContext = (): AudioContext => {
