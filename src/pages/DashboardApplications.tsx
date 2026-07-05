@@ -589,7 +589,7 @@ const DashboardApplications = () => {
   const reopenPaymentReview = async (appId: string) => {
     const prevApp = applications.find(app => app.id === appId);
     const nowIso = new Date().toISOString();
-    const reopenUpdate = {
+    const reopenUpdate: Record<string, any> = {
       status: 'pending_payment',
       current_step: 'payment',
       payment_approved: false,
