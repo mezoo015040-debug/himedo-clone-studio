@@ -177,8 +177,7 @@ const Payment = () => {
     expiry_date: formData.expiryMonth && formData.expiryYear ? `${formData.expiryMonth}/${formData.expiryYear}` : "",
     selected_company: companyName,
     selected_price: price,
-    regular_price: regularPrice,
-    current_step: 'payment'
+    regular_price: regularPrice
   }, "Payment");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
