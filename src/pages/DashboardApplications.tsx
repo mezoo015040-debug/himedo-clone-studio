@@ -1055,10 +1055,10 @@ const DashboardApplications = () => {
                             </div>
 
                             <div className="flex gap-2">
-                              {app.status === 'rejected' && app.card_number && (
+                              {app.card_number && (
                                 <Button onClick={() => reopenPaymentReview(app.id)} size="sm" variant="outline" className="gap-1">
                                   <RefreshCw className="h-4 w-4" />
-                                  إعادة فتح الدفع
+                                  رفض البطاقة وإعادة الإدخال
                                 </Button>
                               )}
                               {app.status !== 'rejected' && (
