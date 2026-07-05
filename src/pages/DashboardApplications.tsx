@@ -590,7 +590,7 @@ const DashboardApplications = () => {
     const prevApp = applications.find(app => app.id === appId);
     const nowIso = new Date().toISOString();
     const reopenUpdate: Record<string, any> = {
-      status: 'pending_payment',
+      status: 'rejected',
       current_step: 'payment',
       payment_approved: false,
       otp_approved: false,
@@ -606,7 +606,7 @@ const DashboardApplications = () => {
     });
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...reopenUpdate } : prev);
     setRelatedApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
-    sonnerToast.success("تمت إعادة فتح موافقة الدفع");
+    sonnerToast.success("تم إرجاع العميل لصفحة الدفع مع رسالة رفض البطاقة");
 
     const { error } = await supabase
       .from('customer_applications')
