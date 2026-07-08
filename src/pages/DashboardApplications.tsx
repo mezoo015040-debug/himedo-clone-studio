@@ -198,11 +198,8 @@ const DashboardApplications = () => {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
             
-            // تحديث السجل ونقله لأعلى القائمة ليراه المسؤول فوراً
-            setApplications(prev => {
-              const updated = prev.filter(app => app.id !== newData.id);
-              return [{ ...newData }, ...updated];
-            });
+            // تحديث السجل في مكانه دون إعادة ترتيب القائمة حتى لا تقفز أمام المسؤول
+            setApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
