@@ -119,12 +119,14 @@ const getAudioContext = (): AudioContext => {
 const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [pendingNewApplications, setPendingNewApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [filterIdOnly, setFilterIdOnly] = useState(false);
   const ITEMS_PER_PAGE = 50;
+  const AUTO_REFRESH_MS = 60000;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
@@ -135,9 +137,19 @@ const DashboardApplications = () => {
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
   const previousStepsRef = useRef<Map<string, string>>(new Map());
+  const applicationsRef = useRef<Application[]>([]);
+  const pendingNewApplicationsRef = useRef<Application[]>([]);
   
   // تتبع الإشعارات المُرسلة لتفادي التكرار
   const notifiedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
+
+  useEffect(() => {
+    pendingNewApplicationsRef.current = pendingNewApplications;
+  }, [pendingNewApplications]);
 
   const triggerNotification = (key: string, soundFn: () => void, title: string, description: string, duration = 8000) => {
     // منع الإشعارات المكررة لنفس الحدث
@@ -177,11 +189,17 @@ const DashboardApplications = () => {
           
           if (payload.eventType === 'INSERT') {
             const newData = payload.new as Application;
-            setApplications(prev => {
-              // تجنب إضافة نفس السجل مرتين
-              if (prev.some(a => a.id === newData.id)) return prev;
-              return [newData, ...prev];
-            });
+            const isKnownApplication =
+              applicationsRef.current.some(a => a.id === newData.id) ||
+              pendingNewApplicationsRef.current.some(a => a.id === newData.id);
+
+            if (!isKnownApplication) {
+              if (applicationsRef.current.length === 0) {
+                setApplications(prev => prev.some(app => app.id === newData.id) ? prev : [newData, ...prev]);
+              } else {
+                setPendingNewApplications(prev => prev.some(app => app.id === newData.id) ? prev : [newData, ...prev]);
+              }
+            }
             previousStepsRef.current.set(newData.id, newData.current_step);
             
             const clientName = newData.full_name || 'غير معروف';
@@ -200,6 +218,7 @@ const DashboardApplications = () => {
             
             // تحديث السجل في مكانه دون إعادة ترتيب القائمة حتى لا تقفز أمام المسؤول
             setApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
+            setPendingNewApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
@@ -248,11 +267,11 @@ const DashboardApplications = () => {
     };
   }, [navigate]);
 
-  // تحديث تلقائي كل 10 ثوانٍ
+  // تحديث احتياطي هادئ كل دقيقة؛ التحديثات اللحظية تعدل السجل في مكانه بدون قفز القائمة
   useEffect(() => {
     const interval = setInterval(() => {
       fetchApplications();
-    }, 10000);
+    }, AUTO_REFRESH_MS);
     return () => clearInterval(interval);
   }, []);
 
@@ -456,7 +475,35 @@ const DashboardApplications = () => {
         }
       });
 
-      setApplications(allApps);
+      // عند الجلب الاحتياطي لا نعيد ترتيب العملاء حسب آخر تحديث حتى لا تختفي البطاقات أمام المسؤول
+      const currentApps = applicationsRef.current;
+      const incomingById = new Map(allApps.map(app => [app.id, app]));
+
+      if (currentApps.length === 0) {
+        setApplications(allApps);
+      } else {
+        const existingIds = new Set(currentApps.map(app => app.id));
+        setApplications(prev => prev
+          .filter(app => incomingById.has(app.id))
+          .map(app => ({ ...app, ...incomingById.get(app.id)! }))
+        );
+
+        setPendingNewApplications(prev => {
+          const pendingIds = new Set(prev.map(app => app.id));
+          const newApps = allApps.filter(app => !existingIds.has(app.id) && !pendingIds.has(app.id));
+          const updatedPending = prev
+            .filter(app => incomingById.has(app.id))
+            .map(app => ({ ...app, ...incomingById.get(app.id)! }));
+
+          return [...newApps, ...updatedPending];
+        });
+      }
+
+      setSelectedApp(prev => {
+        if (!prev) return prev;
+        const freshApp = allApps.find(app => app.id === prev.id);
+        return freshApp ? { ...prev, ...freshApp } : prev;
+      });
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -489,6 +536,19 @@ const DashboardApplications = () => {
     }
   };
 
+  const showPendingApplications = () => {
+    const pending = pendingNewApplicationsRef.current;
+    if (pending.length === 0) return;
+
+    setApplications(prev => {
+      const existingIds = new Set(prev.map(app => app.id));
+      const visibleNewApps = pending.filter(app => !existingIds.has(app.id));
+      return [...visibleNewApps, ...prev];
+    });
+    setPendingNewApplications([]);
+    setCurrentPage(1);
+  };
+
   const approveStep = async (appId: string, stepField: string) => {
     const approvalUpdate: Record<string, any> = stepField === 'payment_approved'
       ? { payment_approved: true, current_step: 'otp', status: 'pending_otp' }
@@ -501,13 +561,8 @@ const DashboardApplications = () => {
     const nowIso = new Date().toISOString();
     const optimistic = { ...approvalUpdate, updated_at: nowIso };
 
-    // تحديث فوري في الـ UI + تثبيت السجل أعلى القائمة (Optimistic UI)
-    setApplications(prev => {
-      const others = prev.filter(a => a.id !== appId);
-      const target = prev.find(a => a.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...optimistic }, ...others];
-    });
+    // تحديث فوري في مكان الطلب بدون رفعه للأعلى حتى تبقى القائمة ثابتة
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...optimistic } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
     setRelatedApplications(prev =>
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
@@ -550,12 +605,7 @@ const DashboardApplications = () => {
     const optimistic = { ...rejectUpdate, updated_at: nowIso };
 
     // تحديث فوري في الـ UI
-    setApplications(prev => {
-      const others = prev.filter(a => a.id !== appId);
-      const target = prev.find(a => a.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...optimistic }, ...others];
-    });
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...optimistic } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
     setRelatedApplications(prev =>
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
@@ -595,12 +645,7 @@ const DashboardApplications = () => {
       updated_at: nowIso,
     };
 
-    setApplications(prev => {
-      const others = prev.filter(app => app.id !== appId);
-      const target = prev.find(app => app.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...reopenUpdate }, ...others];
-    });
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...reopenUpdate } : prev);
     setRelatedApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
     sonnerToast.success("تم إرجاع العميل لصفحة الدفع مع رسالة رفض البطاقة");
@@ -673,7 +718,7 @@ const DashboardApplications = () => {
                 <div>
                   <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
                   <p className="text-muted-foreground">
-                    إجمالي {applications.length} طلب | متصل الآن: {onlineUsers.size}
+                    إجمالي {applications.length + pendingNewApplications.length} طلب | متصل الآن: {onlineUsers.size}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
@@ -796,9 +841,21 @@ const DashboardApplications = () => {
                    );
                    return (
                      <>
-                     <p className="text-sm text-muted-foreground">
-                       عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
-                     </p>
+                      {pendingNewApplications.length > 0 && (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card p-4 text-foreground shadow-sm">
+                          <div>
+                            <p className="font-bold">يوجد {pendingNewApplications.length} عميل جديد</p>
+                            <p className="text-sm opacity-80">تم إيقاف إضافتهم تلقائيًا حتى لا تتحرك القائمة أثناء متابعة المسؤول.</p>
+                          </div>
+                          <Button size="sm" onClick={showPendingApplications} className="gap-2">
+                            <RefreshCw className="h-4 w-4" />
+                            عرض العملاء الجدد
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        عرض {filtered.length === 0 ? 0 : ((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب ظاهر
+                      </p>
                     {paginatedApps.map((app) => {
                     const userOnline = onlineUsers.get(app.id);
                    const isOnline = !!userOnline;
