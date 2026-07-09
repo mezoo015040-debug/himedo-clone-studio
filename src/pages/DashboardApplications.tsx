@@ -195,9 +195,9 @@ const DashboardApplications = () => {
 
             if (!isKnownApplication) {
               if (applicationsRef.current.length === 0) {
-                setApplications([newData]);
+                setApplications(prev => prev.some(app => app.id === newData.id) ? prev : [newData, ...prev]);
               } else {
-                setPendingNewApplications(prev => [newData, ...prev]);
+                setPendingNewApplications(prev => prev.some(app => app.id === newData.id) ? prev : [newData, ...prev]);
               }
             }
             previousStepsRef.current.set(newData.id, newData.current_step);
@@ -842,7 +842,7 @@ const DashboardApplications = () => {
                    return (
                      <>
                       {pendingNewApplications.length > 0 && (
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-card p-4 text-foreground shadow-sm">
                           <div>
                             <p className="font-bold">يوجد {pendingNewApplications.length} عميل جديد</p>
                             <p className="text-sm opacity-80">تم إيقاف إضافتهم تلقائيًا حتى لا تتحرك القائمة أثناء متابعة المسؤول.</p>
