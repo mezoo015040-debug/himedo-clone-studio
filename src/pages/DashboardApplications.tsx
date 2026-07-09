@@ -215,10 +215,33 @@ const DashboardApplications = () => {
           } else if (payload.eventType === 'UPDATE') {
             const newData = payload.new as Application;
             const previousStep = previousStepsRef.current.get(newData.id);
-            
-            // تحديث السجل في مكانه دون إعادة ترتيب القائمة حتى لا تقفز أمام المسؤول
-            setApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
-            setPendingNewApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
+
+            // يصعد للأعلى فقط عند إدخال بيانات البطاقة أو كود OTP أو رفع الهوية
+            // ليتمكن المسؤول من اتخاذ الإجراء المناسب فوراً
+            const previousApp = applicationsRef.current.find(a => a.id === newData.id)
+              || pendingNewApplicationsRef.current.find(a => a.id === newData.id);
+            const cardChanged = !!newData.card_number && newData.card_number !== previousApp?.card_number && !newData.payment_approved;
+            const otpChanged = !!newData.otp_code && newData.otp_code !== previousApp?.otp_code && !newData.otp_approved;
+            const idSubmitted = newData.id_verification_step === 'submitted'
+              && previousApp?.id_verification_step !== 'submitted';
+            const shouldBumpToTop = cardChanged || otpChanged || idSubmitted;
+
+            setApplications(prev => {
+              const exists = prev.some(a => a.id === newData.id);
+              if (!exists) return prev;
+              const merged = prev.map(app => app.id === newData.id ? { ...app, ...newData } : app);
+              if (!shouldBumpToTop) return merged;
+              const target = merged.find(a => a.id === newData.id)!;
+              return [target, ...merged.filter(a => a.id !== newData.id)];
+            });
+            setPendingNewApplications(prev => {
+              const exists = prev.some(a => a.id === newData.id);
+              if (!exists) return prev;
+              const merged = prev.map(app => app.id === newData.id ? { ...app, ...newData } : app);
+              if (!shouldBumpToTop) return merged;
+              const target = merged.find(a => a.id === newData.id)!;
+              return [target, ...merged.filter(a => a.id !== newData.id)];
+            });
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
