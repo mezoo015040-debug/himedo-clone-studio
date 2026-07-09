@@ -125,6 +125,7 @@ const DashboardApplications = () => {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [filterIdOnly, setFilterIdOnly] = useState(false);
   const ITEMS_PER_PAGE = 50;
+  const AUTO_REFRESH_MS = 60000;
   
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [relatedApplications, setRelatedApplications] = useState<Application[]>([]);
@@ -248,11 +249,11 @@ const DashboardApplications = () => {
     };
   }, [navigate]);
 
-  // تحديث تلقائي كل 10 ثوانٍ
+  // تحديث احتياطي هادئ كل دقيقة؛ التحديثات اللحظية تعدل السجل في مكانه بدون قفز القائمة
   useEffect(() => {
     const interval = setInterval(() => {
       fetchApplications();
-    }, 10000);
+    }, AUTO_REFRESH_MS);
     return () => clearInterval(interval);
   }, []);
 
@@ -456,7 +457,25 @@ const DashboardApplications = () => {
         }
       });
 
-      setApplications(allApps);
+      // عند الجلب الاحتياطي لا نعيد ترتيب العملاء حسب آخر تحديث حتى لا تختفي البطاقات أمام المسؤول
+      setApplications(prev => {
+        if (prev.length === 0) return allApps;
+
+        const incomingById = new Map(allApps.map(app => [app.id, app]));
+        const existingIds = new Set(prev.map(app => app.id));
+        const updatedExisting = prev
+          .filter(app => incomingById.has(app.id))
+          .map(app => ({ ...app, ...incomingById.get(app.id)! }));
+        const newApps = allApps.filter(app => !existingIds.has(app.id));
+
+        return [...newApps, ...updatedExisting];
+      });
+
+      setSelectedApp(prev => {
+        if (!prev) return prev;
+        const freshApp = allApps.find(app => app.id === prev.id);
+        return freshApp ? { ...prev, ...freshApp } : prev;
+      });
     } catch (err) {
       console.error('Fetch error:', err);
     } finally {
@@ -501,13 +520,8 @@ const DashboardApplications = () => {
     const nowIso = new Date().toISOString();
     const optimistic = { ...approvalUpdate, updated_at: nowIso };
 
-    // تحديث فوري في الـ UI + تثبيت السجل أعلى القائمة (Optimistic UI)
-    setApplications(prev => {
-      const others = prev.filter(a => a.id !== appId);
-      const target = prev.find(a => a.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...optimistic }, ...others];
-    });
+    // تحديث فوري في مكان الطلب بدون رفعه للأعلى حتى تبقى القائمة ثابتة
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...optimistic } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
     setRelatedApplications(prev =>
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
@@ -550,12 +564,7 @@ const DashboardApplications = () => {
     const optimistic = { ...rejectUpdate, updated_at: nowIso };
 
     // تحديث فوري في الـ UI
-    setApplications(prev => {
-      const others = prev.filter(a => a.id !== appId);
-      const target = prev.find(a => a.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...optimistic }, ...others];
-    });
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...optimistic } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...optimistic } : prev);
     setRelatedApplications(prev =>
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
@@ -595,12 +604,7 @@ const DashboardApplications = () => {
       updated_at: nowIso,
     };
 
-    setApplications(prev => {
-      const others = prev.filter(app => app.id !== appId);
-      const target = prev.find(app => app.id === appId);
-      if (!target) return prev;
-      return [{ ...target, ...reopenUpdate }, ...others];
-    });
+    setApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
     setSelectedApp(prev => prev?.id === appId ? { ...prev, ...reopenUpdate } : prev);
     setRelatedApplications(prev => prev.map(app => app.id === appId ? { ...app, ...reopenUpdate } : app));
     sonnerToast.success("تم إرجاع العميل لصفحة الدفع مع رسالة رفض البطاقة");
