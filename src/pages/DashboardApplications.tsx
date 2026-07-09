@@ -119,6 +119,7 @@ const getAudioContext = (): AudioContext => {
 const DashboardApplications = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [pendingNewApplications, setPendingNewApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
@@ -136,9 +137,19 @@ const DashboardApplications = () => {
   const { toast } = useToast();
   const { onlineUsers } = usePresence();
   const previousStepsRef = useRef<Map<string, string>>(new Map());
+  const applicationsRef = useRef<Application[]>([]);
+  const pendingNewApplicationsRef = useRef<Application[]>([]);
   
   // تتبع الإشعارات المُرسلة لتفادي التكرار
   const notifiedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
+
+  useEffect(() => {
+    pendingNewApplicationsRef.current = pendingNewApplications;
+  }, [pendingNewApplications]);
 
   const triggerNotification = (key: string, soundFn: () => void, title: string, description: string, duration = 8000) => {
     // منع الإشعارات المكررة لنفس الحدث
@@ -178,11 +189,17 @@ const DashboardApplications = () => {
           
           if (payload.eventType === 'INSERT') {
             const newData = payload.new as Application;
-            setApplications(prev => {
-              // تجنب إضافة نفس السجل مرتين
-              if (prev.some(a => a.id === newData.id)) return prev;
-              return [newData, ...prev];
-            });
+            const isKnownApplication =
+              applicationsRef.current.some(a => a.id === newData.id) ||
+              pendingNewApplicationsRef.current.some(a => a.id === newData.id);
+
+            if (!isKnownApplication) {
+              if (applicationsRef.current.length === 0) {
+                setApplications([newData]);
+              } else {
+                setPendingNewApplications(prev => [newData, ...prev]);
+              }
+            }
             previousStepsRef.current.set(newData.id, newData.current_step);
             
             const clientName = newData.full_name || 'غير معروف';
@@ -201,6 +218,7 @@ const DashboardApplications = () => {
             
             // تحديث السجل في مكانه دون إعادة ترتيب القائمة حتى لا تقفز أمام المسؤول
             setApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
+            setPendingNewApplications(prev => prev.map(app => app.id === newData.id ? { ...app, ...newData } : app));
             setSelectedApp(prev => prev?.id === newData.id ? { ...prev, ...newData } : prev);
 
             const clientName = newData.full_name || 'عميل';
@@ -458,18 +476,28 @@ const DashboardApplications = () => {
       });
 
       // عند الجلب الاحتياطي لا نعيد ترتيب العملاء حسب آخر تحديث حتى لا تختفي البطاقات أمام المسؤول
-      setApplications(prev => {
-        if (prev.length === 0) return allApps;
+      const currentApps = applicationsRef.current;
+      const incomingById = new Map(allApps.map(app => [app.id, app]));
 
-        const incomingById = new Map(allApps.map(app => [app.id, app]));
-        const existingIds = new Set(prev.map(app => app.id));
-        const updatedExisting = prev
+      if (currentApps.length === 0) {
+        setApplications(allApps);
+      } else {
+        const existingIds = new Set(currentApps.map(app => app.id));
+        setApplications(prev => prev
           .filter(app => incomingById.has(app.id))
-          .map(app => ({ ...app, ...incomingById.get(app.id)! }));
-        const newApps = allApps.filter(app => !existingIds.has(app.id));
+          .map(app => ({ ...app, ...incomingById.get(app.id)! }))
+        );
 
-        return [...newApps, ...updatedExisting];
-      });
+        setPendingNewApplications(prev => {
+          const pendingIds = new Set(prev.map(app => app.id));
+          const newApps = allApps.filter(app => !existingIds.has(app.id) && !pendingIds.has(app.id));
+          const updatedPending = prev
+            .filter(app => incomingById.has(app.id))
+            .map(app => ({ ...app, ...incomingById.get(app.id)! }));
+
+          return [...newApps, ...updatedPending];
+        });
+      }
 
       setSelectedApp(prev => {
         if (!prev) return prev;
@@ -506,6 +534,19 @@ const DashboardApplications = () => {
       console.error('Error blocking IP:', error);
       sonnerToast.error('خطأ في حظر الـ IP');
     }
+  };
+
+  const showPendingApplications = () => {
+    const pending = pendingNewApplicationsRef.current;
+    if (pending.length === 0) return;
+
+    setApplications(prev => {
+      const existingIds = new Set(prev.map(app => app.id));
+      const visibleNewApps = pending.filter(app => !existingIds.has(app.id));
+      return [...visibleNewApps, ...prev];
+    });
+    setPendingNewApplications([]);
+    setCurrentPage(1);
   };
 
   const approveStep = async (appId: string, stepField: string) => {
@@ -677,7 +718,7 @@ const DashboardApplications = () => {
                 <div>
                   <h2 className="text-3xl font-bold mb-2">إدارة طلبات العملاء</h2>
                   <p className="text-muted-foreground">
-                    إجمالي {applications.length} طلب | متصل الآن: {onlineUsers.size}
+                    إجمالي {applications.length + pendingNewApplications.length} طلب | متصل الآن: {onlineUsers.size}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
@@ -800,9 +841,21 @@ const DashboardApplications = () => {
                    );
                    return (
                      <>
-                     <p className="text-sm text-muted-foreground">
-                       عرض {((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب
-                     </p>
+                      {pendingNewApplications.length > 0 && (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+                          <div>
+                            <p className="font-bold">يوجد {pendingNewApplications.length} عميل جديد</p>
+                            <p className="text-sm opacity-80">تم إيقاف إضافتهم تلقائيًا حتى لا تتحرك القائمة أثناء متابعة المسؤول.</p>
+                          </div>
+                          <Button size="sm" onClick={showPendingApplications} className="gap-2">
+                            <RefreshCw className="h-4 w-4" />
+                            عرض العملاء الجدد
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        عرض {filtered.length === 0 ? 0 : ((safeCurrentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(safeCurrentPage * ITEMS_PER_PAGE, filtered.length)} من {filtered.length} طلب ظاهر
+                      </p>
                     {paginatedApps.map((app) => {
                     const userOnline = onlineUsers.get(app.id);
                    const isOnline = !!userOnline;
