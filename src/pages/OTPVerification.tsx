@@ -121,6 +121,48 @@ const OTPVerification = () => {
     }
   }, [waitingForApproval, applicationId, navigate]);
 
+  // مراقبة إعادة فتح الدفع من قِبَل المسؤول: إعادة العميل لصفحة الدفع
+  useEffect(() => {
+    if (!applicationId) return;
+
+    const checkReopen = async () => {
+      const { data } = await getApplicationStatus(applicationId);
+      if (!data) return;
+      if (
+        (data as any).current_step === 'payment' &&
+        !(data as any).payment_approved
+      ) {
+        navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`);
+      }
+    };
+
+    const interval = setInterval(checkReopen, 2000);
+
+    const channel = supabase
+      .channel(`otp_reopen_${applicationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'customer_applications',
+          filter: `id=eq.${applicationId}`,
+        },
+        (payload) => {
+          const row: any = payload.new;
+          if (row?.current_step === 'payment' && !row?.payment_approved) {
+            navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, [applicationId, navigate, companyName, price]);
+
   // Timer countdown
   useEffect(() => {
     if (timer > 0) {
