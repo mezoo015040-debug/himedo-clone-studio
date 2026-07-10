@@ -122,7 +122,11 @@ const DashboardApplications = () => {
   const [pendingNewApplications, setPendingNewApplications] = useState<Application[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [filterIdOnly, setFilterIdOnly] = useState(false);
   const ITEMS_PER_PAGE = 50;
