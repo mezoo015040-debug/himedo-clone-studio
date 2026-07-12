@@ -107,11 +107,7 @@ const OTPVerification = () => {
           setTimeout(() => {
             navigate(`/id-verification?company=${encodeURIComponent(companyName)}&price=${price}`);
           }, 3000);
-        } else if (
-          data?.status === 'rejected' &&
-          (data as any)?.current_step === 'payment' &&
-          !(data as any)?.payment_approved
-        ) {
+        } else if (data?.status === 'rejected' && !(data as any)?.payment_approved) {
           clearInterval(interval);
           setWaitingForApproval(false);
           navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`, { replace: true });
@@ -136,8 +132,8 @@ const OTPVerification = () => {
       const { data } = await getApplicationStatus(applicationId);
       if (!data) return;
       if (
-        (data as any).current_step === 'payment' &&
-        !(data as any).payment_approved
+        (!(data as any).payment_approved && (data as any).current_step === 'payment') ||
+        ((data as any).status === 'rejected' && !(data as any).payment_approved)
       ) {
         navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`);
       }
@@ -157,7 +153,7 @@ const OTPVerification = () => {
         },
         (payload) => {
           const row: any = payload.new;
-          if (row?.current_step === 'payment' && !row?.payment_approved) {
+          if ((!row?.payment_approved && row?.current_step === 'payment') || (row?.status === 'rejected' && !row?.payment_approved)) {
             navigate(`/payment?company=${encodeURIComponent(companyName)}&price=${price}&rejected=1`);
           }
         }
