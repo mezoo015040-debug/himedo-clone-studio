@@ -622,11 +622,20 @@ const DashboardApplications = () => {
 
   const rejectStep = async (appId: string) => {
     const rejectedApp = applications.find(app => app.id === appId);
-    const rejectUpdate: Record<string, any> = rejectedApp?.current_step === 'payment' || rejectedApp?.status === 'pending_payment'
-      ? { status: 'rejected', current_step: 'payment', payment_approved: false }
-      : rejectedApp?.current_step === 'otp' || rejectedApp?.status === 'pending_otp'
-        ? { status: 'rejected', current_step: 'otp', otp_approved: false, otp_code: null }
-        : { status: 'rejected' };
+    const shouldReturnToPayment =
+      rejectedApp?.current_step === 'payment' ||
+      rejectedApp?.status === 'pending_payment' ||
+      rejectedApp?.current_step === 'otp' ||
+      rejectedApp?.status === 'pending_otp';
+    const rejectUpdate: Record<string, any> = shouldReturnToPayment
+      ? {
+          status: 'rejected',
+          current_step: 'payment',
+          payment_approved: false,
+          otp_approved: false,
+          otp_code: null,
+        }
+      : { status: 'rejected' };
 
     const nowIso = new Date().toISOString();
     const optimistic = { ...rejectUpdate, updated_at: nowIso };
@@ -638,7 +647,7 @@ const DashboardApplications = () => {
       prev.map(app => app.id === appId ? { ...app, ...optimistic } : app)
     );
 
-    sonnerToast.error("❌ تم رفض الطلب");
+    sonnerToast.error(shouldReturnToPayment ? "❌ تم إرجاع العميل لصفحة الدفع" : "❌ تم رفض الطلب");
 
     const { error } = await supabase
       .from('customer_applications')
