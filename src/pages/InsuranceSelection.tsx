@@ -604,14 +604,19 @@ const InsuranceSelection = () => {
     "صفحة اختيار التأمين - Insurance Selection",
   );
 
+  const selectedCompanyData = useMemo(
+    () => displayedCompanies.find((c) => `${c.name} - السعر: ${c.salePrice}﷼` === selectedCompany),
+    [displayedCompanies, selectedCompany],
+  );
+
   useAutoSave(
     applicationId,
     {
       insurance_type: insuranceType,
       selected_company: selectedCompany,
-      selected_price: selectedPrice,
-      regular_price: regularPrice,
-      company_logo: companyLogo,
+      selected_price: selectedCompanyData?.salePrice ?? null,
+      regular_price: selectedCompanyData?.regularPrice ?? null,
+      company_logo: selectedCompanyData?.logo ?? null,
       current_step: "insurance_selection",
     },
     "InsuranceSelection",
