@@ -604,6 +604,13 @@ const InsuranceSelection = () => {
     "صفحة اختيار التأمين - Insurance Selection",
   );
 
+  // حساب الأسعار ديناميكياً بناءً على قيمة السيارة
+  const displayedCompanies = useMemo(() => {
+    const templates = insuranceType === "comprehensive" ? comprehensiveTemplates : thirdPartyTemplates;
+    const type = insuranceType === "comprehensive" ? "comprehensive" : "thirdParty";
+    return buildCompanies(templates, vehicleValue, type);
+  }, [insuranceType, vehicleValue]);
+
   const selectedCompanyData = useMemo(
     () => displayedCompanies.find((c) => `${c.name} - السعر: ${c.salePrice}﷼` === selectedCompany),
     [displayedCompanies, selectedCompany],
@@ -621,13 +628,6 @@ const InsuranceSelection = () => {
     },
     "InsuranceSelection",
   );
-
-  // حساب الأسعار ديناميكياً بناءً على قيمة السيارة
-  const displayedCompanies = useMemo(() => {
-    const templates = insuranceType === "comprehensive" ? comprehensiveTemplates : thirdPartyTemplates;
-    const type = insuranceType === "comprehensive" ? "comprehensive" : "thirdParty";
-    return buildCompanies(templates, vehicleValue, type);
-  }, [insuranceType, vehicleValue]);
 
   const filteredCompanies = displayedCompanies.filter(
     (company) => company.name.includes(searchQuery) || company.shortName.includes(searchQuery),
