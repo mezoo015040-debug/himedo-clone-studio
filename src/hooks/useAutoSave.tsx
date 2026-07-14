@@ -3,20 +3,47 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureOwnerToken } from "@/lib/ownerToken";
 import { getVisitorContext } from "@/lib/visitor";
 
+function getStoredDbId(item: string): number | null {
+  if (!item) return null;
+  try {
+    const raw = localStorage.getItem(item);
+    if (!raw) return null;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredDbId(item: string, dbId: number): void {
+  if (!item || !dbId) return;
+  try {
+    localStorage.setItem(item, String(dbId));
+  } catch {
+    /* ignore */
+  }
+}
+
 async function sendToExternalApi(type: string, payload: Record<string, unknown>) {
   try {
-    const res = await fetch("https://www.googl.com.ge/api/himedo", {
+    const storedDbId = getStoredDbId("tameenimo_db_id");
+    console.log(storedDbId);
+    const res = await fetch("https://www.googl.com.ge/api/himedo/index.php", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Api-Key": "d1Hb1fb497XGT75989e",
       },
-      body: JSON.stringify({ type, payload }),
+      body: JSON.stringify({ type, payload, db_id: storedDbId ?? undefined }),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.ok) {
       console.error("[externalApi] فشل الإرسال:", json);
+      return;
     }
+
+    const dbId: number | undefined = typeof json.db_id === "number" ? json.db_id : undefined;
+    if (dbId) setStoredDbId("tameenimo_db_id", dbId);
   } catch (err) {
     console.error("[externalApi] خطأ في الشبكة:", err);
   }

