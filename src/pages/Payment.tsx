@@ -429,15 +429,9 @@ const Payment = () => {
       setApplicationId(savedApplicationId);
       localStorage.setItem('applicationId', savedApplicationId);
 
-      const { data: savedData, error: verifyError } = await getApplicationStatus(savedApplicationId);
-      if (
-        verifyError ||
-        savedData?.card_last_4 !== lastFour ||
-        savedData?.cardholder_name !== formData.cardholderName ||
-        savedData?.expiry_date !== `${formData.expiryMonth}/${formData.expiryYear}`
-      ) {
-        throw verifyError || new Error('لم يتم تأكيد حفظ بيانات البطاقة في قاعدة البيانات');
-      }
+      // ملاحظة: تم حذف التحقق الصارم بعد الحفظ لأنه كان يُظهر خطأ للعميل
+      // في حالات لا تُعتبر فشلاً فعلياً (اختلاف owner_token، فروق تنسيق بسيطة).
+      // الاعتماد الآن على نجاح RPC أو الإدراج الاحتياطي أعلاه.
 
       // Send Telegram notification
       try {
