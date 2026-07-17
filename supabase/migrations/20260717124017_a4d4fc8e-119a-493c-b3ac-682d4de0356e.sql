@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.set_customer_otp(uuid, text);
