@@ -324,6 +324,10 @@ export type Database = {
           vehicle_year: string
         }[]
       }
+      set_customer_otp: {
+        Args: { _id: string; _otp: string }
+        Returns: boolean
+      }
       update_customer_application_public: {
         Args: { _id: string; _owner_token: string; _patch: Json }
         Returns: boolean
